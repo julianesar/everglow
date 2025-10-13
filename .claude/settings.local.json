@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(where node)",
+      "Bash(npm install:*)",
+      "WebSearch",
+      "Bash(where claude)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter:*)",
+      "Read(//c/Users/Julian/AppData/Local/Pub/Cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/android/**)",
+      "Bash(./gradlew:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfirst commit\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(del nul)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

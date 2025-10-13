@@ -1,0 +1,29 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:everglow_app/presentation/core/theme/app_theme.dart';
+import 'package:everglow_app/presentation/core/router/app_router.dart';
+
+/// Entry point of the application
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Run the app wrapped in ProviderScope for Riverpod state management
+  runApp(const ProviderScope(child: MainApp()));
+}
+
+/// Root widget of the application
+class MainApp extends ConsumerWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
+      title: 'Everglow App',
+      theme: AppTheme.lightTheme(),
+      routerConfig: router,
+    );
+  }
+}
