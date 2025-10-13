@@ -100,8 +100,8 @@ class OnboardingScreen extends ConsumerWidget {
                         try {
                           await controller.submitOnboarding();
                           if (context.mounted) {
-                            // Navigate to report screen after successful onboarding
-                            context.go('/report');
+                            // Navigate to day 1 after successful onboarding
+                            context.go('/day/1');
                           }
                         } catch (e) {
                           if (context.mounted) {
