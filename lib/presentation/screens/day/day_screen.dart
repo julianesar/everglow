@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/daily_journey_models.dart';
 import '../../features/daily_journey/daily_journey_controller.dart';
+import '../../features/daily_journey/widgets/journal_prompt_dialog.dart';
 
 /// Screen displaying the daily itinerary for a specific day
 ///
@@ -86,7 +87,10 @@ class DayScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Single Priority section
-            const _SinglePrioritySection(),
+            _SinglePrioritySection(
+              dayNumber: dayNumber,
+              initialPriority: dailyJourney.singlePriority ?? '',
+            ),
             const SizedBox(height: 32),
 
             // Section title for itinerary
@@ -99,7 +103,7 @@ class DayScreen extends ConsumerWidget {
             // Itinerary items
             ...dailyJourney.itinerary.map((item) => Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
-                  child: _buildItineraryItem(item),
+                  child: _buildItineraryItem(item, dayNumber),
                 )),
           ],
         ),
@@ -108,11 +112,14 @@ class DayScreen extends ConsumerWidget {
   }
 
   /// Builds the appropriate widget for each itinerary item type
-  Widget _buildItineraryItem(ItineraryItem item) {
+  Widget _buildItineraryItem(ItineraryItem item, int dayNumber) {
     return switch (item) {
       MedicalEvent() => _MedicalEventCard(event: item),
       GuidedPractice() => _GuidedPracticeCard(practice: item),
-      JournalingSection() => _JournalingCard(section: item),
+      JournalingSection() => _JournalingCard(
+          section: item,
+          dayNumber: dayNumber,
+        ),
       _ => const SizedBox.shrink(),
     };
   }
@@ -185,16 +192,30 @@ class _DayHeader extends StatelessWidget {
 }
 
 /// Single Priority section widget
-class _SinglePrioritySection extends StatefulWidget {
-  const _SinglePrioritySection();
+class _SinglePrioritySection extends ConsumerStatefulWidget {
+  const _SinglePrioritySection({
+    required this.dayNumber,
+    required this.initialPriority,
+  });
+
+  final int dayNumber;
+  final String initialPriority;
 
   @override
-  State<_SinglePrioritySection> createState() => _SinglePrioritySectionState();
+  ConsumerState<_SinglePrioritySection> createState() => _SinglePrioritySectionState();
 }
 
-class _SinglePrioritySectionState extends State<_SinglePrioritySection> {
-  final _controller = TextEditingController();
+class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> {
+  late final TextEditingController _controller;
   bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialPriority);
+    // If there's an initial priority, consider it saved
+    _isSaved = widget.initialPriority.isNotEmpty;
+  }
 
   @override
   void dispose() {
@@ -202,16 +223,31 @@ class _SinglePrioritySectionState extends State<_SinglePrioritySection> {
     super.dispose();
   }
 
-  void _savePriority() {
-    if (_controller.text.trim().isNotEmpty) {
+  Future<void> _savePriority() async {
+    if (_controller.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a priority before saving'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Call the controller to save the priority
+    await ref
+        .read(dailyJourneyControllerProvider(widget.dayNumber).notifier)
+        .updateSinglePriority(_controller.text.trim());
+
+    if (mounted) {
       setState(() {
         _isSaved = true;
       });
-      // TODO: Persist the priority using the controller
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Priority saved successfully'),
           duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
         ),
       );
     }
@@ -512,15 +548,49 @@ class _GuidedPracticeCard extends StatelessWidget {
 }
 
 /// Card widget for displaying journaling sections
-class _JournalingCard extends StatelessWidget {
+class _JournalingCard extends ConsumerWidget {
   const _JournalingCard({
     required this.section,
+    required this.dayNumber,
   });
 
   final JournalingSection section;
+  final int dayNumber;
+
+  /// Handles the journaling flow by showing dialogs for each prompt
+  Future<void> _handleJournaling(BuildContext context, WidgetRef ref) async {
+    // Show a dialog for each prompt in sequence
+    for (final prompt in section.prompts) {
+      // Check if context is still valid before showing dialog
+      if (!context.mounted) return;
+
+      final response = await JournalPromptDialog.show(context, prompt);
+
+      // If user canceled or provided empty response, skip this prompt
+      if (response == null || response.trim().isEmpty) {
+        continue;
+      }
+
+      // Save the journal entry
+      await ref
+          .read(dailyJourneyControllerProvider(dayNumber).notifier)
+          .updateJournalEntry(prompt.id, response);
+    }
+
+    // Show completion message
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Journal entries saved successfully'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -635,15 +705,7 @@ class _JournalingCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to journaling screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Opening journaling section...'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
+                onPressed: () => _handleJournaling(context, ref),
                 icon: const Icon(Icons.create_rounded),
                 label: const Text('Start Journaling'),
               ),

@@ -101,10 +101,31 @@ class DailyJourney {
   /// List of all itinerary items scheduled for this day
   final List<ItineraryItem> itinerary;
 
+  /// The user's single priority for this day
+  final String? singlePriority;
+
   const DailyJourney({
     required this.dayNumber,
     required this.title,
     required this.mantra,
     required this.itinerary,
+    this.singlePriority,
   });
+
+  /// Creates a copy of this DailyJourney with the given fields replaced
+  DailyJourney copyWith({
+    int? dayNumber,
+    String? title,
+    String? mantra,
+    List<ItineraryItem>? itinerary,
+    String? singlePriority,
+  }) {
+    return DailyJourney(
+      dayNumber: dayNumber ?? this.dayNumber,
+      title: title ?? this.title,
+      mantra: mantra ?? this.mantra,
+      itinerary: itinerary ?? this.itinerary,
+      singlePriority: singlePriority ?? this.singlePriority,
+    );
+  }
 }
