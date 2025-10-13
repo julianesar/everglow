@@ -600,7 +600,10 @@ class _MedicalEventCard extends StatelessWidget {
   }
 }
 
-/// Card widget for displaying journaling sections
+/// Card widget for displaying journaling sections as an expandable accordion
+///
+/// This widget uses an ExpansionTile to reduce cognitive load by allowing
+/// users to expand only the journaling sections they want to work on.
 class _JournalingCard extends ConsumerWidget {
   const _JournalingCard({required this.section, required this.dayNumber});
 
@@ -657,75 +660,76 @@ class _JournalingCard extends ConsumerWidget {
 
     return Card(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card header with icon and title
-            Row(
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        // Override the expansion tile theme for better control
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          // Disable default top/bottom borders
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 8.0,
+          ),
+          childrenPadding: const EdgeInsets.only(
+            left: 16.0,
+            right: 16.0,
+            bottom: 16.0,
+          ),
+          // Custom expansion icon colors
+          iconColor: Theme.of(context).colorScheme.primary,
+          collapsedIconColor: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.6),
+          // Leading icon with background
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.edit_note_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          // Title with section name
+          title: Text(
+            section.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          // Subtitle with time
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
+                Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  section.time,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.edit_note_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        section.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            section.time,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-
-            // Section title for prompts
-            Text(
-              'Reflection Prompts:',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-
-            // Display prompts with their responses or write button
+          ),
+          // Expandable content - the journaling prompts
+          children: [
             dailyJourneyAsync.when(
               loading: () => const Center(
                 child: Padding(
@@ -734,174 +738,190 @@ class _JournalingCard extends ConsumerWidget {
                 ),
               ),
               error: (error, _) => Center(
-                child: Text(
-                  'Error loading responses',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Error loading responses',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
               ),
               data: (dailyJourney) {
                 return Column(
-                  children: section.prompts.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final prompt = entry.value;
-                    final response = dailyJourney.journalResponses[prompt.id];
-                    final hasResponse = response != null && response.isNotEmpty;
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section title for prompts
+                    Text(
+                      'Reflection Prompts:',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: hasResponse
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.05)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                    // Display prompts with their responses or write button
+                    ...section.prompts.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final prompt = entry.value;
+                      final response = dailyJourney.journalResponses[prompt.id];
+                      final hasResponse = response != null && response.isNotEmpty;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
                             color: hasResponse
                                 ? Theme.of(
                                     context,
-                                  ).colorScheme.primary.withValues(alpha: 0.2)
-                                : Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.1),
-                            width: 1,
+                                  ).colorScheme.primary.withValues(alpha: 0.05)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: hasResponse
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withValues(alpha: 0.2)
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withValues(alpha: 0.1),
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Prompt question with number
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Prompt question with number
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary
+                                          .withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
                                   ),
-                                  child: Center(
+                                  const SizedBox(width: 12),
+                                  Expanded(
                                     child: Text(
-                                      '${index + 1}',
+                                      prompt.promptText,
                                       style: Theme.of(context)
                                           .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                            fontWeight: FontWeight.bold,
+                                          .bodyMedium
+                                          ?.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Response section or write button
+                              if (hasResponse) ...[
+                                // Show saved response with edit button
+                                Container(
+                                  padding: const EdgeInsets.all(12.0),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle,
+                                            size: 16,
+                                            color: Colors.green,
                                           ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Your Response',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelMedium
+                                                ?.copyWith(
+                                                  color: Colors.green,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        response,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Edit button
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: () => _handleEditPrompt(
+                                      context,
+                                      ref,
+                                      prompt,
+                                      response,
+                                    ),
+                                    icon: const Icon(Icons.edit, size: 16),
+                                    label: const Text('Edit Response'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    prompt.promptText,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
+                              ] else ...[
+                                // Show write reflection button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _handleEditPrompt(
+                                      context,
+                                      ref,
+                                      prompt,
+                                      null,
+                                    ),
+                                    icon: const Icon(Icons.create),
+                                    label: const Text('Write Reflection'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Response section or write button
-                            if (hasResponse) ...[
-                              // Show saved response with edit button
-                              Container(
-                                padding: const EdgeInsets.all(12.0),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.check_circle,
-                                          size: 16,
-                                          color: Colors.green,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          'Your Response',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelMedium
-                                              ?.copyWith(
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      response,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              // Edit button
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: () => _handleEditPrompt(
-                                    context,
-                                    ref,
-                                    prompt,
-                                    response,
-                                  ),
-                                  icon: const Icon(Icons.edit, size: 16),
-                                  label: const Text('Edit Response'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ] else ...[
-                              // Show write reflection button
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _handleEditPrompt(
-                                    context,
-                                    ref,
-                                    prompt,
-                                    null,
-                                  ),
-                                  icon: const Icon(Icons.create),
-                                  label: const Text('Write Reflection'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ),
-                              ),
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ],
                 );
               },
             ),

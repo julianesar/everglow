@@ -111,7 +111,7 @@ class GuidedPracticeWidget extends ConsumerWidget {
       audioNotifier.resume();
     } else {
       // Not loaded or a different track is playing - start playing
-      audioNotifier.play(practice.audioUrl);
+      audioNotifier.play(practice.audioUrl, practice.title);
     }
   }
 }
