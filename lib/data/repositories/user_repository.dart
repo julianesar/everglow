@@ -1,0 +1,105 @@
+import 'package:isar/isar.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../domain/models/journal_models.dart';
+import '../local/isar_provider.dart';
+
+part 'user_repository.g.dart';
+
+/// Abstract repository contract for user data management.
+///
+/// This interface defines the contract for user data operations,
+/// following the Repository pattern from Clean Architecture.
+abstract class UserRepository {
+  /// Saves a user with the provided information.
+  ///
+  /// [name] The user's name
+  /// [integrationStatement] The user's integration statement
+  ///
+  /// Throws an exception if the save operation fails.
+  Future<void> saveUser({
+    required String name,
+    required String integrationStatement,
+  });
+}
+
+/// In-memory implementation of [UserRepository].
+///
+/// This class provides a simple in-memory implementation for development.
+/// TODO: Replace with Isar implementation for production use.
+class InMemoryUserRepository implements UserRepository {
+  /// Creates an instance of [InMemoryUserRepository].
+  const InMemoryUserRepository();
+
+  // In-memory storage
+  static String? _userName;
+  static String? _userStatement;
+
+  @override
+  Future<void> saveUser({
+    required String name,
+    required String integrationStatement,
+  }) async {
+    // Simulate async operation
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    _userName = name;
+    _userStatement = integrationStatement;
+
+    // Print for debugging
+    // ignore: avoid_print
+    print('User saved: $name - $integrationStatement');
+  }
+}
+
+/// Isar database implementation of [UserRepository].
+///
+/// This class provides persistent storage using Isar database.
+/// User data is stored locally and survives app restarts.
+class IsarUserRepository implements UserRepository {
+  /// The Isar database instance.
+  final Isar _isar;
+
+  /// Creates an instance of [IsarUserRepository].
+  ///
+  /// [isar] The Isar database instance to use for storage.
+  const IsarUserRepository(this._isar);
+
+  @override
+  Future<void> saveUser({
+    required String name,
+    required String integrationStatement,
+  }) async {
+    // Create or update user in database
+    await _isar.writeTxn(() async {
+      // Get existing user or create new one
+      final existingUser = await _isar.users.where().findFirst();
+
+      final user = existingUser ?? User()
+        ..name = name
+        ..integrationStatement = integrationStatement;
+
+      // Update existing user
+      if (existingUser != null) {
+        user.name = name;
+        user.integrationStatement = integrationStatement;
+      }
+
+      // Save to database
+      await _isar.users.put(user);
+    });
+  }
+}
+
+/// Provides an instance of [UserRepository].
+///
+/// This provider creates and manages the [IsarUserRepository] instance,
+/// which uses Isar for persistent storage.
+///
+/// The provider watches [isarProvider] to get the database instance
+/// and passes it to the repository constructor.
+@riverpod
+Future<UserRepository> userRepository(UserRepositoryRef ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  return IsarUserRepository(isar);
+}
