@@ -9,11 +9,9 @@ part of 'ai_report_service.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element
 
 class _AiReportService implements AiReportService {
-  _AiReportService(
-    this._dio, {
-    this.baseUrl,
-    this.errorLogger,
-  });
+  _AiReportService(this._dio, {this.baseUrl, this.errorLogger}) {
+    baseUrl ??= 'https://generativelanguage.googleapis.com';
+  }
 
   final Dio _dio;
 
@@ -22,37 +20,28 @@ class _AiReportService implements AiReportService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<AiReportResponse> generateReport(Map<String, dynamic> userData) async {
+  Future<HttpResponse<dynamic>> generateReport(
+    Map<String, dynamic> requestBody,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    _data.addAll(userData);
-    final _options = _setStreamType<AiReportResponse>(Options(
-      method: 'POST',
-      headers: _headers,
-      extra: _extra,
-    )
-        .compose(
-          _dio.options,
-          '/generateReport',
-          queryParameters: queryParameters,
-          data: _data,
-        )
-        .copyWith(
-            baseUrl: _combineBaseUrls(
-          _dio.options.baseUrl,
-          baseUrl,
-        )));
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late AiReportResponse _value;
-    try {
-      _value = AiReportResponse.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
+    _data.addAll(requestBody);
+    final _options = _setStreamType<HttpResponse<dynamic>>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/v1beta/models/gemini-2.5-flash:generateContent',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
   }
 
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
@@ -68,10 +57,7 @@ class _AiReportService implements AiReportService {
     return requestOptions;
   }
 
-  String _combineBaseUrls(
-    String dioBaseUrl,
-    String? baseUrl,
-  ) {
+  String _combineBaseUrls(String dioBaseUrl, String? baseUrl) {
     if (baseUrl == null || baseUrl.trim().isEmpty) {
       return dioBaseUrl;
     }

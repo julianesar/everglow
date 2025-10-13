@@ -10,20 +10,30 @@ String _$aiReportServiceHash() => r'f6e5b1c44a1f7601551935f4e8a87b07e221ada1';
 
 /// Provides an instance of [AiReportService].
 ///
-/// This provider creates a Retrofit-based API service for generating AI reports.
-/// It uses the [dioProvider] to get a configured Dio instance and passes it
-/// to the AiReportService constructor.
+/// This provider creates a Retrofit-based API service for communicating with
+/// the Google Gemini API. It uses the [dioProvider] to get a configured Dio
+/// instance (with API key authentication) and passes it to the AiReportService
+/// constructor.
 ///
-/// The service handles all HTTP communication with the AI API, including:
+/// The service handles all HTTP communication with the Gemini API, including:
 /// - Request serialization
 /// - Response deserialization
+/// - API key authentication via interceptor
 /// - Error handling
 ///
 /// Usage example:
 /// ```dart
 /// final service = ref.read(aiReportServiceProvider);
-/// final response = await service.generateReport({'userData': {...}});
-/// final reportText = response.report;
+/// final response = await service.generateReport({
+///   'contents': [
+///     {
+///       'parts': [
+///         {'text': 'Generate a report about...'}
+///       ]
+///     }
+///   ]
+/// });
+/// final generatedText = response['candidates'][0]['content']['parts'][0]['text'];
 /// ```
 ///
 /// Copied from [aiReportService].

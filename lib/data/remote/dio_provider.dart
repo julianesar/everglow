@@ -1,51 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:everglow_app/data/remote/api_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dio_provider.g.dart';
 
-/// Configuration constants for the API client.
-class ApiConfig {
-  /// The base URL for the AI API.
-  ///
-  /// TODO: Replace this with your actual API endpoint.
-  /// Consider using environment variables for different environments:
-  /// - Development: 'http://localhost:3000/api'
-  /// - Production: 'https://api.yourapp.com'
-  static const String baseUrl = 'https://api.example.com';
-
-  /// Default connection timeout in milliseconds (30 seconds).
-  static const int connectTimeout = 30000;
-
-  /// Default receive timeout in milliseconds (30 seconds).
-  static const int receiveTimeout = 30000;
-
-  /// Default send timeout in milliseconds (30 seconds).
-  static const int sendTimeout = 30000;
-}
-
-/// Provides a configured Dio instance for HTTP requests.
+/// Provides a configured Dio instance for Gemini API requests.
 ///
 /// This provider creates a Dio client with:
-/// - Base URL configured for the AI API
-/// - Timeouts for connection, receive, and send operations
+/// - Base URL configured for the Gemini API
+/// - API key as query parameter for authentication (from api_keys.dart)
 /// - JSON content type headers
-/// - Request/Response logging interceptor (in debug mode)
+/// - Request/Response logging interceptor (for debugging)
 ///
 /// The Dio instance can be used directly or passed to Retrofit services.
 ///
 /// Usage example:
 /// ```dart
 /// final dio = ref.read(dioProvider);
-/// final response = await dio.post('/endpoint', data: {...});
+/// final response = await dio.post('/v1beta/models/gemini-2.5-flash:generateContent', data: {...});
 /// ```
 @riverpod
 Dio dio(DioRef ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(milliseconds: ApiConfig.connectTimeout),
-      receiveTimeout: const Duration(milliseconds: ApiConfig.receiveTimeout),
-      sendTimeout: const Duration(milliseconds: ApiConfig.sendTimeout),
+      baseUrl: 'https://generativelanguage.googleapis.com',
+      queryParameters: {'key': geminiApiKey},
       contentType: Headers.jsonContentType,
       responseType: ResponseType.json,
     ),
@@ -66,9 +45,6 @@ Dio dio(DioRef ref) {
       },
     ),
   );
-
-  // Add authentication interceptor if needed
-  // dio.interceptors.add(AuthInterceptor());
 
   return dio;
 }

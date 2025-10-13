@@ -19,7 +19,10 @@
       "Bash(dart run build_runner build:*)",
       "Bash(git commit:*)",
       "WebFetch(domain:jumpshare.com)",
-      "Bash(dart format:*)"
+      "Bash(dart format:*)",
+      "Bash(test -f \"D:\\Development\\chad\\everglow_app\\lib\\data\\repositories\\ai_report_repository.dart\")",
+      "Bash(test:*)",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": [],
     "ask": []

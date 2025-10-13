@@ -7,27 +7,26 @@ part of 'ai_report_repository.dart';
 // **************************************************************************
 
 String _$aiReportRepositoryHash() =>
-    r'17c43f4c9fcad1d85e9d2c95dc2893e214cd0e42';
+    r'5456f63e0ded44ea59d0bd5bc3f815378dd3c2d3';
 
-/// Provides an instance of [AiReportRepository].
+/// Provides an instance of [AIReportRepository].
 ///
-/// This provider creates and manages the [AiReportRepositoryImpl] instance,
-/// which coordinates between the journal repository and AI service.
+/// This provider creates and manages the [AIReportRepository] instance,
+/// injecting the required dependencies ([AiReportService] and [JournalRepository]).
 ///
-/// The provider watches both [journalRepositoryProvider] and [aiReportServiceProvider]
-/// to ensure all dependencies are available.
+/// The provider watches [aiReportServiceProvider] and [journalRepositoryProvider]
+/// to get the necessary dependencies.
 ///
 /// Usage example:
 /// ```dart
-/// final repo = await ref.read(aiReportRepositoryProvider.future);
-/// final report = await repo.generateFinalReport();
-/// print(report);
+/// final aiReportRepo = await ref.read(aiReportRepositoryProvider.future);
+/// final report = await aiReportRepo.generateFinalReport();
 /// ```
 ///
 /// Copied from [aiReportRepository].
 @ProviderFor(aiReportRepository)
 final aiReportRepositoryProvider =
-    AutoDisposeFutureProvider<AiReportRepository>.internal(
+    AutoDisposeFutureProvider<AIReportRepository>.internal(
   aiReportRepository,
   name: r'aiReportRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -38,6 +37,6 @@ final aiReportRepositoryProvider =
 );
 
 typedef AiReportRepositoryRef
-    = AutoDisposeFutureProviderRef<AiReportRepository>;
+    = AutoDisposeFutureProviderRef<AIReportRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

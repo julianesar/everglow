@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../remote/ai_report_service.dart';
@@ -6,156 +8,232 @@ import 'journal_repository.dart';
 
 part 'ai_report_repository.g.dart';
 
-/// Master prompt template for AI report generation.
+/// Repository responsible for generating comprehensive AI-powered transformation reports.
 ///
-/// This prompt is sent to the AI along with the user's journal data
-/// to generate a comprehensive personal growth report.
-const String masterPrompt = '''
-You are a compassionate and insightful personal growth coach. Your task is to analyze the user's 21-day journey data and create a comprehensive, personalized report.
-
-The user has completed a 21-day self-discovery and personal growth journey. They have:
-- Set a single priority for each day
-- Answered reflective journal prompts throughout their journey
-
-Please analyze their responses and create a report that includes:
-
-1. **Journey Overview**: Summarize the key themes and patterns you observe across their 21 days.
-
-2. **Priority Analysis**:
-   - Identify recurring priorities and focus areas
-   - Note how their priorities evolved over time
-   - Highlight any shifts in mindset or focus
-
-3. **Growth Insights**:
-   - Key realizations and breakthroughs
-   - Emotional patterns and progress
-   - Areas of significant growth
-   - Challenges they faced and how they navigated them
-
-4. **Strengths Identified**:
-   - Personal strengths demonstrated through their responses
-   - Positive coping mechanisms and strategies they used
-   - Moments of resilience and self-awareness
-
-5. **Recommendations for Continued Growth**:
-   - Specific, actionable suggestions based on their journey
-   - Areas that might benefit from further exploration
-   - Practices or habits to maintain or develop
-   - Resources or approaches that align with their growth trajectory
-
-6. **Closing Message**:
-   - An encouraging, personalized message acknowledging their commitment
-   - Affirmation of their progress and potential
-
-Guidelines:
-- Be warm, encouraging, and non-judgmental
-- Use specific examples from their journal entries
-- Avoid generic advice; make everything personalized to their specific journey
-- Keep the tone professional yet compassionate
-- Structure the report with clear sections and headings
-- Aim for approximately 2-3 pages of content
-
-Below is the user's 21-day journey data:
-
-''';
-
-/// Repository for AI report generation operations.
+/// This repository orchestrates the report generation process by:
+/// 1. Fetching all user journal data from [JournalRepository]
+/// 2. Constructing a detailed prompt for the AI
+/// 3. Sending the request to Google's Gemini API via [AiReportService]
+/// 4. Parsing and returning the generated report text
 ///
-/// This repository coordinates between the [JournalRepository] and [AiReportService]
-/// to generate comprehensive AI-powered reports about the user's journey.
-///
-/// The repository:
-/// 1. Fetches all user journal data from the local database
-/// 2. Combines it with a master prompt template
-/// 3. Sends the request to the AI API
-/// 4. Returns the generated report text
-abstract class AiReportRepository {
-  /// Generates a comprehensive AI report based on the user's complete journey data.
-  ///
-  /// This method:
-  /// 1. Retrieves all user data (priorities and journal entries) from [JournalRepository]
-  /// 2. Combines the data with the master prompt
-  /// 3. Sends the request to the AI API via [AiReportService]
-  /// 4. Returns the generated report text
-  ///
-  /// Returns a [Future<String>] containing the AI-generated report.
-  ///
-  /// Throws an exception if:
-  /// - The journal repository fails to fetch data
-  /// - The API request fails
-  /// - The response format is invalid
-  Future<String> generateFinalReport();
-}
-
-/// Implementation of [AiReportRepository] using Isar and Retrofit.
-///
-/// This class provides the business logic for generating AI reports
-/// by coordinating between local data storage and remote API calls.
-class AiReportRepositoryImpl implements AiReportRepository {
-  /// The journal repository for accessing local user data.
-  final JournalRepository _journalRepository;
-
-  /// The AI report service for making API calls.
+/// The repository acts as the single source of truth for AI report generation,
+/// encapsulating the business logic of prompt construction and response handling.
+class AIReportRepository {
+  /// The service for communicating with the Gemini API.
   final AiReportService _aiReportService;
 
-  /// Creates an instance of [AiReportRepositoryImpl].
+  /// The repository for accessing user journal data.
+  final JournalRepository _journalRepository;
+
+  /// Creates an instance of [AIReportRepository].
   ///
-  /// [journalRepository] Repository for accessing local journal data
-  /// [aiReportService] Service for making API calls to generate reports
-  const AiReportRepositoryImpl({
-    required JournalRepository journalRepository,
+  /// [aiReportService] Service for making API calls to Gemini
+  /// [journalRepository] Repository for fetching user journal data
+  const AIReportRepository({
     required AiReportService aiReportService,
-  }) : _journalRepository = journalRepository,
-       _aiReportService = aiReportService;
+    required JournalRepository journalRepository,
+  }) : _aiReportService = aiReportService,
+       _journalRepository = journalRepository;
 
-  @override
+  /// Generates a comprehensive transformation report based on all user data.
+  ///
+  /// This method orchestrates the entire report generation workflow:
+  /// 1. Retrieves all user journal entries and priorities from the database
+  /// 2. Constructs a master prompt instructing the AI to act as a compassionate coach
+  /// 3. Combines the prompt with user data into a comprehensive context
+  /// 4. Formats the request according to Gemini API specifications
+  /// 5. Sends the request and parses the response
+  ///
+  /// Returns the generated report text as a String.
+  ///
+  /// Throws:
+  /// - [Exception] if the API call fails
+  /// - [FormatException] if the response cannot be parsed
+  /// - [StateError] if the response structure is unexpected
+  ///
+  /// Example usage:
+  /// ```dart
+  /// final repository = await ref.read(aiReportRepositoryProvider.future);
+  /// try {
+  ///   final report = await repository.generateFinalReport();
+  ///   print(report);
+  /// } catch (e) {
+  ///   print('Failed to generate report: $e');
+  /// }
+  /// ```
   Future<String> generateFinalReport() async {
+    // Step 1: Retrieve all user data from the journal repository
+    final userData = await _journalRepository.getAllUserData();
+
+    // Step 2: Construct the master prompt
+    final masterPrompt = _buildMasterPrompt();
+
+    // Step 3: Combine the master prompt with user data
+    final fullPrompt = _combinePromptWithUserData(masterPrompt, userData);
+
+    // Step 4: Format the request body for Gemini API
+    // The Gemini API expects this exact structure:
+    // {"contents": [{"parts": [{"text": "YOUR_FULL_PROMPT_STRING"}]}]}
+    final requestBody = {
+      'contents': [
+        {
+          'parts': [
+            {'text': fullPrompt},
+          ],
+        },
+      ],
+    };
+
+    // Step 5: Call the AI service and parse the response
+    final httpResponse = await _aiReportService.generateReport(requestBody);
+
+    // Extract the response data
+    final response = httpResponse.data as Map<String, dynamic>;
+
+    // Step 6: Extract the generated text from the response
+    final generatedText = _parseGeneratedText(response);
+
+    return generatedText;
+  }
+
+  /// Builds the master prompt that instructs the AI on how to generate the report.
+  ///
+  /// The prompt instructs the AI to:
+  /// - Act as 'EverGlow AI Guide', an insightful and compassionate transformation coach
+  /// - Synthesize the user's 3-day 'EverGlow Rebirth Protocol' journey
+  /// - Create a cohesive, empowering, and deeply personal final report
+  /// - Structure the report with specific sections for each day
+  /// - Weave the user's own words into the narrative
+  /// - Connect released patterns with new identity anchoring
+  String _buildMasterPrompt() {
+    return '''
+You are an insightful and compassionate transformation coach. Your name is 'EverGlow AI Guide'.
+Your task is to synthesize a user's personal reflections from their 3-day 'EverGlow Rebirth Protocol' into a cohesive, empowering, and deeply personal final report. The report must be a celebration of their journey, not just a summary of their answers.
+GUIDELINES:
+Title: The report must begin with the title: # Your Rebirth Protocol.
+Structure: Structure the report with a powerful introduction, followed by three distinct sections titled ## Day 1: The Great Release, ## Day 2: The Courage to Rise, and ## Day 3: Anchoring the Rebirth. Conclude with a short, forward-looking summary called ## Your New Standard.
+Tone: The tone must be inspiring, personal, and insightful. Weave the user's own words and phrases (provided below) into the narrative to make it feel deeply resonant. Connect the dots between what they released, how they chose to rise, and the new identity they are anchoring.
+Action: Do NOT simply list the user's answers. Interpret and connect them into a flowing narrative. For example, if they released a 'fear of failure' and their new identity is a 'bold creator', connect those two points directly.
+Source of Truth: Use ONLY the user data provided below. Do not add generic advice or information not derived from their inputs.
+--- USER DATA ---
+{user_data_json_string}
+--- END OF USER DATA ---
+Begin the report now.
+''';
+  }
+
+  /// Combines the master prompt with user data into a single prompt string.
+  ///
+  /// This method serializes the [userData] map into a clean JSON string and injects
+  /// it into the {user_data_json_string} placeholder within the [masterPrompt].
+  ///
+  /// [masterPrompt] The instruction prompt for the AI containing the placeholder
+  /// [userData] The structured user data from the journal repository
+  ///
+  /// Returns the complete formatted prompt with user data injected.
+  String _combinePromptWithUserData(
+    String masterPrompt,
+    Map<String, dynamic> userData,
+  ) {
+    // Import dart:convert is needed at the top of the file for json encoding
+    // Convert user data map to a clean JSON string
+    final userDataJsonString = _formatUserDataAsJson(userData);
+
+    // Inject the JSON string into the placeholder in the master prompt
+    return masterPrompt.replaceAll(
+      '{user_data_json_string}',
+      userDataJsonString,
+    );
+  }
+
+  /// Serializes user data into a clean JSON string for the AI prompt.
+  ///
+  /// Converts the structured map into a JSON string representation that the AI
+  /// can parse and understand. The JSON format ensures data integrity and makes
+  /// it easier for the AI to extract structured information.
+  ///
+  /// [userData] The structured user data from the journal repository
+  ///
+  /// Returns a JSON string representation of the user's journey data.
+  String _formatUserDataAsJson(Map<String, dynamic> userData) {
+    // Use JsonEncoder with indentation for better readability
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(userData);
+  }
+
+  /// Parses the generated text from the Gemini API response.
+  ///
+  /// The expected response structure is:
+  /// ```json
+  /// {
+  ///   "candidates": [
+  ///     {
+  ///       "content": {
+  ///         "parts": [
+  ///           {"text": "The generated report text..."}
+  ///         ]
+  ///       }
+  ///     }
+  ///   ]
+  /// }
+  /// ```
+  ///
+  /// [response] The raw response map from the API
+  ///
+  /// Returns the extracted text content.
+  ///
+  /// Throws [StateError] if the response structure doesn't match expectations.
+  String _parseGeneratedText(Map<String, dynamic> response) {
     try {
-      // Step 1: Fetch all user data from the local database
-      final userData = await _journalRepository.getAllUserData();
+      final candidates = response['candidates'] as List<dynamic>?;
+      if (candidates == null || candidates.isEmpty) {
+        throw StateError('No candidates in API response');
+      }
 
-      // Step 2: Prepare the request payload
-      // Combine the master prompt with the user data
-      final requestPayload = {
-        'prompt': masterPrompt,
-        'userData': userData,
-        'format': 'markdown', // Request markdown format for better structure
-        'maxLength': 3000, // Approximate word count for 2-3 pages
-      };
+      final firstCandidate = candidates[0] as Map<String, dynamic>;
+      final content = firstCandidate['content'] as Map<String, dynamic>?;
+      if (content == null) {
+        throw StateError('No content in API response candidate');
+      }
 
-      // Step 3: Send the request to the AI API
-      final response = await _aiReportService.generateReport(requestPayload);
+      final parts = content['parts'] as List<dynamic>?;
+      if (parts == null || parts.isEmpty) {
+        throw StateError('No parts in API response content');
+      }
 
-      // Step 4: Return the generated report
-      return response.report;
+      final firstPart = parts[0] as Map<String, dynamic>;
+      final text = firstPart['text'] as String?;
+      if (text == null || text.isEmpty) {
+        throw StateError('No text in API response part');
+      }
+
+      return text;
     } catch (e) {
-      // Re-throw with more context for debugging
-      throw Exception('Failed to generate AI report: $e');
+      throw StateError('Failed to parse API response: $e');
     }
   }
 }
 
-/// Provides an instance of [AiReportRepository].
+/// Provides an instance of [AIReportRepository].
 ///
-/// This provider creates and manages the [AiReportRepositoryImpl] instance,
-/// which coordinates between the journal repository and AI service.
+/// This provider creates and manages the [AIReportRepository] instance,
+/// injecting the required dependencies ([AiReportService] and [JournalRepository]).
 ///
-/// The provider watches both [journalRepositoryProvider] and [aiReportServiceProvider]
-/// to ensure all dependencies are available.
+/// The provider watches [aiReportServiceProvider] and [journalRepositoryProvider]
+/// to get the necessary dependencies.
 ///
 /// Usage example:
 /// ```dart
-/// final repo = await ref.read(aiReportRepositoryProvider.future);
-/// final report = await repo.generateFinalReport();
-/// print(report);
+/// final aiReportRepo = await ref.read(aiReportRepositoryProvider.future);
+/// final report = await aiReportRepo.generateFinalReport();
 /// ```
 @riverpod
-Future<AiReportRepository> aiReportRepository(AiReportRepositoryRef ref) async {
-  final journalRepository = await ref.watch(journalRepositoryProvider.future);
+Future<AIReportRepository> aiReportRepository(AiReportRepositoryRef ref) async {
   final aiReportService = ref.watch(aiReportServiceProvider);
+  final journalRepository = await ref.watch(journalRepositoryProvider.future);
 
-  return AiReportRepositoryImpl(
-    journalRepository: journalRepository,
+  return AIReportRepository(
     aiReportService: aiReportService,
+    journalRepository: journalRepository,
   );
 }
