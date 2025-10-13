@@ -40,6 +40,31 @@ abstract class JournalRepository {
     required String promptId,
     required String responseText,
   });
+
+  /// Retrieves all user data in a structured format for AI processing.
+  ///
+  /// Returns a Map structured by day number, containing priority and journal entries.
+  /// The structure is:
+  /// ```json
+  /// {
+  ///   "day_1": {
+  ///     "priority": "The priority text for day 1",
+  ///     "journal_entries": {
+  ///       "entry_1": "Response to prompt 1",
+  ///       "entry_2": "Response to prompt 2"
+  ///     }
+  ///   },
+  ///   "day_2": { ... }
+  /// }
+  /// ```
+  ///
+  /// Note: Since JournalEntry currently doesn't store promptId, entries are
+  /// indexed sequentially (entry_1, entry_2, etc.) within each day.
+  ///
+  /// Handles missing data gracefully:
+  /// - Days with no priority will have an empty string
+  /// - Days with no journal entries will have an empty map
+  Future<Map<String, dynamic>> getAllUserData();
 }
 
 /// Isar database implementation of [JournalRepository].
@@ -132,6 +157,41 @@ class IsarJournalRepository implements JournalRepository {
 
       await _isar.journalEntrys.put(newEntry);
     });
+  }
+
+  @override
+  Future<Map<String, dynamic>> getAllUserData() async {
+    final result = <String, dynamic>{};
+
+    // Fetch all daily logs sorted by day number
+    final dailyLogs = await _isar.dailyLogs.where().sortByDayNumber().findAll();
+
+    // Process each daily log
+    for (final dailyLog in dailyLogs) {
+      final dayKey = 'day_${dailyLog.dayNumber}';
+
+      // Get all journal entries for this daily log
+      final journalEntries = await _isar.journalEntrys
+          .filter()
+          .dailyLogIdEqualTo(dailyLog.id)
+          .sortByCreatedAt()
+          .findAll();
+
+      // Build journal entries map
+      final entriesMap = <String, String>{};
+      for (var i = 0; i < journalEntries.length; i++) {
+        final entryKey = 'entry_${i + 1}';
+        entriesMap[entryKey] = journalEntries[i].response;
+      }
+
+      // Build the day's data structure
+      result[dayKey] = {
+        'priority': dailyLog.singlePriority,
+        'journal_entries': entriesMap,
+      };
+    }
+
+    return result;
   }
 }
 

@@ -17,7 +17,9 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfirst commit\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(del nul)",
       "Bash(dart run build_runner build:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:jumpshare.com)",
+      "Bash(dart format:*)"
     ],
     "deny": [],
     "ask": []

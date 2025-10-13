@@ -36,17 +36,20 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
         return const DailyJourney(
           dayNumber: 1,
           title: 'DAY ONE — RELEASE',
-          mantra: 'You cannot step into your future while clinging to your past.',
+          mantra:
+              'You cannot step into your future while clinging to your past.',
           itinerary: [
             GuidedPractice(
               time: 'Morning',
               title: 'Morning Intention Ceremony',
-              audioUrl: 'placeholder_audio_url_1.mp3',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
             MedicalEvent(
               time: 'AM',
               title: 'Plasmapheresis detox',
-              description: 'Your body and mind begin to let go of stored weight — physical, emotional, and energetic.',
+              description:
+                  'Your body and mind begin to let go of stored weight — physical, emotional, and energetic.',
               location: 'Medical Wing',
             ),
             MedicalEvent(
@@ -71,36 +74,168 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                 ),
                 JournalingPrompt(
                   id: 'd1q2',
-                  promptText: 'Who or what no longer has permission to occupy space in my energy?',
+                  promptText:
+                      'Who or what no longer has permission to occupy space in my energy?',
                 ),
                 JournalingPrompt(
                   id: 'd1q3',
-                  promptText: 'What old identities or patterns am I saying goodbye to?',
+                  promptText:
+                      'What old identities or patterns am I saying goodbye to?',
                 ),
                 JournalingPrompt(
                   id: 'd1q4',
-                  promptText: 'Today I choose to release _____ so I can create space for _____.',
+                  promptText:
+                      'Today I choose to release _____ so I can create space for _____.',
                 ),
                 JournalingPrompt(
                   id: 'd1q5',
-                  promptText: 'If I were free of this weight, how would I feel tomorrow?',
+                  promptText:
+                      'If I were free of this weight, how would I feel tomorrow?',
                 ),
               ],
             ),
             GuidedPractice(
               time: 'Afternoon',
               title: 'Breath + Sound Reset',
-              audioUrl: 'placeholder_audio_url_2.mp3',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
             ),
             GuidedPractice(
               time: 'Evening',
               title: 'Evening Release Ritual',
-              audioUrl: 'placeholder_audio_url_3.mp3',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_3.mp3',
+            ),
+          ],
+        );
+      case 2:
+        return const DailyJourney(
+          dayNumber: 2,
+          title: 'DAY TWO — RISE',
+          mantra: 'Energy returns when clarity aligns with purpose.',
+          itinerary: [
+            GuidedPractice(
+              time: 'Morning',
+              title: 'Cold Plunge or Power Breath',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
+            ),
+            MedicalEvent(
+              time: 'AM',
+              title: '10-Pass Ozone Therapy',
+              description: 'Super-oxygenating your system for peak energy.',
+              location: 'Medical Wing',
+            ),
+            MedicalEvent(
+              time: 'AM',
+              title: 'Peptides & NAD+ Optimization',
+              description: 'Activating cellular repair and vitality.',
+              location: 'Medical Wing',
+            ),
+            GuidedPractice(
+              time: 'Afternoon',
+              title: 'Future-Self Visualization',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
+            ),
+            JournalingSection(
+              time: 'Afternoon',
+              title: 'Journaling: Activating Your Future Self',
+              prompts: [
+                JournalingPrompt(
+                  id: 'd2q1',
+                  promptText: 'Who is my next-level self?',
+                ),
+                JournalingPrompt(
+                  id: 'd2q2',
+                  promptText: 'What would I do if I fully trusted myself?',
+                ),
+                JournalingPrompt(
+                  id: 'd2q3',
+                  promptText: 'How do I show up when I lead from clarity?',
+                ),
+                JournalingPrompt(
+                  id: 'd2q4',
+                  promptText:
+                      'How does my most powerful self speak, move, and lead?',
+                ),
+                JournalingPrompt(
+                  id: 'd2q5',
+                  promptText: 'What action anchors this identity?',
+                ),
+              ],
+            ),
+            GuidedPractice(
+              time: 'Evening',
+              title: 'Evening Reflection + Lock-in',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_3.mp3',
+            ),
+          ],
+        );
+      case 3:
+        return const DailyJourney(
+          dayNumber: 3,
+          title: 'DAY THREE — REBIRTH',
+          mantra: 'I am the designer of my destiny.',
+          itinerary: [
+            MedicalEvent(
+              time: 'AM',
+              title: 'Stem-Cell Therapy',
+              description: 'The pinnacle of regeneration begins.',
+              location: 'Medical Wing',
+            ),
+            MedicalEvent(
+              time: 'AM',
+              title: 'Longevity Infusions & Neural Rejuvenation',
+              description:
+                  'Supporting your system for long-term transformation.',
+              location: 'Medical Wing',
+            ),
+            GuidedPractice(
+              time: 'Afternoon',
+              title: 'Quantum Heart Coherence Meditation',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
+            ),
+            JournalingSection(
+              time: 'Afternoon',
+              title: 'Journaling: Anchoring Your New Identity',
+              prompts: [
+                JournalingPrompt(
+                  id: 'd3q1',
+                  promptText: 'Who am I, now that I\'ve chosen to rise?',
+                ),
+                JournalingPrompt(
+                  id: 'd3q2',
+                  promptText: 'What rituals will anchor this identity daily?',
+                ),
+                JournalingPrompt(
+                  id: 'd3q3',
+                  promptText: 'What does my new reality look and feel like?',
+                ),
+                JournalingPrompt(
+                  id: 'd3q4',
+                  promptText: 'What boundaries protect this version of me?',
+                ),
+                JournalingPrompt(
+                  id: 'd3q5',
+                  promptText: 'What am I no longer willing to tolerate?',
+                ),
+              ],
+            ),
+            GuidedPractice(
+              time: 'Evening',
+              title: 'Gratitude + Declaration Ritual',
+              audioUrl:
+                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
             ),
           ],
         );
       default:
-        throw UnimplementedError('Journey content for day $dayNumber has not been implemented yet.');
+        throw UnimplementedError(
+          'Journey content for day $dayNumber has not been implemented yet.',
+        );
     }
   }
 }

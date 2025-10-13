@@ -3,6 +3,7 @@
 /// This file contains the domain models representing a daily journey
 /// with various types of itinerary items including medical events,
 /// guided practices, and journaling sections.
+library;
 
 /// Abstract base class for all itinerary items
 ///
@@ -14,10 +15,7 @@ abstract class ItineraryItem {
   /// The title of this itinerary item
   final String title;
 
-  const ItineraryItem({
-    required this.time,
-    required this.title,
-  });
+  const ItineraryItem({required this.time, required this.title});
 }
 
 /// Represents a medical event in the daily journey
@@ -78,10 +76,7 @@ class JournalingPrompt {
   /// The text of the journaling prompt
   final String promptText;
 
-  const JournalingPrompt({
-    required this.id,
-    required this.promptText,
-  });
+  const JournalingPrompt({required this.id, required this.promptText});
 }
 
 /// Represents a complete daily journey
@@ -104,12 +99,16 @@ class DailyJourney {
   /// The user's single priority for this day
   final String? singlePriority;
 
+  /// Indicates whether the user has set their priority for this day
+  final bool isPrioritySet;
+
   const DailyJourney({
     required this.dayNumber,
     required this.title,
     required this.mantra,
     required this.itinerary,
     this.singlePriority,
+    this.isPrioritySet = false,
   });
 
   /// Creates a copy of this DailyJourney with the given fields replaced
@@ -119,6 +118,7 @@ class DailyJourney {
     String? mantra,
     List<ItineraryItem>? itinerary,
     String? singlePriority,
+    bool? isPrioritySet,
   }) {
     return DailyJourney(
       dayNumber: dayNumber ?? this.dayNumber,
@@ -126,6 +126,7 @@ class DailyJourney {
       mantra: mantra ?? this.mantra,
       itinerary: itinerary ?? this.itinerary,
       singlePriority: singlePriority ?? this.singlePriority,
+      isPrioritySet: isPrioritySet ?? this.isPrioritySet,
     );
   }
 }

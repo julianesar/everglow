@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../domain/models/daily_journey_models.dart';
 import '../../features/daily_journey/daily_journey_controller.dart';
+import '../../features/daily_journey/widgets/guided_practice_widget.dart';
 import '../../features/daily_journey/widgets/journal_prompt_dialog.dart';
 
 /// Screen displaying the daily itinerary for a specific day
@@ -10,11 +12,9 @@ import '../../features/daily_journey/widgets/journal_prompt_dialog.dart';
 /// - Daily title and mantra
 /// - Single priority input section
 /// - Itinerary items (medical events, guided practices, journaling)
+/// - Footer button for day progression (driven by isPrioritySet state)
 class DayScreen extends ConsumerWidget {
-  const DayScreen({
-    super.key,
-    required this.dayId,
-  });
+  const DayScreen({super.key, required this.dayId});
 
   /// The ID of the day to display (as a string from the router)
   final String dayId;
@@ -25,17 +25,15 @@ class DayScreen extends ConsumerWidget {
     final dayNumber = int.tryParse(dayId) ?? 1;
 
     // Watch the daily journey controller
-    final dailyJourneyAsync = ref.watch(dailyJourneyControllerProvider(dayNumber));
+    final dailyJourneyAsync = ref.watch(
+      dailyJourneyControllerProvider(dayNumber),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Day $dayId'),
-      ),
+      appBar: AppBar(title: Text('Day $dayId')),
       body: dailyJourneyAsync.when(
         // Loading state - show spinner
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
 
         // Error state - show error message
         error: (error, stackTrace) => Center(
@@ -75,36 +73,55 @@ class DayScreen extends ConsumerWidget {
           ),
         ),
 
-        // Data state - show the content
-        data: (dailyJourney) => ListView(
-          padding: const EdgeInsets.all(16.0),
+        // Data state - show the content with footer button
+        data: (dailyJourney) => Column(
           children: [
-            // Header with title and mantra
-            _DayHeader(
-              title: dailyJourney.title,
-              mantra: dailyJourney.mantra,
-            ),
-            const SizedBox(height: 24),
+            // Main scrollable content
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Header with title and mantra
+                  _DayHeader(
+                    title: dailyJourney.title,
+                    mantra: dailyJourney.mantra,
+                  ),
+                  const SizedBox(height: 24),
 
-            // Single Priority section
-            _SinglePrioritySection(
+                  // Single Priority section - now stateless
+                  _SinglePrioritySection(
+                    dayNumber: dayNumber,
+                    initialPriority: dailyJourney.singlePriority ?? '',
+                    isPrioritySet: dailyJourney.isPrioritySet,
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Section title for itinerary
+                  Text(
+                    'Your Journey Today',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Itinerary items
+                  ...dailyJourney.itinerary.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _buildItineraryItem(item, dayNumber),
+                    ),
+                  ),
+
+                  // Add bottom padding to avoid button overlap
+                  const SizedBox(height: 80),
+                ],
+              ),
+            ),
+
+            // Footer button - driven by isPrioritySet state
+            _FooterButton(
               dayNumber: dayNumber,
-              initialPriority: dailyJourney.singlePriority ?? '',
+              isPrioritySet: dailyJourney.isPrioritySet,
             ),
-            const SizedBox(height: 32),
-
-            // Section title for itinerary
-            Text(
-              'Your Journey Today',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-
-            // Itinerary items
-            ...dailyJourney.itinerary.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: _buildItineraryItem(item, dayNumber),
-                )),
           ],
         ),
       ),
@@ -115,11 +132,11 @@ class DayScreen extends ConsumerWidget {
   Widget _buildItineraryItem(ItineraryItem item, int dayNumber) {
     return switch (item) {
       MedicalEvent() => _MedicalEventCard(event: item),
-      GuidedPractice() => _GuidedPracticeCard(practice: item),
+      GuidedPractice() => GuidedPracticeWidget(practice: item),
       JournalingSection() => _JournalingCard(
-          section: item,
-          dayNumber: dayNumber,
-        ),
+        section: item,
+        dayNumber: dayNumber,
+      ),
       _ => const SizedBox.shrink(),
     };
   }
@@ -127,10 +144,7 @@ class DayScreen extends ConsumerWidget {
 
 /// Header widget displaying the day's title and mantra
 class _DayHeader extends StatelessWidget {
-  const _DayHeader({
-    required this.title,
-    required this.mantra,
-  });
+  const _DayHeader({required this.title, required this.mantra});
 
   final String title;
   final String mantra;
@@ -160,9 +174,9 @@ class _DayHeader extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  letterSpacing: 2,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 2,
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -178,9 +192,9 @@ class _DayHeader extends StatelessWidget {
                 child: Text(
                   mantra,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        height: 1.5,
-                      ),
+                    fontStyle: FontStyle.italic,
+                    height: 1.5,
+                  ),
                 ),
               ),
             ],
@@ -191,36 +205,45 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-/// Single Priority section widget
+/// Single Priority section widget (now stateless)
+///
+/// This widget displays the single priority input field and save button.
+/// The saved state is now driven entirely by the controller's isPrioritySet flag.
 class _SinglePrioritySection extends ConsumerStatefulWidget {
   const _SinglePrioritySection({
     required this.dayNumber,
     required this.initialPriority,
+    required this.isPrioritySet,
   });
 
   final int dayNumber;
   final String initialPriority;
+  final bool isPrioritySet;
 
   @override
-  ConsumerState<_SinglePrioritySection> createState() => _SinglePrioritySectionState();
+  ConsumerState<_SinglePrioritySection> createState() =>
+      _SinglePrioritySectionState();
 }
 
-class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> {
+class _SinglePrioritySectionState
+    extends ConsumerState<_SinglePrioritySection> {
   late final TextEditingController _controller;
-  bool _isSaved = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialPriority);
-    // If there's an initial priority, consider it saved
-    _isSaved = widget.initialPriority.isNotEmpty;
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Checks if the text has been modified from the saved priority
+  bool get _hasUnsavedChanges {
+    return _controller.text.trim() != widget.initialPriority.trim();
   }
 
   Future<void> _savePriority() async {
@@ -240,9 +263,6 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
         .updateSinglePriority(_controller.text.trim());
 
     if (mounted) {
-      setState(() {
-        _isSaved = true;
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Priority saved successfully'),
@@ -255,6 +275,9 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
 
   @override
   Widget build(BuildContext context) {
+    // Determine the button state based on controller's isPrioritySet
+    final bool isSaved = widget.isPrioritySet && !_hasUnsavedChanges;
+
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -286,11 +309,10 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
           Text(
             'What is the one thing that matters most today?',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -298,7 +320,7 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Enter your single priority for today...',
-              suffixIcon: _isSaved
+              suffixIcon: isSaved
                   ? Icon(
                       Icons.check_circle,
                       color: Theme.of(context).colorScheme.primary,
@@ -306,11 +328,8 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
                   : null,
             ),
             onChanged: (_) {
-              if (_isSaved) {
-                setState(() {
-                  _isSaved = false;
-                });
-              }
+              // Trigger rebuild to update button state
+              setState(() {});
             },
           ),
           const SizedBox(height: 16),
@@ -318,8 +337,8 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _savePriority,
-              icon: Icon(_isSaved ? Icons.check : Icons.save),
-              label: Text(_isSaved ? 'Saved' : 'Save Priority'),
+              icon: Icon(isSaved ? Icons.check : Icons.save),
+              label: Text(isSaved ? 'Saved' : 'Save Priority'),
             ),
           ),
         ],
@@ -330,9 +349,7 @@ class _SinglePrioritySectionState extends ConsumerState<_SinglePrioritySection> 
 
 /// Card widget for displaying medical events
 class _MedicalEventCard extends StatelessWidget {
-  const _MedicalEventCard({
-    required this.event,
-  });
+  const _MedicalEventCard({required this.event});
 
   final MedicalEvent event;
 
@@ -350,7 +367,9 @@ class _MedicalEventCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -374,21 +393,18 @@ class _MedicalEventCard extends StatelessWidget {
                           Icon(
                             Icons.access_time,
                             size: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             event.time,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
                           ),
                         ],
                       ),
@@ -399,10 +415,9 @@ class _MedicalEventCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Divider(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.1),
             ),
             const SizedBox(height: 12),
             Row(
@@ -410,10 +425,9 @@ class _MedicalEventCard extends StatelessWidget {
                 Icon(
                   Icons.description_outlined,
                   size: 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -430,10 +444,9 @@ class _MedicalEventCard extends StatelessWidget {
                 Icon(
                   Icons.location_on_outlined,
                   size: 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -451,108 +464,9 @@ class _MedicalEventCard extends StatelessWidget {
   }
 }
 
-/// Card widget for displaying guided practices
-class _GuidedPracticeCard extends StatelessWidget {
-  const _GuidedPracticeCard({
-    required this.practice,
-  });
-
-  final GuidedPractice practice;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.self_improvement_rounded,
-                    color: Theme.of(context).colorScheme.secondary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        practice.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            practice.time,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Play audio
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Playing: ${practice.title}'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Begin Practice'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Card widget for displaying journaling sections
 class _JournalingCard extends ConsumerWidget {
-  const _JournalingCard({
-    required this.section,
-    required this.dayNumber,
-  });
+  const _JournalingCard({required this.section, required this.dayNumber});
 
   final JournalingSection section;
   final int dayNumber;
@@ -603,10 +517,9 @@ class _JournalingCard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -630,21 +543,18 @@ class _JournalingCard extends ConsumerWidget {
                           Icon(
                             Icons.access_time,
                             size: 14,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             section.time,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
                           ),
                         ],
                       ),
@@ -656,9 +566,9 @@ class _JournalingCard extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               'Reflection Prompts:',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             ...section.prompts.asMap().entries.map((entry) {
@@ -673,20 +583,19 @@ class _JournalingCard extends ConsumerWidget {
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.2),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: Text(
                           '${index + 1}',
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ),
                     ),
@@ -711,6 +620,103 @@ class _JournalingCard extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Footer button widget for day progression
+///
+/// This widget displays a dynamic button that:
+/// - Is disabled when the priority hasn't been set (isPrioritySet = false)
+/// - Shows 'Complete Today's Priority to Proceed' when disabled
+/// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
+/// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates to /report
+/// - Uses Liquid Gold color (#FFD700) when enabled
+class _FooterButton extends StatelessWidget {
+  const _FooterButton({required this.dayNumber, required this.isPrioritySet});
+
+  final int dayNumber;
+  final bool isPrioritySet;
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine button text and navigation based on priority state and day number
+    final String buttonText;
+    final String navigationPath;
+
+    if (!isPrioritySet) {
+      // Priority not set - button disabled
+      buttonText = 'Complete Today\'s Priority to Proceed';
+      navigationPath = ''; // Not used when disabled
+    } else if (dayNumber < 3) {
+      // Days 1-2: Proceed to next day
+      buttonText = 'Proceed to Day ${dayNumber + 1}';
+      navigationPath = '/day/${dayNumber + 1}';
+    } else {
+      // Day 3 onwards: Go to report
+      buttonText = 'Forge my Rebirth Report';
+      navigationPath = '/report';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: isPrioritySet
+                ? () {
+                    // Navigate to next day or report screen
+                    context.go(navigationPath);
+                  }
+                : null, // Button is disabled when priority is not set
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isPrioritySet
+                  ? const Color(0xFFFFD700) // Liquid Gold
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
+              foregroundColor: isPrioritySet
+                  ? Colors.black87 // Dark text on gold background
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
+              disabledBackgroundColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.1),
+              disabledForegroundColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: isPrioritySet ? 4 : 0,
+            ),
+            child: Text(
+              buttonText,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: isPrioritySet
+                    ? Colors.black87
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
         ),
       ),
     );

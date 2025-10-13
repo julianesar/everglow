@@ -7,7 +7,7 @@ part of 'daily_journey_controller.dart';
 // **************************************************************************
 
 String _$dailyJourneyControllerHash() =>
-    r'3d69eb6435db2e39f0730fbb1a547b2c3f8d7e2b';
+    r'88495a777772fb5990d27697ee3c9396729fbfc2';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -43,6 +43,7 @@ abstract class _$DailyJourneyController
 ///
 /// This controller fetches and manages the daily journey data for a specific day.
 /// It uses Riverpod's AsyncNotifier to handle async state management.
+/// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
 ///
 /// Copied from [DailyJourneyController].
 @ProviderFor(DailyJourneyController)
@@ -52,6 +53,7 @@ const dailyJourneyControllerProvider = DailyJourneyControllerFamily();
 ///
 /// This controller fetches and manages the daily journey data for a specific day.
 /// It uses Riverpod's AsyncNotifier to handle async state management.
+/// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
 ///
 /// Copied from [DailyJourneyController].
 class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
@@ -59,6 +61,7 @@ class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
   ///
   /// This controller fetches and manages the daily journey data for a specific day.
   /// It uses Riverpod's AsyncNotifier to handle async state management.
+  /// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
   ///
   /// Copied from [DailyJourneyController].
   const DailyJourneyControllerFamily();
@@ -67,6 +70,7 @@ class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
   ///
   /// This controller fetches and manages the daily journey data for a specific day.
   /// It uses Riverpod's AsyncNotifier to handle async state management.
+  /// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
   ///
   /// Copied from [DailyJourneyController].
   DailyJourneyControllerProvider call(
@@ -105,6 +109,7 @@ class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
 ///
 /// This controller fetches and manages the daily journey data for a specific day.
 /// It uses Riverpod's AsyncNotifier to handle async state management.
+/// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
 ///
 /// Copied from [DailyJourneyController].
 class DailyJourneyControllerProvider
@@ -114,6 +119,7 @@ class DailyJourneyControllerProvider
   ///
   /// This controller fetches and manages the daily journey data for a specific day.
   /// It uses Riverpod's AsyncNotifier to handle async state management.
+  /// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
   ///
   /// Copied from [DailyJourneyController].
   DailyJourneyControllerProvider(
