@@ -102,6 +102,9 @@ class DailyJourney {
   /// Indicates whether the user has set their priority for this day
   final bool isPrioritySet;
 
+  /// Map of journal responses where key is promptId and value is the response text
+  final Map<String, String> journalResponses;
+
   const DailyJourney({
     required this.dayNumber,
     required this.title,
@@ -109,6 +112,7 @@ class DailyJourney {
     required this.itinerary,
     this.singlePriority,
     this.isPrioritySet = false,
+    this.journalResponses = const {},
   });
 
   /// Creates a copy of this DailyJourney with the given fields replaced
@@ -119,6 +123,7 @@ class DailyJourney {
     List<ItineraryItem>? itinerary,
     String? singlePriority,
     bool? isPrioritySet,
+    Map<String, String>? journalResponses,
   }) {
     return DailyJourney(
       dayNumber: dayNumber ?? this.dayNumber,
@@ -127,6 +132,7 @@ class DailyJourney {
       itinerary: itinerary ?? this.itinerary,
       singlePriority: singlePriority ?? this.singlePriority,
       isPrioritySet: isPrioritySet ?? this.isPrioritySet,
+      journalResponses: journalResponses ?? this.journalResponses,
     );
   }
 }

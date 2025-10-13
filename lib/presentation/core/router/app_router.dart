@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:everglow_app/presentation/screens/splash/splash_screen.dart';
 import 'package:everglow_app/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:everglow_app/presentation/screens/day/day_screen.dart';
 import 'package:everglow_app/presentation/screens/report/report_screen.dart';
+import 'package:everglow_app/presentation/screens/hub/hub_screen.dart';
 
 /// Provider for the app router instance
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     routes: [
-      // Root route - Onboarding
+      // Splash screen that handles intelligent navigation
       GoRoute(
-        path: '/',
+        path: '/splash',
+        name: 'splash',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const SplashScreen(),
+        ),
+      ),
+
+      // Onboarding route
+      GoRoute(
+        path: '/onboarding',
         name: 'onboarding',
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
@@ -40,6 +52,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: const ReportScreen(),
+        ),
+      ),
+
+      // Hub route - Transformation hub for completed journeys
+      GoRoute(
+        path: '/hub',
+        name: 'hub',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const HubScreen(),
         ),
       ),
     ],

@@ -5,6 +5,7 @@ import '../../../domain/models/daily_journey_models.dart';
 import '../../features/daily_journey/daily_journey_controller.dart';
 import '../../features/daily_journey/widgets/guided_practice_widget.dart';
 import '../../features/daily_journey/widgets/journal_prompt_dialog.dart';
+import 'package:everglow_app/presentation/features/daily_journey/widgets/timeline_navigator.dart';
 
 /// Screen displaying the daily itinerary for a specific day
 ///
@@ -24,105 +25,137 @@ class DayScreen extends ConsumerWidget {
     // Parse dayId to int for the controller
     final dayNumber = int.tryParse(dayId) ?? 1;
 
+    // Validate day number - only days 1-3 are valid
+    // If invalid, redirect to hub immediately
+    if (dayNumber < 1 || dayNumber > 3) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go('/hub');
+        }
+      });
+      // Show a temporary loading state while redirecting
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Redirecting to Hub...',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Watch the daily journey controller
     final dailyJourneyAsync = ref.watch(
       dailyJourneyControllerProvider(dayNumber),
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text('Day $dayId')),
-      body: dailyJourneyAsync.when(
-        // Loading state - show spinner
-        loading: () => const Center(child: CircularProgressIndicator()),
+      body: SafeArea(
+        child: dailyJourneyAsync.when(
+          // Loading state - show spinner
+          loading: () => const Center(child: CircularProgressIndicator()),
 
-        // Error state - show error message
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error Loading Day',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Retry by invalidating the provider
-                    ref.invalidate(dailyJourneyControllerProvider(dayNumber));
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Data state - show the content with footer button
-        data: (dailyJourney) => Column(
-          children: [
-            // Main scrollable content
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
+          // Error state - show error message
+          error: (error, stackTrace) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Header with title and mantra
-                  _DayHeader(
-                    title: dailyJourney.title,
-                    mantra: dailyJourney.mantra,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Single Priority section - now stateless
-                  _SinglePrioritySection(
-                    dayNumber: dayNumber,
-                    initialPriority: dailyJourney.singlePriority ?? '',
-                    isPrioritySet: dailyJourney.isPrioritySet,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Section title for itinerary
-                  Text(
-                    'Your Journey Today',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                   const SizedBox(height: 16),
-
-                  // Itinerary items
-                  ...dailyJourney.itinerary.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: _buildItineraryItem(item, dayNumber),
-                    ),
+                  Text(
+                    'Error Loading Day',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
                   ),
-
-                  // Add bottom padding to avoid button overlap
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Retry by invalidating the provider
+                      ref.invalidate(dailyJourneyControllerProvider(dayNumber));
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
                 ],
               ),
             ),
+          ),
 
-            // Footer button - driven by isPrioritySet state
-            _FooterButton(
-              dayNumber: dayNumber,
-              isPrioritySet: dailyJourney.isPrioritySet,
-            ),
-          ],
+          // Data state - show the content with footer button
+          data: (dailyJourney) => Column(
+            children: [
+              // Timeline Navigator - fixed at top
+              TimelineNavigator(currentDay: dayNumber),
+
+              // Main scrollable content
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16.0),
+                  children: [
+                    // Header with title and mantra
+                    _DayHeader(
+                      title: dailyJourney.title,
+                      mantra: dailyJourney.mantra,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Single Priority section - now stateless
+                    _SinglePrioritySection(
+                      dayNumber: dayNumber,
+                      initialPriority: dailyJourney.singlePriority ?? '',
+                      isPrioritySet: dailyJourney.isPrioritySet,
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Section title for itinerary
+                    Text(
+                      'Your Journey Today',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Itinerary items
+                    ...dailyJourney.itinerary.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: _buildItineraryItem(item, dayNumber),
+                      ),
+                    ),
+
+                    // Add bottom padding to avoid button overlap
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+
+              // Footer button - driven by isPrioritySet state
+              _FooterButton(
+                dayNumber: dayNumber,
+                isPrioritySet: dailyJourney.isPrioritySet,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -241,11 +274,6 @@ class _SinglePrioritySectionState
     super.dispose();
   }
 
-  /// Checks if the text has been modified from the saved priority
-  bool get _hasUnsavedChanges {
-    return _controller.text.trim() != widget.initialPriority.trim();
-  }
-
   Future<void> _savePriority() async {
     if (_controller.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -275,9 +303,18 @@ class _SinglePrioritySectionState
 
   @override
   Widget build(BuildContext context) {
-    // Determine the button state based on controller's isPrioritySet
-    final bool isSaved = widget.isPrioritySet && !_hasUnsavedChanges;
+    // Conditional constructor based on isPrioritySet
+    if (!widget.isPrioritySet) {
+      // EDIT MODE: Show input field and save button
+      return _buildEditMode(context);
+    } else {
+      // READ MODE: Show Focus Chip with priority and edit button
+      return _buildReadMode(context);
+    }
+  }
 
+  /// Builds the Edit Mode UI - input field and save button
+  Widget _buildEditMode(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -318,14 +355,8 @@ class _SinglePrioritySectionState
           TextFormField(
             controller: _controller,
             maxLines: 3,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Enter your single priority for today...',
-              suffixIcon: isSaved
-                  ? Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : null,
             ),
             onChanged: (_) {
               // Trigger rebuild to update button state
@@ -337,13 +368,118 @@ class _SinglePrioritySectionState
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _savePriority,
-              icon: Icon(isSaved ? Icons.check : Icons.save),
-              label: Text(isSaved ? 'Saved' : 'Save Priority'),
+              icon: const Icon(Icons.save),
+              label: const Text('Set Priority'),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Builds the Read Mode UI - Focus Chip with priority and edit button
+  Widget _buildReadMode(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _enterEditMode,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                // Star icon in a circular container
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.star_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Priority text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Today\'s Priority',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.initialPriority,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Edit button
+                IconButton(
+                  onPressed: _enterEditMode,
+                  icon: const Icon(Icons.edit_rounded),
+                  color: Theme.of(context).colorScheme.primary,
+                  tooltip: 'Edit Priority',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Enters edit mode by manually marking priority as unset
+  /// This allows the user to edit their priority
+  Future<void> _enterEditMode() async {
+    // Call the controller to mark priority as unset
+    await ref
+        .read(dailyJourneyControllerProvider(widget.dayNumber).notifier)
+        .markPriorityAsUnset();
   }
 }
 
@@ -471,32 +607,41 @@ class _JournalingCard extends ConsumerWidget {
   final JournalingSection section;
   final int dayNumber;
 
-  /// Handles the journaling flow by showing dialogs for each prompt
-  Future<void> _handleJournaling(BuildContext context, WidgetRef ref) async {
-    // Show a dialog for each prompt in sequence
-    for (final prompt in section.prompts) {
-      // Check if context is still valid before showing dialog
-      if (!context.mounted) return;
+  /// Handles editing a single journal prompt response
+  Future<void> _handleEditPrompt(
+    BuildContext context,
+    WidgetRef ref,
+    JournalingPrompt prompt,
+    String? existingResponse,
+  ) async {
+    if (!context.mounted) return;
 
-      final response = await JournalPromptDialog.show(context, prompt);
+    final response = await JournalPromptDialog.show(
+      context,
+      prompt,
+      initialResponse: existingResponse,
+    );
 
-      // If user canceled or provided empty response, skip this prompt
-      if (response == null || response.trim().isEmpty) {
-        continue;
-      }
-
-      // Save the journal entry
-      await ref
-          .read(dailyJourneyControllerProvider(dayNumber).notifier)
-          .updateJournalEntry(prompt.id, response);
+    // If user canceled or provided empty response, return
+    if (response == null || response.trim().isEmpty) {
+      return;
     }
 
-    // Show completion message
+    // Save the journal entry
+    await ref
+        .read(dailyJourneyControllerProvider(dayNumber).notifier)
+        .updateJournalEntry(prompt.id, response);
+
+    // Show success message
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Journal entries saved successfully'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(
+            existingResponse == null
+                ? 'Response saved successfully'
+                : 'Response updated successfully',
+          ),
+          duration: const Duration(seconds: 2),
           backgroundColor: Colors.green,
         ),
       );
@@ -505,6 +650,11 @@ class _JournalingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the daily journey to get journal responses
+    final dailyJourneyAsync = ref.watch(
+      dailyJourneyControllerProvider(dayNumber),
+    );
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -512,6 +662,7 @@ class _JournalingCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Card header with icon and title
             Row(
               children: [
                 Container(
@@ -564,6 +715,8 @@ class _JournalingCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
+
+            // Section title for prompts
             Text(
               'Reflection Prompts:',
               style: Theme.of(
@@ -571,53 +724,186 @@ class _JournalingCard extends ConsumerWidget {
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            ...section.prompts.asMap().entries.map((entry) {
-              final index = entry.key;
-              final prompt = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
+
+            // Display prompts with their responses or write button
+            dailyJourneyAsync.when(
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (error, _) => Center(
+                child: Text(
+                  'Error loading responses',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+              data: (dailyJourney) {
+                return Column(
+                  children: section.prompts.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final prompt = entry.value;
+                    final response = dailyJourney.journalResponses[prompt.id];
+                    final hasResponse = response != null && response.isNotEmpty;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: hasResponse
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.05)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: hasResponse
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.2)
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.1),
+                            width: 1,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Prompt question with number
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '${index + 1}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    prompt.promptText,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Response section or write button
+                            if (hasResponse) ...[
+                              // Show saved response with edit button
+                              Container(
+                                padding: const EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle,
+                                          size: 16,
+                                          color: Colors.green,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Your Response',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium
+                                              ?.copyWith(
+                                                color: Colors.green,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      response,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
                               ),
+                              const SizedBox(height: 8),
+                              // Edit button
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => _handleEditPrompt(
+                                    context,
+                                    ref,
+                                    prompt,
+                                    response,
+                                  ),
+                                  icon: const Icon(Icons.edit, size: 16),
+                                  label: const Text('Edit Response'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ] else ...[
+                              // Show write reflection button
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _handleEditPrompt(
+                                    context,
+                                    ref,
+                                    prompt,
+                                    null,
+                                  ),
+                                  icon: const Icon(Icons.create),
+                                  label: const Text('Write Reflection'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        prompt.promptText,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _handleJournaling(context, ref),
-                icon: const Icon(Icons.create_rounded),
-                label: const Text('Start Journaling'),
-              ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),
@@ -632,7 +918,7 @@ class _JournalingCard extends ConsumerWidget {
 /// - Is disabled when the priority hasn't been set (isPrioritySet = false)
 /// - Shows 'Complete Today's Priority to Proceed' when disabled
 /// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
-/// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates to /report
+/// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates directly to /report
 /// - Uses Liquid Gold color (#FFD700) when enabled
 class _FooterButton extends StatelessWidget {
   const _FooterButton({required this.dayNumber, required this.isPrioritySet});
@@ -655,7 +941,7 @@ class _FooterButton extends StatelessWidget {
       buttonText = 'Proceed to Day ${dayNumber + 1}';
       navigationPath = '/day/${dayNumber + 1}';
     } else {
-      // Day 3 onwards: Go to report
+      // Day 3 onwards: Go directly to report
       buttonText = 'Forge my Rebirth Report';
       navigationPath = '/report';
     }
@@ -690,7 +976,8 @@ class _FooterButton extends StatelessWidget {
                       context,
                     ).colorScheme.onSurface.withValues(alpha: 0.3),
               foregroundColor: isPrioritySet
-                  ? Colors.black87 // Dark text on gold background
+                  ? Colors
+                        .black87 // Dark text on gold background
                   : Theme.of(
                       context,
                     ).colorScheme.onSurface.withValues(alpha: 0.5),

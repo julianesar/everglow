@@ -18,10 +18,7 @@ void main() async {
 
   // Run the app wrapped in ProviderScope for Riverpod state management
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const MainApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const MainApp()),
   );
 }
 
@@ -35,6 +32,7 @@ class MainApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Everglow App',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(),
       routerConfig: router,
     );

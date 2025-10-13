@@ -16,8 +16,9 @@ class DailyJourneyController extends _$DailyJourneyController {
   ///
   /// This method:
   /// 1. Fetches the journey data from the repository
-  /// 2. Checks if a priority has been set for this day in the journal repository
-  /// 3. Returns a [DailyJourney] with the [isPrioritySet] flag updated
+  /// 2. Loads the saved single priority for this day
+  /// 3. Loads all journal entries for this day
+  /// 4. Returns a [DailyJourney] with [isPrioritySet], [singlePriority], and [journalResponses] updated
   ///
   /// Throws an exception if the repository fails to fetch the data.
   @override
@@ -25,31 +26,35 @@ class DailyJourneyController extends _$DailyJourneyController {
     final repository = ref.watch(dailyJourneyRepositoryProvider);
     final journey = await repository.getJourneyForDay(dayNumber);
 
-    // Check if priority has been set for this day by querying the journal repository
-    final isPrioritySet = await _checkIfPriorityIsSet(dayNumber);
+    // Load the saved single priority for this day
+    final journalRepo = await ref.read(journalRepositoryProvider.future);
+    final savedPriority = await journalRepo.getSinglePriorityForDay(dayNumber);
 
-    // Return journey with updated isPrioritySet flag
-    return journey.copyWith(isPrioritySet: isPrioritySet);
+    // Load journal entries for this day
+    final journalResponses = await _loadJournalEntries(dayNumber);
+
+    // Determine if priority is set based on whether the saved priority is non-empty
+    final isPrioritySet = savedPriority != null && savedPriority.isNotEmpty;
+
+    // Return journey with updated isPrioritySet flag, singlePriority text, and journal responses
+    return journey.copyWith(
+      isPrioritySet: isPrioritySet,
+      singlePriority: isPrioritySet ? savedPriority : null,
+      journalResponses: journalResponses,
+    );
   }
 
-  /// Checks if a single priority has been set for the given day.
+  /// Loads all journal entries for the given day.
   ///
-  /// Returns true if a non-empty priority exists in the repository.
-  /// Returns false if there's no priority or if an error occurs.
-  Future<bool> _checkIfPriorityIsSet(int dayNumber) async {
+  /// Returns a Map where the key is the promptId and the value is the response text.
+  /// Returns an empty map if there are no entries or if an error occurs.
+  Future<Map<String, String>> _loadJournalEntries(int dayNumber) async {
     try {
       final journalRepo = await ref.read(journalRepositoryProvider.future);
-      final userData = await journalRepo.getAllUserData();
-      final dayKey = 'day_$dayNumber';
-
-      if (userData.containsKey(dayKey)) {
-        final priority = userData[dayKey]['priority'] as String?;
-        return priority != null && priority.isNotEmpty;
-      }
-      return false;
+      return await journalRepo.getJournalEntriesForDay(dayNumber);
     } catch (e) {
-      // If there's any error, assume priority is not set
-      return false;
+      // If there's any error, return empty map
+      return {};
     }
   }
 
@@ -86,15 +91,30 @@ class DailyJourneyController extends _$DailyJourneyController {
     }
   }
 
+  /// Marks the priority as unset, allowing the user to edit it.
+  ///
+  /// This method updates the state to set [isPrioritySet] to false,
+  /// which triggers the UI to switch from Read Mode to Edit Mode.
+  /// The priority text is preserved so the user can edit it.
+  Future<void> markPriorityAsUnset() async {
+    // Get the current state
+    final currentJourney = state.value;
+    if (currentJourney == null) return;
+
+    // Update state with isPrioritySet = false
+    final updatedJourney = currentJourney.copyWith(isPrioritySet: false);
+
+    state = AsyncValue.data(updatedJourney);
+  }
+
   /// Updates a journal entry for a specific prompt.
   ///
   /// Takes the [promptId] to identify which prompt is being answered and
   /// the [response] text entered by the user. Persists the journal entry
-  /// to the repository.
+  /// to the repository and updates the local state.
   ///
-  /// Note: This method does not update the local state as journal entries
-  /// are not part of the [DailyJourney] model. They are stored separately
-  /// in the journal repository.
+  /// After successful save, updates the [journalResponses] map in the state
+  /// with the new response.
   ///
   /// If an error occurs during save, the state is updated with an error.
   Future<void> updateJournalEntry(String promptId, String response) async {
@@ -103,16 +123,25 @@ class DailyJourneyController extends _$DailyJourneyController {
     if (currentJourney == null) return;
 
     try {
-      // Persist to journal repository
+      // Persist to journal repository with the current day number
       final journalRepo = await ref.read(journalRepositoryProvider.future);
       await journalRepo.saveJournalEntry(
         promptId: promptId,
         responseText: response,
+        dayNumber: currentJourney.dayNumber,
       );
 
-      // Note: We don't update the state here because journal entries
-      // are not part of the DailyJourney model. They are stored separately
-      // and can be fetched using the journal repository when needed.
+      // Update local state with the new journal response
+      final updatedResponses = Map<String, String>.from(
+        currentJourney.journalResponses,
+      );
+      updatedResponses[promptId] = response;
+
+      final updatedJourney = currentJourney.copyWith(
+        journalResponses: updatedResponses,
+      );
+
+      state = AsyncValue.data(updatedJourney);
     } catch (e, stackTrace) {
       // Handle error - set error state
       state = AsyncValue.error(e, stackTrace);

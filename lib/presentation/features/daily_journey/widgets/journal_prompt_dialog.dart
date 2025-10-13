@@ -13,30 +13,45 @@ class JournalPromptDialog extends StatefulWidget {
   /// The journaling prompt to display
   final JournalingPrompt prompt;
 
+  /// Optional initial response text to pre-populate the dialog (for editing)
+  final String? initialResponse;
+
   const JournalPromptDialog({
     super.key,
     required this.prompt,
+    this.initialResponse,
   });
 
   /// Shows the journal prompt dialog and returns the entered text or null.
   ///
+  /// Optionally accepts an [initialResponse] parameter to pre-populate the
+  /// text field when editing an existing response.
+  ///
   /// Example usage:
   /// ```dart
-  /// final response = await showDialog<String>(
-  ///   context: context,
-  ///   builder: (context) => JournalPromptDialog(prompt: myPrompt),
+  /// // For new entry
+  /// final response = await JournalPromptDialog.show(context, myPrompt);
+  ///
+  /// // For editing existing entry
+  /// final response = await JournalPromptDialog.show(
+  ///   context,
+  ///   myPrompt,
+  ///   initialResponse: existingText,
   /// );
+  ///
   /// if (response != null) {
   ///   // Handle the user's journal entry
   /// }
   /// ```
   static Future<String?> show(
     BuildContext context,
-    JournalingPrompt prompt,
-  ) {
+    JournalingPrompt prompt, {
+    String? initialResponse,
+  }) {
     return showDialog<String>(
       context: context,
-      builder: (context) => JournalPromptDialog(prompt: prompt),
+      builder: (context) =>
+          JournalPromptDialog(prompt: prompt, initialResponse: initialResponse),
     );
   }
 
@@ -50,7 +65,8 @@ class _JournalPromptDialogState extends State<JournalPromptDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    // Initialize controller with existing response if provided
+    _controller = TextEditingController(text: widget.initialResponse ?? '');
   }
 
   @override
@@ -74,13 +90,8 @@ class _JournalPromptDialogState extends State<JournalPromptDialog> {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      title: Text(
-        widget.prompt.promptText,
-        style: theme.textTheme.titleLarge,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Text(widget.prompt.promptText, style: theme.textTheme.titleLarge),
       content: TextFormField(
         controller: _controller,
         maxLines: 5,
@@ -97,10 +108,7 @@ class _JournalPromptDialogState extends State<JournalPromptDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _handleCancel,
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: _handleCancel, child: const Text('Cancel')),
         ElevatedButton(
           onPressed: _handleSave,
           style: ElevatedButton.styleFrom(

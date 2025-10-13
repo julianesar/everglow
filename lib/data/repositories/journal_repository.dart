@@ -30,16 +30,45 @@ abstract class JournalRepository {
   ///
   /// [promptId] The unique identifier for the journal prompt
   /// [responseText] The user's response text
+  /// [dayNumber] The day number (1-3) this journal entry belongs to
   ///
   /// This method creates a new [JournalEntry] or updates an existing one
-  /// that matches the [promptId]. The entry is associated with the current
+  /// that matches the [promptId]. The entry is associated with the specified
   /// day's [DailyLog].
   ///
   /// Throws an exception if the save operation fails.
   Future<void> saveJournalEntry({
     required String promptId,
     required String responseText,
+    required int dayNumber,
   });
+
+  /// Retrieves the single priority for a specific day.
+  ///
+  /// [dayNumber] The sequential day number to retrieve the priority for
+  ///
+  /// Returns the priority text if it exists, or null if no DailyLog exists
+  /// for the given day number or if the priority is not set.
+  ///
+  /// This is a more efficient method when you only need the priority text
+  /// without fetching all journal entries.
+  Future<String?> getSinglePriorityForDay(int dayNumber);
+
+  /// Retrieves all journal entries for a specific day.
+  ///
+  /// [dayNumber] The sequential day number to retrieve entries for
+  ///
+  /// Returns a Map where the key is the promptId and the value is the response text.
+  /// If no DailyLog exists for the given day number, returns an empty map.
+  ///
+  /// Example return value:
+  /// ```dart
+  /// {
+  ///   "prompt_1": "My response to prompt 1",
+  ///   "prompt_2": "My response to prompt 2"
+  /// }
+  /// ```
+  Future<Map<String, String>> getJournalEntriesForDay(int dayNumber);
 
   /// Retrieves all user data in a structured format for AI processing.
   ///
@@ -50,16 +79,15 @@ abstract class JournalRepository {
   ///   "day_1": {
   ///     "priority": "The priority text for day 1",
   ///     "journal_entries": {
-  ///       "entry_1": "Response to prompt 1",
-  ///       "entry_2": "Response to prompt 2"
+  ///       "prompt_1": "Response to prompt 1",
+  ///       "prompt_2": "Response to prompt 2"
   ///     }
   ///   },
   ///   "day_2": { ... }
   /// }
   /// ```
   ///
-  /// Note: Since JournalEntry currently doesn't store promptId, entries are
-  /// indexed sequentially (entry_1, entry_2, etc.) within each day.
+  /// Journal entries are keyed by their promptId for easy lookup.
   ///
   /// Handles missing data gracefully:
   /// - Days with no priority will have an empty string
@@ -85,6 +113,11 @@ class IsarJournalRepository implements JournalRepository {
     required int dayNumber,
     required String priorityText,
   }) async {
+    // Validate day number (only days 1-3 are allowed)
+    if (dayNumber < 1 || dayNumber > 3) {
+      throw ArgumentError('Day number must be between 1 and 3, got $dayNumber');
+    }
+
     await _isar.writeTxn(() async {
       // Find existing DailyLog for this day number
       final existingLog = await _isar.dailyLogs
@@ -112,51 +145,99 @@ class IsarJournalRepository implements JournalRepository {
   Future<void> saveJournalEntry({
     required String promptId,
     required String responseText,
+    required int dayNumber,
   }) async {
+    // Validate day number (only days 1-3 are allowed)
+    if (dayNumber < 1 || dayNumber > 3) {
+      throw ArgumentError('Day number must be between 1 and 3, got $dayNumber');
+    }
+
     await _isar.writeTxn(() async {
-      // Get or create today's DailyLog
-      final today = DateTime.now();
-      final todayLog = await _isar.dailyLogs
+      // Find or create the DailyLog for the specified day number
+      final existingLog = await _isar.dailyLogs
           .filter()
-          .dateBetween(
-            DateTime(today.year, today.month, today.day),
-            DateTime(today.year, today.month, today.day, 23, 59, 59),
-          )
+          .dayNumberEqualTo(dayNumber)
           .findFirst();
 
-      // Ensure we have a DailyLog for today
+      // Ensure we have a DailyLog for this day
       late final int dailyLogId;
-      if (todayLog != null) {
-        dailyLogId = todayLog.id;
+      if (existingLog != null) {
+        dailyLogId = existingLog.id;
       } else {
-        // Create a new DailyLog for today
-        // Note: dayNumber should ideally be determined by counting existing logs
-        final existingLogsCount = await _isar.dailyLogs.count();
+        // Create a new DailyLog for this day number
         final newLog = DailyLog.create(
-          date: today,
-          dayNumber: existingLogsCount + 1,
+          date: DateTime.now(),
+          dayNumber: dayNumber,
           singlePriority: '',
         );
         dailyLogId = await _isar.dailyLogs.put(newLog);
       }
 
-      // Find existing journal entry with the same promptId (stored in response for now)
-      // Note: If you need to query by promptId, consider adding it as a field to JournalEntry
+      // Find existing journal entry with the same promptId and dailyLogId
       final existingEntry = await _isar.journalEntrys
           .filter()
           .dailyLogIdEqualTo(dailyLogId)
-          .findAll();
+          .and()
+          .promptIdEqualTo(promptId)
+          .findFirst();
 
-      // For now, we'll create a new entry each time
-      // TODO: If you want to update existing entries by promptId,
-      // add promptId field to JournalEntry model
-      final newEntry = JournalEntry.create(
-        response: responseText,
-        dailyLogId: dailyLogId,
-      );
-
-      await _isar.journalEntrys.put(newEntry);
+      if (existingEntry != null) {
+        // Update existing entry
+        existingEntry.response = responseText;
+        existingEntry.createdAt = DateTime.now();
+        await _isar.journalEntrys.put(existingEntry);
+      } else {
+        // Create new entry
+        final newEntry = JournalEntry.create(
+          promptId: promptId,
+          response: responseText,
+          dailyLogId: dailyLogId,
+        );
+        await _isar.journalEntrys.put(newEntry);
+      }
     });
+  }
+
+  @override
+  Future<String?> getSinglePriorityForDay(int dayNumber) async {
+    // Find the DailyLog for the specified day number
+    final dailyLog = await _isar.dailyLogs
+        .filter()
+        .dayNumberEqualTo(dayNumber)
+        .findFirst();
+
+    // Return the priority if found, otherwise null
+    return dailyLog?.singlePriority;
+  }
+
+  @override
+  Future<Map<String, String>> getJournalEntriesForDay(int dayNumber) async {
+    final result = <String, String>{};
+
+    // Find the DailyLog for the specified day number
+    final dailyLog = await _isar.dailyLogs
+        .filter()
+        .dayNumberEqualTo(dayNumber)
+        .findFirst();
+
+    // If no DailyLog exists for this day, return empty map
+    if (dailyLog == null) {
+      return result;
+    }
+
+    // Get all journal entries for this daily log
+    final journalEntries = await _isar.journalEntrys
+        .filter()
+        .dailyLogIdEqualTo(dailyLog.id)
+        .sortByCreatedAt()
+        .findAll();
+
+    // Build the map with promptId as key and response as value
+    for (final entry in journalEntries) {
+      result[entry.promptId] = entry.response;
+    }
+
+    return result;
   }
 
   @override
@@ -177,11 +258,10 @@ class IsarJournalRepository implements JournalRepository {
           .sortByCreatedAt()
           .findAll();
 
-      // Build journal entries map
+      // Build journal entries map using promptId as key
       final entriesMap = <String, String>{};
-      for (var i = 0; i < journalEntries.length; i++) {
-        final entryKey = 'entry_${i + 1}';
-        entriesMap[entryKey] = journalEntries[i].response;
+      for (final entry in journalEntries) {
+        entriesMap[entry.promptId] = entry.response;
       }
 
       // Build the day's data structure

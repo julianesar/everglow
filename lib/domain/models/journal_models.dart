@@ -17,6 +17,9 @@ class User {
   /// User's integration statement for personal growth
   late String integrationStatement;
 
+  /// Cached AI-generated report for the user
+  String? generatedReport;
+
   /// Default constructor
   User();
 
@@ -66,6 +69,10 @@ class JournalEntry {
   /// Auto-incremental unique identifier
   Id id = Isar.autoIncrement;
 
+  /// Unique identifier for the journal prompt
+  @Index()
+  late String promptId;
+
   /// Response text for the journal entry
   late String response;
 
@@ -81,6 +88,7 @@ class JournalEntry {
 
   /// Named constructor with parameters
   JournalEntry.create({
+    required this.promptId,
     required this.response,
     required this.dailyLogId,
     DateTime? createdAt,

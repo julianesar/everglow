@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:go_router/go_router.dart';
 import '../../features/report/report_controller.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
@@ -20,7 +21,14 @@ class ReportScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Rebirth Protocol')),
+      appBar: AppBar(
+        title: const Text('Your Rebirth Protocol'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/hub'),
+          tooltip: 'Back to Hub',
+        ),
+      ),
       body: reportAsync.when(
         loading: () => _buildLoadingState(theme),
         error: (error, stack) => _buildErrorState(context, ref, error, theme),

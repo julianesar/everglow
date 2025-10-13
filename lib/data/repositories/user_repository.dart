@@ -21,6 +21,23 @@ abstract class UserRepository {
     required String name,
     required String integrationStatement,
   });
+
+  /// Retrieves the current user's data.
+  ///
+  /// Returns the user object, or null if no user has been saved.
+  Future<User?> getUser();
+
+  /// Saves the AI-generated report text for the current user.
+  ///
+  /// [reportText] The generated report text to cache
+  ///
+  /// Throws an exception if the save operation fails.
+  Future<void> saveGeneratedReport(String reportText);
+
+  /// Retrieves the cached AI-generated report for the current user.
+  ///
+  /// Returns the cached report text, or null if no report has been generated.
+  Future<String?> getGeneratedReport();
 }
 
 /// In-memory implementation of [UserRepository].
@@ -34,6 +51,7 @@ class InMemoryUserRepository implements UserRepository {
   // In-memory storage
   static String? _userName;
   static String? _userStatement;
+  static String? _generatedReport;
 
   @override
   Future<void> saveUser({
@@ -49,6 +67,41 @@ class InMemoryUserRepository implements UserRepository {
     // Print for debugging
     // ignore: avoid_print
     print('User saved: $name - $integrationStatement');
+  }
+
+  @override
+  Future<User?> getUser() async {
+    // Simulate async operation
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (_userName != null && _userStatement != null) {
+      return User.create(
+        name: _userName!,
+        integrationStatement: _userStatement!,
+      );
+    }
+
+    return null;
+  }
+
+  @override
+  Future<void> saveGeneratedReport(String reportText) async {
+    // Simulate async operation
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    _generatedReport = reportText;
+
+    // Print for debugging
+    // ignore: avoid_print
+    print('Generated report saved: ${reportText.substring(0, 50)}...');
+  }
+
+  @override
+  Future<String?> getGeneratedReport() async {
+    // Simulate async operation
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    return _generatedReport;
   }
 }
 
@@ -88,6 +141,37 @@ class IsarUserRepository implements UserRepository {
       // Save to database
       await _isar.users.put(user);
     });
+  }
+
+  @override
+  Future<User?> getUser() async {
+    // Query and return the first user from the database
+    return await _isar.users.where().findFirst();
+  }
+
+  @override
+  Future<void> saveGeneratedReport(String reportText) async {
+    await _isar.writeTxn(() async {
+      // Find the current user
+      final user = await _isar.users.where().findFirst();
+
+      if (user != null) {
+        // Update the generatedReport field
+        user.generatedReport = reportText;
+
+        // Save the updated user to database
+        await _isar.users.put(user);
+      }
+    });
+  }
+
+  @override
+  Future<String?> getGeneratedReport() async {
+    // Find the current user
+    final user = await _isar.users.where().findFirst();
+
+    // Return the generatedReport field
+    return user?.generatedReport;
   }
 }
 

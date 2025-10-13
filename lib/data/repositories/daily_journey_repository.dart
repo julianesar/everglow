@@ -46,20 +46,20 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                   'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '9 AM',
               title: 'Plasmapheresis detox',
               description:
                   'Your body and mind begin to let go of stored weight — physical, emotional, and energetic.',
               location: 'Medical Wing',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '10 AM',
               title: 'IV nutrient infusions',
               description: 'Replenishing your system at a cellular level.',
               location: 'Medical Wing',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '11 AM',
               title: 'Heavy-metal elimination',
               description: 'Clearing space for what\'s next.',
               location: 'Medical Wing',
@@ -121,13 +121,13 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                   'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '9 AM',
               title: '10-Pass Ozone Therapy',
               description: 'Super-oxygenating your system for peak energy.',
               location: 'Medical Wing',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '10 AM',
               title: 'Peptides & NAD+ Optimization',
               description: 'Activating cellular repair and vitality.',
               location: 'Medical Wing',
@@ -180,13 +180,13 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           mantra: 'I am the designer of my destiny.',
           itinerary: [
             MedicalEvent(
-              time: 'AM',
+              time: '9 AM',
               title: 'Stem-Cell Therapy',
               description: 'The pinnacle of regeneration begins.',
               location: 'Medical Wing',
             ),
             MedicalEvent(
-              time: 'AM',
+              time: '10AM',
               title: 'Longevity Infusions & Neural Rejuvenation',
               description:
                   'Supporting your system for long-term transformation.',
