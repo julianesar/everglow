@@ -12,10 +12,10 @@ class User {
   Id id = Isar.autoIncrement;
 
   /// User's name
-  late String name;
+  String name = '';
 
   /// User's integration statement for personal growth
-  late String integrationStatement;
+  String integrationStatement = '';
 
   /// Cached AI-generated report for the user
   String? generatedReport;
@@ -24,10 +24,7 @@ class User {
   User();
 
   /// Named constructor with parameters
-  User.create({
-    required this.name,
-    required this.integrationStatement,
-  });
+  User.create({required this.name, required this.integrationStatement});
 }
 
 /// Daily log entity representing a single day's log entry
@@ -41,13 +38,13 @@ class DailyLog {
 
   /// Date of the daily log
   @Index()
-  late DateTime date;
+  DateTime date = DateTime.now();
 
   /// Sequential day number in the journaling journey
-  late int dayNumber;
+  int dayNumber = 1;
 
   /// Single priority focus for the day
-  late String singlePriority;
+  String singlePriority = '';
 
   /// Default constructor
   DailyLog();
@@ -71,17 +68,17 @@ class JournalEntry {
 
   /// Unique identifier for the journal prompt
   @Index()
-  late String promptId;
+  String promptId = '';
 
   /// Response text for the journal entry
-  late String response;
+  String response = '';
 
   /// Timestamp when the entry was created
   @Index()
-  late DateTime createdAt;
+  DateTime createdAt = DateTime.now();
 
   /// Reference to the daily log this entry belongs to
-  late int dailyLogId;
+  int dailyLogId = 0;
 
   /// Default constructor
   JournalEntry();

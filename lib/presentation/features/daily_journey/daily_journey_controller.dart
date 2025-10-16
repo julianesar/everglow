@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../domain/models/daily_journey_models.dart';
 import '../../../data/repositories/daily_journey_repository.dart';
 import '../../../data/repositories/journal_repository.dart';
+import '../../core/services/notification_service.dart';
 
 part 'daily_journey_controller.g.dart';
 
@@ -77,6 +78,12 @@ class DailyJourneyController extends _$DailyJourneyController {
         dayNumber: currentJourney.dayNumber,
         priorityText: priority,
       );
+
+      // Schedule daily notifications after successful save
+      await ref.read(notificationServiceProvider).scheduleDailyNotifications(
+            dayNumber: currentJourney.dayNumber,
+            priorityText: priority,
+          );
 
       // Upon successful save, update state with new journey object
       final updatedJourney = currentJourney.copyWith(

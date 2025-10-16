@@ -22,7 +22,9 @@
       "Bash(dart format:*)",
       "Bash(test -f \"D:\\Development\\chad\\everglow_app\\lib\\data\\repositories\\ai_report_repository.dart\")",
       "Bash(test:*)",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(findstr:*)",
+      "Bash(dart run flutter_native_splash:create:*)"
     ],
     "deny": [],
     "ask": []

@@ -31,6 +31,7 @@ dependencies:
 
   # Notifications
   flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
 
   # PDF Export
   pdf: ^3.11.1
@@ -52,6 +53,18 @@ dev_dependencies:
   json_serializable: ^6.8.0
   riverpod_generator: ^2.4.0
   retrofit_generator: ^8.2.1
+  flutter_native_splash: ^2.4.6
 
 flutter:
   uses-material-design: true
+
+# Flutter Native Splash Configuration
+flutter_native_splash:
+  color: "#000000"  # Black background
+  android: true
+  ios: true
+  web: false
+
+  # Android 12+ specific settings
+  android_12:
+    color: "#000000"  # Black background for Android 12+
