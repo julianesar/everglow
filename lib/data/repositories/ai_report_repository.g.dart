@@ -27,16 +27,16 @@ String _$aiReportRepositoryHash() =>
 @ProviderFor(aiReportRepository)
 final aiReportRepositoryProvider =
     AutoDisposeFutureProvider<AIReportRepository>.internal(
-  aiReportRepository,
-  name: r'aiReportRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$aiReportRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      aiReportRepository,
+      name: r'aiReportRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$aiReportRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-typedef AiReportRepositoryRef
-    = AutoDisposeFutureProviderRef<AIReportRepository>;
+typedef AiReportRepositoryRef =
+    AutoDisposeFutureProviderRef<AIReportRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

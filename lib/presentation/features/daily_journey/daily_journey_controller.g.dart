@@ -7,7 +7,7 @@ part of 'daily_journey_controller.dart';
 // **************************************************************************
 
 String _$dailyJourneyControllerHash() =>
-    r'd171e0cacf8dbb16c614d393f619bf3edba7b8bc';
+    r'8789a7ffdfb45aa2c13911c71f2ce514c6fe3981';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -34,9 +34,7 @@ abstract class _$DailyJourneyController
     extends BuildlessAutoDisposeAsyncNotifier<DailyJourney> {
   late final int dayNumber;
 
-  FutureOr<DailyJourney> build(
-    int dayNumber,
-  );
+  FutureOr<DailyJourney> build(int dayNumber);
 }
 
 /// Controller for managing daily journey state and operations.
@@ -73,21 +71,15 @@ class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
   /// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
   ///
   /// Copied from [DailyJourneyController].
-  DailyJourneyControllerProvider call(
-    int dayNumber,
-  ) {
-    return DailyJourneyControllerProvider(
-      dayNumber,
-    );
+  DailyJourneyControllerProvider call(int dayNumber) {
+    return DailyJourneyControllerProvider(dayNumber);
   }
 
   @override
   DailyJourneyControllerProvider getProviderOverride(
     covariant DailyJourneyControllerProvider provider,
   ) {
-    return call(
-      provider.dayNumber,
-    );
+    return call(provider.dayNumber);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -113,8 +105,11 @@ class DailyJourneyControllerFamily extends Family<AsyncValue<DailyJourney>> {
 ///
 /// Copied from [DailyJourneyController].
 class DailyJourneyControllerProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<DailyJourneyController,
-        DailyJourney> {
+    extends
+        AutoDisposeAsyncNotifierProviderImpl<
+          DailyJourneyController,
+          DailyJourney
+        > {
   /// Controller for managing daily journey state and operations.
   ///
   /// This controller fetches and manages the daily journey data for a specific day.
@@ -122,21 +117,19 @@ class DailyJourneyControllerProvider
   /// The state is a [DailyJourney] object that includes the [isPrioritySet] flag.
   ///
   /// Copied from [DailyJourneyController].
-  DailyJourneyControllerProvider(
-    int dayNumber,
-  ) : this._internal(
-          () => DailyJourneyController()..dayNumber = dayNumber,
-          from: dailyJourneyControllerProvider,
-          name: r'dailyJourneyControllerProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$dailyJourneyControllerHash,
-          dependencies: DailyJourneyControllerFamily._dependencies,
-          allTransitiveDependencies:
-              DailyJourneyControllerFamily._allTransitiveDependencies,
-          dayNumber: dayNumber,
-        );
+  DailyJourneyControllerProvider(int dayNumber)
+    : this._internal(
+        () => DailyJourneyController()..dayNumber = dayNumber,
+        from: dailyJourneyControllerProvider,
+        name: r'dailyJourneyControllerProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$dailyJourneyControllerHash,
+        dependencies: DailyJourneyControllerFamily._dependencies,
+        allTransitiveDependencies:
+            DailyJourneyControllerFamily._allTransitiveDependencies,
+        dayNumber: dayNumber,
+      );
 
   DailyJourneyControllerProvider._internal(
     super._createNotifier, {
@@ -154,9 +147,7 @@ class DailyJourneyControllerProvider
   FutureOr<DailyJourney> runNotifierBuild(
     covariant DailyJourneyController notifier,
   ) {
-    return notifier.build(
-      dayNumber,
-    );
+    return notifier.build(dayNumber);
   }
 
   @override
@@ -177,7 +168,7 @@ class DailyJourneyControllerProvider
 
   @override
   AutoDisposeAsyncNotifierProviderElement<DailyJourneyController, DailyJourney>
-      createElement() {
+  createElement() {
     return _DailyJourneyControllerProviderElement(this);
   }
 
@@ -203,12 +194,17 @@ mixin DailyJourneyControllerRef
 }
 
 class _DailyJourneyControllerProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<DailyJourneyController,
-        DailyJourney> with DailyJourneyControllerRef {
+    extends
+        AutoDisposeAsyncNotifierProviderElement<
+          DailyJourneyController,
+          DailyJourney
+        >
+    with DailyJourneyControllerRef {
   _DailyJourneyControllerProviderElement(super.provider);
 
   @override
   int get dayNumber => (origin as DailyJourneyControllerProvider).dayNumber;
 }
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

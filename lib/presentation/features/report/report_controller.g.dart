@@ -18,14 +18,14 @@ String _$reportControllerHash() => r'ea26d476c2fd7ac666eff4b2ac2e8a4628a44e55';
 @ProviderFor(ReportController)
 final reportControllerProvider =
     AutoDisposeAsyncNotifierProvider<ReportController, String>.internal(
-  ReportController.new,
-  name: r'reportControllerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$reportControllerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      ReportController.new,
+      name: r'reportControllerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$reportControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$ReportController = AutoDisposeAsyncNotifier<String>;
 // ignore_for_file: type=lint

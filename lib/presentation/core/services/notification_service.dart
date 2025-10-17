@@ -16,7 +16,9 @@ class NotificationService {
   ///
   /// [router] The GoRouter instance used for navigation when notifications are tapped
   Future<void> init(GoRouter router) async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -41,17 +43,15 @@ class NotificationService {
     // Request permissions for iOS
     await _plugin
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
 
     // Request permissions for Android 13+
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
@@ -123,8 +123,9 @@ class NotificationService {
     );
 
     // If midday time has passed today, schedule for tomorrow
-    final scheduledMiddayTime =
-        middayTime.isBefore(now) ? middayTime.add(const Duration(days: 1)) : middayTime;
+    final scheduledMiddayTime = middayTime.isBefore(now)
+        ? middayTime.add(const Duration(days: 1))
+        : middayTime;
 
     await _plugin.zonedSchedule(
       0, // Notification ID for midday
@@ -149,8 +150,9 @@ class NotificationService {
     );
 
     // If evening time has passed today, schedule for tomorrow
-    final scheduledEveningTime =
-        eveningTime.isBefore(now) ? eveningTime.add(const Duration(days: 1)) : eveningTime;
+    final scheduledEveningTime = eveningTime.isBefore(now)
+        ? eveningTime.add(const Duration(days: 1))
+        : eveningTime;
 
     await _plugin.zonedSchedule(
       1, // Notification ID for evening

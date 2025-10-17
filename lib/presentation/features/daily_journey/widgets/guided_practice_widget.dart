@@ -4,6 +4,7 @@ import 'package:everglow_app/domain/models/daily_journey_models.dart';
 import 'package:everglow_app/presentation/core/services/audio_player_service.dart';
 import 'package:everglow_app/presentation/features/daily_journey/daily_journey_controller.dart';
 import 'package:everglow_app/presentation/core/widgets/confetti_celebration.dart';
+import 'package:everglow_app/presentation/core/widgets/completion_chip.dart';
 
 /// Widget for displaying a single "Guided Practice" itinerary item.
 ///
@@ -44,8 +45,8 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
     super.dispose();
   }
 
-  Future<void> _handleCheckboxChange(bool? newValue) async {
-    if (newValue == true && !widget.practice.isCompleted) {
+  Future<void> _handleCompletion() async {
+    if (!widget.practice.isCompleted) {
       // Trigger celebration animation
       celebrate();
 
@@ -116,54 +117,154 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
       children: [
         Card(
           elevation: 2,
+          clipBehavior: Clip.antiAlias,
           color: widget.practice.isCompleted
               ? theme.colorScheme.primary.withValues(alpha: 0.05)
               : null,
-          child: ListTile(
-            // Display the time
-            leading: Text(
-              widget.practice.time,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          child: Theme(
+            // Override the expansion tile theme for better control
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              // Disable default top/bottom borders
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
               ),
-            ),
-
-            // Display the title with strike-through if completed
-            title: Text(
-              widget.practice.title,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                decoration: widget.practice.isCompleted
-                    ? TextDecoration.lineThrough
-                    : null,
+              childrenPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
               ),
-            ),
-
-            // Display the play/pause control and checkbox
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: _buildIcon(
-                    isPlaying: isThisPracticePlaying,
-                    isPaused: isThisPracticePaused,
-                    isLoading: isThisPracticeLoading,
-                  ),
-                  color: primaryColor,
-                  iconSize: 32,
-                  onPressed: () => _handlePlayPause(
-                    audioNotifier: audioNotifier,
-                    isPlaying: isThisPracticePlaying,
-                    isPaused: isThisPracticePaused,
-                  ),
+              // Custom expansion icon colors
+              iconColor: theme.colorScheme.primary,
+              collapsedIconColor: theme.colorScheme.onSurface.withValues(
+                alpha: 0.6,
+              ),
+              // Leading icon with background
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Checkbox(
-                  value: widget.practice.isCompleted,
-                  onChanged: widget.practice.isCompleted
-                      ? null
-                      : _handleCheckboxChange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                child: Icon(
+                  Icons.headphones_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              // Title with practice name and strike-through if completed
+              title: Text(
+                widget.practice.title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  decoration: widget.practice.isCompleted
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+              // Subtitle with time
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.practice.time,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Expandable content - audio controls and completion
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Audio control button centered
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            IconButton(
+                              icon: _buildIcon(
+                                isPlaying: isThisPracticePlaying,
+                                isPaused: isThisPracticePaused,
+                                isLoading: isThisPracticeLoading,
+                              ),
+                              color: primaryColor,
+                              iconSize: 48,
+                              onPressed: () => _handlePlayPause(
+                                audioNotifier: audioNotifier,
+                                isPlaying: isThisPracticePlaying,
+                                isPaused: isThisPracticePaused,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Audio progress indicator
+                            if (isThisPracticePlaying ||
+                                isThisPracticePaused) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isThisPracticePlaying
+                                        ? Icons.play_arrow
+                                        : Icons.pause,
+                                    size: 16,
+                                    color: primaryColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isThisPracticePlaying
+                                        ? 'Playing...'
+                                        : 'Paused',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ] else ...[
+                              Text(
+                                'Tap to start guided practice',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Completion chip centered at the bottom
+                    Center(
+                      child: CompletionChip(
+                        isCompleted: widget.practice.isCompleted,
+                        onPressed: widget.practice.isCompleted
+                            ? null
+                            : _handleCompletion,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

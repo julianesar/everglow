@@ -41,6 +41,7 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           title: 'DAY ONE — RELEASE',
           mantra:
               'You cannot step into your future while clinging to your past.',
+          singlePriority: 'Release the weight (mental / emotional / physical)',
           itinerary: [
             GuidedPractice(
               id: 'd1_gp1',
@@ -95,6 +96,7 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           dayNumber: 2,
           title: 'DAY TWO — RISE',
           mantra: 'Energy returns when clarity aligns with purpose.',
+          singlePriority: 'Act like your future self',
           itinerary: [
             GuidedPractice(
               id: 'd2_gp1',
@@ -107,7 +109,8 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
               id: 'd2_me1',
               time: '9 AM - 10 AM',
               title: 'Energy Optimization Program',
-              description: '10-Pass Ozone Therapy and Peptides & NAD+ Optimization. Super-oxygenating your system for peak energy and activating cellular repair and vitality.',
+              description:
+                  '10-Pass Ozone Therapy and Peptides & NAD+ Optimization. Super-oxygenating your system for peak energy and activating cellular repair and vitality.',
               location: 'Medical Wing',
             ),
             JournalingSection(
@@ -145,6 +148,7 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           dayNumber: 3,
           title: 'DAY THREE — REBIRTH',
           mantra: 'I am the designer of my destiny.',
+          singlePriority: 'Anchor your new identity',
           itinerary: [
             GuidedPractice(
               id: 'd3_gp1',
@@ -157,7 +161,8 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
               id: 'd3_me1',
               time: '9 AM - 10 AM',
               title: 'Regeneration & Longevity Program',
-              description: 'Stem-Cell Therapy, Longevity Infusions & Neural Rejuvenation. The pinnacle of regeneration begins, supporting your system for long-term transformation.',
+              description:
+                  'Stem-Cell Therapy, Longevity Infusions & Neural Rejuvenation. The pinnacle of regeneration begins, supporting your system for long-term transformation.',
               location: 'Medical Wing',
             ),
             JournalingSection(

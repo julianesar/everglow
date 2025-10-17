@@ -26,14 +26,14 @@ String _$journalRepositoryHash() => r'04372db17b98dec8f02293becbfcbdcfe8b13d0d';
 @ProviderFor(journalRepository)
 final journalRepositoryProvider =
     AutoDisposeFutureProvider<JournalRepository>.internal(
-  journalRepository,
-  name: r'journalRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$journalRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      journalRepository,
+      name: r'journalRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$journalRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef JournalRepositoryRef = AutoDisposeFutureProviderRef<JournalRepository>;
 // ignore_for_file: type=lint

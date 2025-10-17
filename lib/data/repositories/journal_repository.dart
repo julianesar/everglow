@@ -103,10 +103,7 @@ abstract class JournalRepository {
   /// for the specified day. If the task is already completed, it does nothing.
   ///
   /// Throws an exception if the save operation fails.
-  Future<void> completeTask({
-    required int dayNumber,
-    required String taskId,
-  });
+  Future<void> completeTask({required int dayNumber, required String taskId});
 
   /// Retrieves the list of completed task IDs for a specific day.
   ///

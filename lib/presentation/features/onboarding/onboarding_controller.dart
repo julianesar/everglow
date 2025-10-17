@@ -16,9 +16,9 @@ class OnboardingState {
 
   /// Creates the initial state with empty values.
   const OnboardingState.initial()
-      : name = '',
-        statement = '',
-        isButtonEnabled = false;
+    : name = '',
+      statement = '',
+      isButtonEnabled = false;
 
   /// The user's name input.
   final String name;
@@ -55,7 +55,8 @@ class OnboardingState {
   }
 
   @override
-  int get hashCode => name.hashCode ^ statement.hashCode ^ isButtonEnabled.hashCode;
+  int get hashCode =>
+      name.hashCode ^ statement.hashCode ^ isButtonEnabled.hashCode;
 }
 
 /// Controller for managing onboarding screen state and logic.

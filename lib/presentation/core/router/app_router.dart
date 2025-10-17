@@ -16,20 +16,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         name: 'splash',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const SplashScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const SplashScreen()),
       ),
 
       // Onboarding route
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const OnboardingScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const OnboardingScreen()),
       ),
 
       // Day itinerary route with path parameter
@@ -49,20 +45,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/report',
         name: 'report',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const ReportScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const ReportScreen()),
       ),
 
       // Hub route - Transformation hub for completed journeys
       GoRoute(
         path: '/hub',
         name: 'hub',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const HubScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const HubScreen()),
       ),
     ],
 
@@ -70,18 +62,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     errorPageBuilder: (context, state) => MaterialPage(
       key: state.pageKey,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Error'),
-        ),
+        appBar: AppBar(title: const Text('Error')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               const Text(
                 'Page not found',

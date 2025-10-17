@@ -12,10 +12,11 @@ class TimelineNavigator extends StatelessWidget {
   /// Creates a [TimelineNavigator].
   ///
   /// The [currentDay] parameter must be between 1 and 3 inclusive.
-  const TimelineNavigator({
-    super.key,
-    required this.currentDay,
-  }) : assert(currentDay >= 1 && currentDay <= 3, 'currentDay must be between 1 and 3');
+  const TimelineNavigator({super.key, required this.currentDay})
+    : assert(
+        currentDay >= 1 && currentDay <= 3,
+        'currentDay must be between 1 and 3',
+      );
 
   @override
   Widget build(BuildContext context) {

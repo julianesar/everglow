@@ -7,6 +7,7 @@ import '../../features/daily_journey/widgets/guided_practice_widget.dart';
 import '../../features/daily_journey/widgets/journal_prompt_dialog.dart';
 import 'package:everglow_app/presentation/features/daily_journey/widgets/timeline_navigator.dart';
 import '../../core/widgets/confetti_celebration.dart';
+import '../../core/widgets/completion_chip.dart';
 
 /// Screen displaying the daily itinerary for a specific day
 ///
@@ -136,11 +137,9 @@ class DayScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
 
-                      // Single Priority section - now stateless
+                      // Single Priority section - read-only display
                       _SinglePrioritySection(
-                        dayNumber: dayNumber,
-                        initialPriority: dailyJourney.singlePriority ?? '',
-                        isPrioritySet: dailyJourney.isPrioritySet,
+                        priority: dailyJourney.singlePriority ?? '',
                       ),
                       const SizedBox(height: 32),
 
@@ -165,11 +164,8 @@ class DayScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Footer button - driven by isPrioritySet state
-                _FooterButton(
-                  dayNumber: dayNumber,
-                  isPrioritySet: dailyJourney.isPrioritySet,
-                ),
+                // Footer button for day progression
+                _FooterButton(dayNumber: dayNumber),
               ],
             );
           },
@@ -328,147 +324,17 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-/// Single Priority section widget (now stateless)
+/// Single Priority section widget - read-only display
 ///
-/// This widget displays the single priority input field and save button.
-/// The saved state is now driven entirely by the controller's isPrioritySet flag.
-class _SinglePrioritySection extends ConsumerStatefulWidget {
-  const _SinglePrioritySection({
-    required this.dayNumber,
-    required this.initialPriority,
-    required this.isPrioritySet,
-  });
+/// This widget displays the pre-established single priority for the day
+/// without any editing functionality.
+class _SinglePrioritySection extends StatelessWidget {
+  const _SinglePrioritySection({required this.priority});
 
-  final int dayNumber;
-  final String initialPriority;
-  final bool isPrioritySet;
-
-  @override
-  ConsumerState<_SinglePrioritySection> createState() =>
-      _SinglePrioritySectionState();
-}
-
-class _SinglePrioritySectionState
-    extends ConsumerState<_SinglePrioritySection> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialPriority);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _savePriority() async {
-    if (_controller.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a priority before saving'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Call the controller to save the priority
-    await ref
-        .read(dailyJourneyControllerProvider(widget.dayNumber).notifier)
-        .updateSinglePriority(_controller.text.trim());
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Priority saved successfully'),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
+  final String priority;
 
   @override
   Widget build(BuildContext context) {
-    // Conditional constructor based on isPrioritySet
-    if (!widget.isPrioritySet) {
-      // EDIT MODE: Show input field and save button
-      return _buildEditMode(context);
-    } else {
-      // READ MODE: Show Focus Chip with priority and edit button
-      return _buildReadMode(context);
-    }
-  }
-
-  /// Builds the Edit Mode UI - input field and save button
-  Widget _buildEditMode(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.star_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Single Priority',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'What is the one thing that matters most today?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _controller,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Enter your single priority for today...',
-            ),
-            onChanged: (_) {
-              // Trigger rebuild to update button state
-              setState(() {});
-            },
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _savePriority,
-              icon: const Icon(Icons.save),
-              label: const Text('Set Priority'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds the Read Mode UI - Focus Chip with priority and edit button
-  Widget _buildReadMode(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -492,84 +358,54 @@ class _SinglePrioritySectionState
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: _enterEditMode,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                // Star icon in a circular container
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.star_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Priority text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Today\'s Priority',
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.initialPriority,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Edit button
-                IconButton(
-                  onPressed: _enterEditMode,
-                  icon: const Icon(Icons.edit_rounded),
-                  color: Theme.of(context).colorScheme.primary,
-                  tooltip: 'Edit Priority',
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surface.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            // Star icon in a circular container
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.star_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 28,
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            // Priority text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Today\'s Priority',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    priority,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  /// Enters edit mode by manually marking priority as unset
-  /// This allows the user to edit their priority
-  Future<void> _enterEditMode() async {
-    // Call the controller to mark priority as unset
-    await ref
-        .read(dailyJourneyControllerProvider(widget.dayNumber).notifier)
-        .markPriorityAsUnset();
   }
 }
 
@@ -598,8 +434,8 @@ class _MedicalEventCardState extends ConsumerState<_MedicalEventCard>
     super.dispose();
   }
 
-  Future<void> _handleCheckboxChange(bool? newValue) async {
-    if (newValue == true && !widget.event.isCompleted) {
+  Future<void> _handleCompletion() async {
+    if (!widget.event.isCompleted) {
       // Trigger celebration animation
       celebrate();
 
@@ -626,122 +462,130 @@ class _MedicalEventCardState extends ConsumerState<_MedicalEventCard>
       children: [
         Card(
           elevation: 2,
+          clipBehavior: Clip.antiAlias,
           color: widget.event.isCompleted
               ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)
               : null,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.error.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.medical_services_rounded,
-                        color: Theme.of(context).colorScheme.error,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.event.title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  decoration: widget.event.isCompleted
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.event.time,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Checkbox for task completion
-                    Checkbox(
-                      value: widget.event.isCompleted,
-                      onChanged: widget.event.isCompleted
-                          ? null
-                          : _handleCheckboxChange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Divider(
+          child: Theme(
+            // Override the expansion tile theme for better control
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              // Disable default top/bottom borders
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              childrenPadding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+              ),
+              // Custom expansion icon colors
+              iconColor: Theme.of(context).colorScheme.error,
+              collapsedIconColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
+              // Leading icon with background
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.1),
+                  ).colorScheme.error.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 12),
-                Row(
+                child: Icon(
+                  Icons.medical_services_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 24,
+                ),
+              ),
+              // Title with event name and strike-through if completed
+              title: Text(
+                widget.event.title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  decoration: widget.event.isCompleted
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+              // Subtitle with time
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Row(
                   children: [
                     Icon(
-                      Icons.description_outlined,
-                      size: 16,
+                      Icons.access_time,
+                      size: 14,
                       color: Theme.of(
                         context,
                       ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.event.description,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.event.time,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
+              ),
+              // Expandable content - event details
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 16,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 16,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.event.description,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.event.location,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.event.location,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Completion chip centered at the bottom
+                    Center(
+                      child: CompletionChip(
+                        isCompleted: widget.event.isCompleted,
+                        onPressed: widget.event.isCompleted
+                            ? null
+                            : _handleCompletion,
                       ),
                     ),
                   ],
@@ -796,8 +640,8 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
     super.dispose();
   }
 
-  Future<void> _handleCheckboxChange(bool? newValue) async {
-    if (newValue == true && !widget.section.isCompleted) {
+  Future<void> _handleCompletion() async {
+    if (!widget.section.isCompleted) {
       // Trigger celebration animation
       celebrate();
 
@@ -942,26 +786,7 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
                   ],
                 ),
               ),
-              // Add checkbox as trailing
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: widget.section.isCompleted,
-                    onChanged: widget.section.isCompleted
-                        ? null
-                        : _handleCheckboxChange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  // Keep the expansion indicator
-                  Icon(
-                    Icons.expand_more,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
-              ),
+              // trailing is automatically added by ExpansionTile
               // Expandable content - the journaling prompts
               children: [
                 dailyJourneyAsync.when(
@@ -1162,7 +987,17 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
+                        const SizedBox(height: 16),
+                        // Completion chip centered at the bottom of expanded content
+                        Center(
+                          child: CompletionChip(
+                            isCompleted: widget.section.isCompleted,
+                            onPressed: widget.section.isCompleted
+                                ? null
+                                : _handleCompletion,
+                          ),
+                        ),
                       ],
                     );
                   },
@@ -1190,28 +1025,21 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
 /// Footer button widget for day progression
 ///
 /// This widget displays a dynamic button that:
-/// - Is disabled when the priority hasn't been set (isPrioritySet = false)
-/// - Shows 'Complete Today's Priority to Proceed' when disabled
 /// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
 /// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates directly to /report
-/// - Uses Liquid Gold color (#FFD700) when enabled
+/// - Uses Liquid Gold color (#FFD700)
 class _FooterButton extends StatelessWidget {
-  const _FooterButton({required this.dayNumber, required this.isPrioritySet});
+  const _FooterButton({required this.dayNumber});
 
   final int dayNumber;
-  final bool isPrioritySet;
 
   @override
   Widget build(BuildContext context) {
-    // Determine button text and navigation based on priority state and day number
+    // Determine button text and navigation based on day number
     final String buttonText;
     final String navigationPath;
 
-    if (!isPrioritySet) {
-      // Priority not set - button disabled
-      buttonText = 'Complete Today\'s Priority to Proceed';
-      navigationPath = ''; // Not used when disabled
-    } else if (dayNumber < 3) {
+    if (dayNumber < 3) {
       // Days 1-2: Proceed to next day
       buttonText = 'Proceed to Day ${dayNumber + 1}';
       navigationPath = '/day/${dayNumber + 1}';
@@ -1238,44 +1066,23 @@ class _FooterButton extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: isPrioritySet
-                ? () {
-                    // Navigate to next day or report screen
-                    context.go(navigationPath);
-                  }
-                : null, // Button is disabled when priority is not set
+            onPressed: () {
+              // Navigate to next day or report screen
+              context.go(navigationPath);
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isPrioritySet
-                  ? const Color(0xFFFFD700) // Liquid Gold
-                  : Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
-              foregroundColor: isPrioritySet
-                  ? Colors
-                        .black87 // Dark text on gold background
-                  : Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-              disabledBackgroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.1),
-              disabledForegroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.4),
+              backgroundColor: const Color(0xFFFFD700), // Liquid Gold
+              foregroundColor: Colors.black87, // Dark text on gold background
               padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: isPrioritySet ? 4 : 0,
+              elevation: 4,
             ),
             child: Text(
               buttonText,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
-                color: isPrioritySet
-                    ? Colors.black87
-                    : Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                color: Colors.black87,
               ),
             ),
           ),

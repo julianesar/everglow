@@ -2,7 +2,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../domain/models/daily_journey_models.dart';
 import '../../../data/repositories/daily_journey_repository.dart';
 import '../../../data/repositories/journal_repository.dart';
-import '../../core/services/notification_service.dart';
 
 part 'daily_journey_controller.g.dart';
 
@@ -28,18 +27,15 @@ class DailyJourneyController extends _$DailyJourneyController {
     final repository = ref.watch(dailyJourneyRepositoryProvider);
     final journey = await repository.getJourneyForDay(dayNumber);
 
-    // Load the saved single priority for this day
-    final journalRepo = await ref.read(journalRepositoryProvider.future);
-    final savedPriority = await journalRepo.getSinglePriorityForDay(dayNumber);
-
     // Load journal entries for this day
     final journalResponses = await _loadJournalEntries(dayNumber);
 
     // Load completed tasks for this day
+    final journalRepo = await ref.read(journalRepositoryProvider.future);
     final completedTasks = await journalRepo.getCompletedTasksForDay(dayNumber);
 
-    // Determine if priority is set based on whether the saved priority is non-empty
-    final isPrioritySet = savedPriority != null && savedPriority.isNotEmpty;
+    // Priority is always set since it's pre-established in the repository
+    final isPrioritySet = true;
 
     // Update itinerary items with completion status
     final updatedItinerary = journey.itinerary.map((item) {
@@ -71,10 +67,10 @@ class DailyJourneyController extends _$DailyJourneyController {
       };
     }).toList();
 
-    // Return journey with updated isPrioritySet flag, singlePriority text, journal responses, and completion status
+    // Return journey with updated isPrioritySet flag, journal responses, and completion status
+    // singlePriority is already set in the journey from the repository
     return journey.copyWith(
       isPrioritySet: isPrioritySet,
-      singlePriority: isPrioritySet ? savedPriority : null,
       journalResponses: journalResponses,
       itinerary: updatedItinerary,
     );
@@ -92,63 +88,6 @@ class DailyJourneyController extends _$DailyJourneyController {
       // If there's any error, return empty map
       return {};
     }
-  }
-
-  /// Updates the single priority for the current day.
-  ///
-  /// Takes the [priority] text and persists it to the journal repository.
-  /// Upon successful save, updates the state with a new [DailyJourney] object
-  /// that has [isPrioritySet] set to true and the [singlePriority] field updated.
-  ///
-  /// If an error occurs during save, the state is updated with an error.
-  Future<void> updateSinglePriority(String priority) async {
-    // Get the current state
-    final currentJourney = state.value;
-    if (currentJourney == null) return;
-
-    try {
-      // Persist to repository first
-      final journalRepo = await ref.read(journalRepositoryProvider.future);
-      await journalRepo.saveSinglePriority(
-        dayNumber: currentJourney.dayNumber,
-        priorityText: priority,
-      );
-
-      // Schedule daily notifications after successful save
-      await ref
-          .read(notificationServiceProvider)
-          .scheduleDailyNotifications(
-            dayNumber: currentJourney.dayNumber,
-            priorityText: priority,
-          );
-
-      // Upon successful save, update state with new journey object
-      final updatedJourney = currentJourney.copyWith(
-        singlePriority: priority,
-        isPrioritySet: true,
-      );
-
-      state = AsyncValue.data(updatedJourney);
-    } catch (e, stackTrace) {
-      // Handle error - set error state
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
-
-  /// Marks the priority as unset, allowing the user to edit it.
-  ///
-  /// This method updates the state to set [isPrioritySet] to false,
-  /// which triggers the UI to switch from Read Mode to Edit Mode.
-  /// The priority text is preserved so the user can edit it.
-  Future<void> markPriorityAsUnset() async {
-    // Get the current state
-    final currentJourney = state.value;
-    if (currentJourney == null) return;
-
-    // Update state with isPrioritySet = false
-    final updatedJourney = currentJourney.copyWith(isPrioritySet: false);
-
-    state = AsyncValue.data(updatedJourney);
   }
 
   /// Updates a journal entry for a specific prompt.

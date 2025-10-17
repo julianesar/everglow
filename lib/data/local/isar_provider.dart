@@ -24,11 +24,7 @@ Future<Isar> openIsar() async {
 
   // Open Isar database with all collection schemas
   return await Isar.open(
-    [
-      UserSchema,
-      DailyLogSchema,
-      JournalEntrySchema,
-    ],
+    [UserSchema, DailyLogSchema, JournalEntrySchema],
     directory: dir.path,
     // Inspector is useful for debugging in development
     inspector: true,

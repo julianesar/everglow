@@ -18,16 +18,16 @@ String _$onboardingRepositoryHash() =>
 @ProviderFor(onboardingRepository)
 final onboardingRepositoryProvider =
     AutoDisposeFutureProvider<OnboardingRepository>.internal(
-  onboardingRepository,
-  name: r'onboardingRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$onboardingRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      onboardingRepository,
+      name: r'onboardingRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$onboardingRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
-typedef OnboardingRepositoryRef
-    = AutoDisposeFutureProviderRef<OnboardingRepository>;
+typedef OnboardingRepositoryRef =
+    AutoDisposeFutureProviderRef<OnboardingRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
