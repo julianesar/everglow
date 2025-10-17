@@ -31,6 +31,9 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
     // Simulate async operation
     await Future.delayed(const Duration(milliseconds: 50));
 
+    // TODO: In the future, check a user progress repository to load completion status
+    // for each itinerary item. For now, all items default to isCompleted = false.
+
     switch (dayNumber) {
       case 1:
         return const DailyJourney(
@@ -40,31 +43,22 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
               'You cannot step into your future while clinging to your past.',
           itinerary: [
             GuidedPractice(
+              id: 'd1_gp1',
               time: 'Morning',
               title: 'Morning Intention Ceremony',
               audioUrl:
                   'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
             MedicalEvent(
-              time: '9 AM',
-              title: 'Plasmapheresis detox',
+              id: 'd1_me1',
+              time: '9 AM - 11 AM',
+              title: 'Medical Detox Program',
               description:
-                  'Your body and mind begin to let go of stored weight — physical, emotional, and energetic.',
-              location: 'Medical Wing',
-            ),
-            MedicalEvent(
-              time: '10 AM',
-              title: 'IV nutrient infusions',
-              description: 'Replenishing your system at a cellular level.',
-              location: 'Medical Wing',
-            ),
-            MedicalEvent(
-              time: '11 AM',
-              title: 'Heavy-metal elimination',
-              description: 'Clearing space for what\'s next.',
+                  'Plasmapheresis detox, IV nutrient infusions, and heavy-metal elimination. Your body and mind begin to let go of stored weight — physical, emotional, and energetic.',
               location: 'Medical Wing',
             ),
             JournalingSection(
+              id: 'd1_js1',
               time: 'Afternoon',
               title: 'Journaling: Releasing Attachments',
               prompts: [
@@ -94,18 +88,6 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                 ),
               ],
             ),
-            GuidedPractice(
-              time: 'Afternoon',
-              title: 'Breath + Sound Reset',
-              audioUrl:
-                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
-            ),
-            GuidedPractice(
-              time: 'Evening',
-              title: 'Evening Release Ritual',
-              audioUrl:
-                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_3.mp3',
-            ),
           ],
         );
       case 2:
@@ -115,30 +97,21 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           mantra: 'Energy returns when clarity aligns with purpose.',
           itinerary: [
             GuidedPractice(
+              id: 'd2_gp1',
               time: 'Morning',
               title: 'Cold Plunge or Power Breath',
               audioUrl:
                   'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
             MedicalEvent(
-              time: '9 AM',
-              title: '10-Pass Ozone Therapy',
-              description: 'Super-oxygenating your system for peak energy.',
+              id: 'd2_me1',
+              time: '9 AM - 10 AM',
+              title: 'Energy Optimization Program',
+              description: '10-Pass Ozone Therapy and Peptides & NAD+ Optimization. Super-oxygenating your system for peak energy and activating cellular repair and vitality.',
               location: 'Medical Wing',
-            ),
-            MedicalEvent(
-              time: '10 AM',
-              title: 'Peptides & NAD+ Optimization',
-              description: 'Activating cellular repair and vitality.',
-              location: 'Medical Wing',
-            ),
-            GuidedPractice(
-              time: 'Afternoon',
-              title: 'Future-Self Visualization',
-              audioUrl:
-                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
             ),
             JournalingSection(
+              id: 'd2_js1',
               time: 'Afternoon',
               title: 'Journaling: Activating Your Future Self',
               prompts: [
@@ -165,12 +138,6 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                 ),
               ],
             ),
-            GuidedPractice(
-              time: 'Evening',
-              title: 'Evening Reflection + Lock-in',
-              audioUrl:
-                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_3.mp3',
-            ),
           ],
         );
       case 3:
@@ -179,26 +146,22 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
           title: 'DAY THREE — REBIRTH',
           mantra: 'I am the designer of my destiny.',
           itinerary: [
-            MedicalEvent(
-              time: '9 AM',
-              title: 'Stem-Cell Therapy',
-              description: 'The pinnacle of regeneration begins.',
-              location: 'Medical Wing',
-            ),
-            MedicalEvent(
-              time: '10AM',
-              title: 'Longevity Infusions & Neural Rejuvenation',
-              description:
-                  'Supporting your system for long-term transformation.',
-              location: 'Medical Wing',
-            ),
             GuidedPractice(
-              time: 'Afternoon',
+              id: 'd3_gp1',
+              time: 'Morning',
               title: 'Quantum Heart Coherence Meditation',
               audioUrl:
                   'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test.mp3',
             ),
+            MedicalEvent(
+              id: 'd3_me1',
+              time: '9 AM - 10 AM',
+              title: 'Regeneration & Longevity Program',
+              description: 'Stem-Cell Therapy, Longevity Infusions & Neural Rejuvenation. The pinnacle of regeneration begins, supporting your system for long-term transformation.',
+              location: 'Medical Wing',
+            ),
             JournalingSection(
+              id: 'd3_js1',
               time: 'Afternoon',
               title: 'Journaling: Anchoring Your New Identity',
               prompts: [
@@ -223,12 +186,6 @@ class StaticDailyJourneyRepository implements DailyJourneyRepository {
                   promptText: 'What am I no longer willing to tolerate?',
                 ),
               ],
-            ),
-            GuidedPractice(
-              time: 'Evening',
-              title: 'Gratitude + Declaration Ritual',
-              audioUrl:
-                  'https://foreverhealthyliving.com/wp-content/uploads/test/meditation-audio_test_2.mp3',
             ),
           ],
         );

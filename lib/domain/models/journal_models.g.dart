@@ -22,13 +22,18 @@ const UserSchema = CollectionSchema(
       name: r'generatedReport',
       type: IsarType.string,
     ),
-    r'integrationStatement': PropertySchema(
+    r'hasCompletedOnboarding': PropertySchema(
       id: 1,
+      name: r'hasCompletedOnboarding',
+      type: IsarType.bool,
+    ),
+    r'integrationStatement': PropertySchema(
+      id: 2,
       name: r'integrationStatement',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'name',
       type: IsarType.string,
     )
@@ -71,8 +76,9 @@ void _userSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.generatedReport);
-  writer.writeString(offsets[1], object.integrationStatement);
-  writer.writeString(offsets[2], object.name);
+  writer.writeBool(offsets[1], object.hasCompletedOnboarding);
+  writer.writeString(offsets[2], object.integrationStatement);
+  writer.writeString(offsets[3], object.name);
 }
 
 User _userDeserialize(
@@ -83,9 +89,10 @@ User _userDeserialize(
 ) {
   final object = User();
   object.generatedReport = reader.readStringOrNull(offsets[0]);
+  object.hasCompletedOnboarding = reader.readBool(offsets[1]);
   object.id = id;
-  object.integrationStatement = reader.readString(offsets[1]);
-  object.name = reader.readString(offsets[2]);
+  object.integrationStatement = reader.readString(offsets[2]);
+  object.name = reader.readString(offsets[3]);
   return object;
 }
 
@@ -99,8 +106,10 @@ P _userDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -337,6 +346,16 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'generatedReport',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> hasCompletedOnboardingEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasCompletedOnboarding',
+        value: value,
       ));
     });
   }
@@ -673,6 +692,18 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
     });
   }
 
+  QueryBuilder<User, User, QAfterSortBy> sortByHasCompletedOnboarding() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedOnboarding', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByHasCompletedOnboardingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedOnboarding', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> sortByIntegrationStatement() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'integrationStatement', Sort.asc);
@@ -708,6 +739,18 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
   QueryBuilder<User, User, QAfterSortBy> thenByGeneratedReportDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generatedReport', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByHasCompletedOnboarding() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedOnboarding', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByHasCompletedOnboardingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasCompletedOnboarding', Sort.desc);
     });
   }
 
@@ -757,6 +800,12 @@ extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
     });
   }
 
+  QueryBuilder<User, User, QDistinct> distinctByHasCompletedOnboarding() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasCompletedOnboarding');
+    });
+  }
+
   QueryBuilder<User, User, QDistinct> distinctByIntegrationStatement(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -786,6 +835,12 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
     });
   }
 
+  QueryBuilder<User, bool, QQueryOperations> hasCompletedOnboardingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasCompletedOnboarding');
+    });
+  }
+
   QueryBuilder<User, String, QQueryOperations> integrationStatementProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'integrationStatement');
@@ -810,18 +865,23 @@ const DailyLogSchema = CollectionSchema(
   name: r'DailyLog',
   id: -3995615497450705259,
   properties: {
-    r'date': PropertySchema(
+    r'completedTasks': PropertySchema(
       id: 0,
+      name: r'completedTasks',
+      type: IsarType.stringList,
+    ),
+    r'date': PropertySchema(
+      id: 1,
       name: r'date',
       type: IsarType.dateTime,
     ),
     r'dayNumber': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'dayNumber',
       type: IsarType.long,
     ),
     r'singlePriority': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'singlePriority',
       type: IsarType.string,
     )
@@ -860,6 +920,13 @@ int _dailyLogEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.completedTasks.length * 3;
+  {
+    for (var i = 0; i < object.completedTasks.length; i++) {
+      final value = object.completedTasks[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.singlePriority.length * 3;
   return bytesCount;
 }
@@ -870,9 +937,10 @@ void _dailyLogSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.date);
-  writer.writeLong(offsets[1], object.dayNumber);
-  writer.writeString(offsets[2], object.singlePriority);
+  writer.writeStringList(offsets[0], object.completedTasks);
+  writer.writeDateTime(offsets[1], object.date);
+  writer.writeLong(offsets[2], object.dayNumber);
+  writer.writeString(offsets[3], object.singlePriority);
 }
 
 DailyLog _dailyLogDeserialize(
@@ -882,10 +950,11 @@ DailyLog _dailyLogDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = DailyLog();
-  object.date = reader.readDateTime(offsets[0]);
-  object.dayNumber = reader.readLong(offsets[1]);
+  object.completedTasks = reader.readStringList(offsets[0]) ?? [];
+  object.date = reader.readDateTime(offsets[1]);
+  object.dayNumber = reader.readLong(offsets[2]);
   object.id = id;
-  object.singlePriority = reader.readString(offsets[2]);
+  object.singlePriority = reader.readString(offsets[3]);
   return object;
 }
 
@@ -897,10 +966,12 @@ P _dailyLogDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1094,6 +1165,232 @@ extension DailyLogQueryWhere on QueryBuilder<DailyLog, DailyLog, QWhereClause> {
 
 extension DailyLogQueryFilter
     on QueryBuilder<DailyLog, DailyLog, QFilterCondition> {
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'completedTasks',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'completedTasks',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'completedTasks',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedTasks',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'completedTasks',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition>
+      completedTasksLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedTasks',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<DailyLog, DailyLog, QAfterFilterCondition> dateEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -1485,6 +1782,12 @@ extension DailyLogQuerySortThenBy
 
 extension DailyLogQueryWhereDistinct
     on QueryBuilder<DailyLog, DailyLog, QDistinct> {
+  QueryBuilder<DailyLog, DailyLog, QDistinct> distinctByCompletedTasks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'completedTasks');
+    });
+  }
+
   QueryBuilder<DailyLog, DailyLog, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'date');
@@ -1511,6 +1814,13 @@ extension DailyLogQueryProperty
   QueryBuilder<DailyLog, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<DailyLog, List<String>, QQueryOperations>
+      completedTasksProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'completedTasks');
     });
   }
 

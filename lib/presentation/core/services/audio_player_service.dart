@@ -8,6 +8,7 @@ class AudioPlayerState {
   const AudioPlayerState({
     required this.isPlaying,
     required this.isLoading,
+    required this.hasCompleted,
     this.currentUrl,
     this.currentTitle,
   });
@@ -16,6 +17,7 @@ class AudioPlayerState {
   const AudioPlayerState.initial()
     : isPlaying = false,
       isLoading = false,
+      hasCompleted = false,
       currentUrl = null,
       currentTitle = null;
 
@@ -24,6 +26,9 @@ class AudioPlayerState {
 
   /// Whether audio is currently loading
   final bool isLoading;
+
+  /// Whether the current audio track has completed playback
+  final bool hasCompleted;
 
   /// URL of the currently loaded audio track
   final String? currentUrl;
@@ -35,12 +40,14 @@ class AudioPlayerState {
   AudioPlayerState copyWith({
     bool? isPlaying,
     bool? isLoading,
+    bool? hasCompleted,
     String? currentUrl,
     String? currentTitle,
   }) {
     return AudioPlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
+      hasCompleted: hasCompleted ?? this.hasCompleted,
       currentUrl: currentUrl ?? this.currentUrl,
       currentTitle: currentTitle ?? this.currentTitle,
     );
@@ -53,6 +60,7 @@ class AudioPlayerState {
     return other is AudioPlayerState &&
         other.isPlaying == isPlaying &&
         other.isLoading == isLoading &&
+        other.hasCompleted == hasCompleted &&
         other.currentUrl == currentUrl &&
         other.currentTitle == currentTitle;
   }
@@ -61,12 +69,13 @@ class AudioPlayerState {
   int get hashCode =>
       isPlaying.hashCode ^
       isLoading.hashCode ^
+      hasCompleted.hashCode ^
       currentUrl.hashCode ^
       currentTitle.hashCode;
 
   @override
   String toString() =>
-      'AudioPlayerState(isPlaying: $isPlaying, isLoading: $isLoading, currentUrl: $currentUrl, currentTitle: $currentTitle)';
+      'AudioPlayerState(isPlaying: $isPlaying, isLoading: $isLoading, hasCompleted: $hasCompleted, currentUrl: $currentUrl, currentTitle: $currentTitle)';
 }
 
 /// Service that manages audio playback throughout the app with proper audio session handling
@@ -123,8 +132,14 @@ class AudioPlayerService extends Notifier<AudioPlayerState> {
       final isLoading =
           playerState.processingState == ProcessingState.loading ||
           playerState.processingState == ProcessingState.buffering;
+      final hasCompleted =
+          playerState.processingState == ProcessingState.completed;
 
-      state = state.copyWith(isPlaying: isPlaying, isLoading: isLoading);
+      state = state.copyWith(
+        isPlaying: isPlaying,
+        isLoading: isLoading,
+        hasCompleted: hasCompleted,
+      );
     });
   }
 
@@ -150,6 +165,7 @@ class AudioPlayerService extends Notifier<AudioPlayerState> {
       // Set loading state
       state = state.copyWith(
         isLoading: true,
+        hasCompleted: false,
         currentUrl: url,
         currentTitle: title,
       );
@@ -217,6 +233,7 @@ class AudioPlayerService extends Notifier<AudioPlayerState> {
     state = state.copyWith(
       isPlaying: false,
       isLoading: false,
+      hasCompleted: false,
       currentUrl: null,
       currentTitle: null,
     );

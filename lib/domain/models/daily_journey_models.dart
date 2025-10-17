@@ -9,13 +9,24 @@ library;
 ///
 /// All itinerary items must have a time and title.
 abstract class ItineraryItem {
+  /// Unique identifier for this itinerary item
+  final String id;
+
   /// The scheduled time for this itinerary item (e.g., "9:00 AM")
   final String time;
 
   /// The title of this itinerary item
   final String title;
 
-  const ItineraryItem({required this.time, required this.title});
+  /// Whether this itinerary item has been completed by the user
+  final bool isCompleted;
+
+  const ItineraryItem({
+    required this.id,
+    required this.time,
+    required this.title,
+    this.isCompleted = false,
+  });
 }
 
 /// Represents a medical event in the daily journey
@@ -30,10 +41,12 @@ class MedicalEvent extends ItineraryItem {
   final String location;
 
   const MedicalEvent({
+    required super.id,
     required super.time,
     required super.title,
     required this.description,
     required this.location,
+    super.isCompleted,
   });
 }
 
@@ -46,9 +59,11 @@ class GuidedPractice extends ItineraryItem {
   final String audioUrl;
 
   const GuidedPractice({
+    required super.id,
     required super.time,
     required super.title,
     required this.audioUrl,
+    super.isCompleted,
   });
 }
 
@@ -60,9 +75,11 @@ class JournalingSection extends ItineraryItem {
   final List<JournalingPrompt> prompts;
 
   const JournalingSection({
+    required super.id,
     required super.time,
     required super.title,
     required this.prompts,
+    super.isCompleted,
   });
 }
 

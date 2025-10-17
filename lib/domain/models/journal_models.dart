@@ -20,6 +20,9 @@ class User {
   /// Cached AI-generated report for the user
   String? generatedReport;
 
+  /// Flag indicating whether the user has completed the onboarding process
+  bool hasCompletedOnboarding = false;
+
   /// Default constructor
   User();
 
@@ -30,7 +33,7 @@ class User {
 /// Daily log entity representing a single day's log entry
 ///
 /// This model stores daily information including the date, day number,
-/// and the single priority for that day.
+/// the single priority for that day, and completed tasks.
 @collection
 class DailyLog {
   /// Auto-incremental unique identifier
@@ -46,6 +49,9 @@ class DailyLog {
   /// Single priority focus for the day
   String singlePriority = '';
 
+  /// List of completed task IDs for gamification tracking
+  List<String> completedTasks = [];
+
   /// Default constructor
   DailyLog();
 
@@ -54,7 +60,10 @@ class DailyLog {
     required this.date,
     required this.dayNumber,
     required this.singlePriority,
-  });
+    List<String>? completedTasks,
+  }) {
+    this.completedTasks = completedTasks ?? [];
+  }
 }
 
 /// Journal entry entity representing a response to a journal prompt

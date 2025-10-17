@@ -7,7 +7,7 @@ part of 'daily_journey_controller.dart';
 // **************************************************************************
 
 String _$dailyJourneyControllerHash() =>
-    r'766765f70963590cecf76565fbe2d41767b027a5';
+    r'd171e0cacf8dbb16c614d393f619bf3edba7b8bc';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -93,6 +93,28 @@ abstract class JournalRepository {
   /// - Days with no priority will have an empty string
   /// - Days with no journal entries will have an empty map
   Future<Map<String, dynamic>> getAllUserData();
+
+  /// Marks a task as completed for a specific day.
+  ///
+  /// [dayNumber] The day number (1-3)
+  /// [taskId] The unique identifier of the task to mark as completed
+  ///
+  /// This method adds the taskId to the completedTasks list in the DailyLog
+  /// for the specified day. If the task is already completed, it does nothing.
+  ///
+  /// Throws an exception if the save operation fails.
+  Future<void> completeTask({
+    required int dayNumber,
+    required String taskId,
+  });
+
+  /// Retrieves the list of completed task IDs for a specific day.
+  ///
+  /// [dayNumber] The day number (1-3)
+  ///
+  /// Returns a Set of completed task IDs for the specified day.
+  /// If no DailyLog exists for the day, returns an empty set.
+  Future<Set<String>> getCompletedTasksForDay(int dayNumber);
 }
 
 /// Isar database implementation of [JournalRepository].
@@ -272,6 +294,55 @@ class IsarJournalRepository implements JournalRepository {
     }
 
     return result;
+  }
+
+  @override
+  Future<void> completeTask({
+    required int dayNumber,
+    required String taskId,
+  }) async {
+    // Validate day number (only days 1-3 are allowed)
+    if (dayNumber < 1 || dayNumber > 3) {
+      throw ArgumentError('Day number must be between 1 and 3, got $dayNumber');
+    }
+
+    await _isar.writeTxn(() async {
+      // Find existing DailyLog for this day number
+      final existingLog = await _isar.dailyLogs
+          .filter()
+          .dayNumberEqualTo(dayNumber)
+          .findFirst();
+
+      if (existingLog != null) {
+        // Check if task is already completed
+        if (!existingLog.completedTasks.contains(taskId)) {
+          // Add task to completed list
+          existingLog.completedTasks.add(taskId);
+          await _isar.dailyLogs.put(existingLog);
+        }
+      } else {
+        // Create new log with the completed task
+        final newLog = DailyLog.create(
+          date: DateTime.now(),
+          dayNumber: dayNumber,
+          singlePriority: '',
+          completedTasks: [taskId],
+        );
+        await _isar.dailyLogs.put(newLog);
+      }
+    });
+  }
+
+  @override
+  Future<Set<String>> getCompletedTasksForDay(int dayNumber) async {
+    // Find the DailyLog for the specified day number
+    final dailyLog = await _isar.dailyLogs
+        .filter()
+        .dayNumberEqualTo(dayNumber)
+        .findFirst();
+
+    // Return the completed tasks as a Set, or empty set if no log exists
+    return dailyLog?.completedTasks.toSet() ?? {};
   }
 }
 

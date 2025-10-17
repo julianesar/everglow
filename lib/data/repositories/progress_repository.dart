@@ -16,14 +16,16 @@ part 'progress_repository.g.dart';
 abstract class ProgressRepository {
   /// Determines the current status of the user's journey.
   ///
-  /// Returns [JourneyStatus.needsOnboarding] if no user exists in the database.
+  /// Returns [JourneyStatus.needsOnboarding] if no user exists in the database
+  /// or if the user has not completed the onboarding process.
   /// Returns [JourneyStatus.completed] if a generated report exists and is not empty.
   /// Returns [JourneyStatus.inProgress] otherwise.
   ///
   /// This method performs the following checks:
   /// 1. Verify if a user exists (if not, return needsOnboarding)
-  /// 2. Check if a generated report exists and is not empty (if yes, return completed)
-  /// 3. Otherwise, return inProgress
+  /// 2. Check if the user has completed onboarding (if not, return needsOnboarding)
+  /// 3. Check if a generated report exists and is not empty (if yes, return completed)
+  /// 4. Otherwise, return inProgress
   Future<JourneyStatus> getJourneyStatus();
 
   /// Gets the current day number based on saved Single Priorities.
@@ -59,20 +61,26 @@ class IsarProgressRepository implements ProgressRepository {
   @override
   Future<JourneyStatus> getJourneyStatus() async {
     // Step 1: Check if a user exists
-    final userExists = await _isar.users.where().findFirst() != null;
+    final user = await _isar.users.where().findFirst();
 
-    if (!userExists) {
+    if (user == null) {
       return JourneyStatus.needsOnboarding;
     }
 
-    // Step 2: Check if a generated report exists and is not empty
+    // Step 2: Check if the user has completed onboarding
+    if (!user.hasCompletedOnboarding) {
+      return JourneyStatus.needsOnboarding;
+    }
+
+    // Step 3: Check if a generated report exists and is not empty
     final generatedReport = await _userRepository.getGeneratedReport();
 
     if (generatedReport != null && generatedReport.isNotEmpty) {
       return JourneyStatus.completed;
     }
 
-    // Step 3: User exists but no report generated, journey is in progress
+    // Step 4: User exists and completed onboarding but no report generated,
+    // journey is in progress
     return JourneyStatus.inProgress;
   }
 

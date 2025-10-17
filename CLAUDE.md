@@ -110,6 +110,31 @@ When working in this codebase:
 - **Write production-ready code**: Handle edge cases, null safety, and error states
 - **Review before committing**: Ensure code is clean, tested, and follows architecture
 
+### Always Act as a UI/UX Expert
+
+When creating or modifying any user interface:
+
+- **Follow the App Theme**: ALWAYS reference and strictly follow the design system defined in `lib/presentation/core/theme/app_theme.dart`
+- **Maintain visual coherence and professionalism**:
+  - Use only the defined color palette (Deep Charcoal, Subtle Gold, Soft Cream, Muted Grey)
+  - Apply the correct typography (Lora for headlines/titles, Satoshi for body/labels)
+  - Follow the established spacing, border radius, and elevation patterns
+  - Use theme-defined component styles (buttons, cards, inputs, etc.)
+- **Never hardcode colors or typography**: Always use `Theme.of(context).colorScheme` and `Theme.of(context).textTheme`
+- **Apply "Silent Luxury" aesthetic**:
+  - Minimalist, refined, and sophisticated design
+  - Subtle interactions and transitions
+  - Generous whitespace and breathing room
+  - No bright or garish colors
+  - Elegant animations with appropriate durations (200-300ms for subtle effects)
+- **Ensure accessibility**:
+  - Sufficient color contrast (already handled by theme)
+  - Appropriate touch targets (minimum 48x48 logical pixels)
+  - Semantic widgets and screen reader support
+  - Support for different text scaling factors
+- **Responsive design**: Consider different screen sizes and orientations
+- **Consistency is paramount**: Every screen should feel like part of the same cohesive application
+
 ### Creating a New Feature
 
 When adding a new feature, create the complete folder structure:

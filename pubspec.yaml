@@ -42,6 +42,9 @@ dependencies:
   # Markdown Rendering
   flutter_markdown: ^0.7.4+1
 
+  # Confetti Animation
+  confetti: ^0.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

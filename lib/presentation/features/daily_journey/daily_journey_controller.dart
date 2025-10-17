@@ -19,7 +19,8 @@ class DailyJourneyController extends _$DailyJourneyController {
   /// 1. Fetches the journey data from the repository
   /// 2. Loads the saved single priority for this day
   /// 3. Loads all journal entries for this day
-  /// 4. Returns a [DailyJourney] with [isPrioritySet], [singlePriority], and [journalResponses] updated
+  /// 4. Loads completed tasks for this day
+  /// 5. Returns a [DailyJourney] with [isPrioritySet], [singlePriority], [journalResponses], and completion status updated
   ///
   /// Throws an exception if the repository fails to fetch the data.
   @override
@@ -34,14 +35,48 @@ class DailyJourneyController extends _$DailyJourneyController {
     // Load journal entries for this day
     final journalResponses = await _loadJournalEntries(dayNumber);
 
+    // Load completed tasks for this day
+    final completedTasks = await journalRepo.getCompletedTasksForDay(dayNumber);
+
     // Determine if priority is set based on whether the saved priority is non-empty
     final isPrioritySet = savedPriority != null && savedPriority.isNotEmpty;
 
-    // Return journey with updated isPrioritySet flag, singlePriority text, and journal responses
+    // Update itinerary items with completion status
+    final updatedItinerary = journey.itinerary.map((item) {
+      final isCompleted = completedTasks.contains(item.id);
+      return switch (item) {
+        MedicalEvent() => MedicalEvent(
+          id: item.id,
+          time: item.time,
+          title: item.title,
+          description: item.description,
+          location: item.location,
+          isCompleted: isCompleted,
+        ),
+        GuidedPractice() => GuidedPractice(
+          id: item.id,
+          time: item.time,
+          title: item.title,
+          audioUrl: item.audioUrl,
+          isCompleted: isCompleted,
+        ),
+        JournalingSection() => JournalingSection(
+          id: item.id,
+          time: item.time,
+          title: item.title,
+          prompts: item.prompts,
+          isCompleted: isCompleted,
+        ),
+        _ => item,
+      };
+    }).toList();
+
+    // Return journey with updated isPrioritySet flag, singlePriority text, journal responses, and completion status
     return journey.copyWith(
       isPrioritySet: isPrioritySet,
       singlePriority: isPrioritySet ? savedPriority : null,
       journalResponses: journalResponses,
+      itinerary: updatedItinerary,
     );
   }
 
@@ -80,7 +115,9 @@ class DailyJourneyController extends _$DailyJourneyController {
       );
 
       // Schedule daily notifications after successful save
-      await ref.read(notificationServiceProvider).scheduleDailyNotifications(
+      await ref
+          .read(notificationServiceProvider)
+          .scheduleDailyNotifications(
             dayNumber: currentJourney.dayNumber,
             priorityText: priority,
           );
@@ -152,6 +189,85 @@ class DailyJourneyController extends _$DailyJourneyController {
     } catch (e, stackTrace) {
       // Handle error - set error state
       state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  /// Marks a task as completed and triggers UI update with celebratory animation.
+  ///
+  /// [taskId] The unique identifier of the task to mark as completed
+  ///
+  /// This method:
+  /// 1. Persists the completion status to the repository
+  /// 2. Updates the local state to reflect the completion
+  /// 3. Triggers a celebratory animation (handled by UI layer)
+  ///
+  /// Returns true if the task was newly completed, false if it was already completed.
+  Future<bool> completeTask(String taskId) async {
+    // Get the current state to ensure we have valid data
+    final currentJourney = state.value;
+    if (currentJourney == null) return false;
+
+    // Check if task is already completed
+    final taskItem = currentJourney.itinerary.firstWhere(
+      (item) => item.id == taskId,
+      orElse: () => throw ArgumentError('Task with id $taskId not found'),
+    );
+
+    if (taskItem.isCompleted) {
+      // Task already completed, no need to do anything
+      return false;
+    }
+
+    try {
+      // Persist to repository first
+      final journalRepo = await ref.read(journalRepositoryProvider.future);
+      await journalRepo.completeTask(
+        dayNumber: currentJourney.dayNumber,
+        taskId: taskId,
+      );
+
+      // Update local state with the new completion status
+      final updatedItinerary = currentJourney.itinerary.map((item) {
+        if (item.id == taskId) {
+          return switch (item) {
+            MedicalEvent() => MedicalEvent(
+              id: item.id,
+              time: item.time,
+              title: item.title,
+              description: item.description,
+              location: item.location,
+              isCompleted: true,
+            ),
+            GuidedPractice() => GuidedPractice(
+              id: item.id,
+              time: item.time,
+              title: item.title,
+              audioUrl: item.audioUrl,
+              isCompleted: true,
+            ),
+            JournalingSection() => JournalingSection(
+              id: item.id,
+              time: item.time,
+              title: item.title,
+              prompts: item.prompts,
+              isCompleted: true,
+            ),
+            _ => item,
+          };
+        }
+        return item;
+      }).toList();
+
+      final updatedJourney = currentJourney.copyWith(
+        itinerary: updatedItinerary,
+      );
+
+      state = AsyncValue.data(updatedJourney);
+      return true; // Task was newly completed
+    } catch (e, stackTrace) {
+      // Handle error - set error state
+      state = AsyncValue.error(e, stackTrace);
+      return false;
     }
   }
 }
