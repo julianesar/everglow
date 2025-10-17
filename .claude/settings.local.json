@@ -24,7 +24,9 @@
       "Bash(test:*)",
       "WebFetch(domain:ai.google.dev)",
       "Bash(findstr:*)",
-      "Bash(dart run flutter_native_splash:create:*)"
+      "Bash(dart run flutter_native_splash:create:*)",
+      "Bash(move \"lib\\presentation\\screens\\onboarding\\onboarding_screen.dart\" \"lib\\presentation\\screens\\onboarding\\legacy_onboarding_screen.dart\")",
+      "Bash(ren \"lib\\presentation\\screens\\onboarding\\onboarding_screen.dart\" \"legacy_onboarding_screen.dart\")"
     ],
     "deny": [],
     "ask": []

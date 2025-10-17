@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 
 import '../../domain/models/journal_models.dart';
 import '../../domain/models/onboarding_question.dart';
+import '../../domain/models/onboarding_section.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 
 /// Static implementation of [OnboardingRepository]
@@ -24,11 +25,11 @@ class StaticOnboardingRepository implements OnboardingRepository {
   StaticOnboardingRepository(this._isar, {this.simulatedDelay = 500});
 
   @override
-  Future<List<OnboardingQuestion>> getOnboardingQuestions() async {
+  Future<List<OnboardingSection>> getOnboardingQuestions() async {
     // Simulate network delay
     await Future.delayed(Duration(milliseconds: simulatedDelay));
 
-    return _dummyQuestions;
+    return _dummySections;
   }
 
   @override
@@ -59,118 +60,108 @@ class StaticOnboardingRepository implements OnboardingRepository {
     // - Handle network errors and validation
   }
 
-  /// Dummy onboarding questions mixing medical and concierge types
-  static final List<OnboardingQuestion> _dummyQuestions = [
-    // Medical Questions
-    const OnboardingQuestion(
-      id: 'med_001',
-      questionText: 'Do you have any known allergies?',
-      questionType: QuestionType.text,
-      placeholder: 'e.g., Peanuts, Shellfish, Penicillin...',
-      isRequired: true,
-      category: 'medical',
-    ),
-    const OnboardingQuestion(
-      id: 'med_002',
-      questionText: 'Please list any current medications you are taking',
-      questionType: QuestionType.text,
-      placeholder: 'e.g., Aspirin 81mg daily, Lisinopril 10mg...',
-      isRequired: false,
-      category: 'medical',
-    ),
-    const OnboardingQuestion(
-      id: 'med_003',
-      questionText: 'Do you have any chronic health conditions?',
-      questionType: QuestionType.yesNo,
-      isRequired: true,
-      category: 'medical',
-    ),
-    const OnboardingQuestion(
-      id: 'med_004',
-      questionText: 'How would you rate your overall health?',
-      questionType: QuestionType.multipleChoice,
-      options: ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor'],
-      isRequired: true,
-      category: 'medical',
+  /// Dummy onboarding sections grouping related questions
+  static final List<OnboardingSection> _dummySections = [
+    // SECTION 1: MEDICAL INTAKE
+    const OnboardingSection(
+      title: 'Medical Intake',
+      questions: [
+        OnboardingQuestion(
+          id: 'med_01',
+          questionText:
+              'Do you have any known allergies to medications, food, or the environment?',
+          questionType: QuestionType.text,
+          isRequired: true,
+          category: 'medical',
+        ),
+        OnboardingQuestion(
+          id: 'med_02',
+          questionText:
+              'Please list any pre-existing medical conditions we should be aware of.',
+          questionType: QuestionType.text,
+          isRequired: true,
+          category: 'medical',
+        ),
+        OnboardingQuestion(
+          id: 'med_03',
+          questionText:
+              'Please list any medications or supplements you are currently taking.',
+          questionType: QuestionType.text,
+          isRequired: true,
+          category: 'medical',
+        ),
+        OnboardingQuestion(
+          id: 'med_04',
+          questionText:
+              'Have you had any major surgeries or medical procedures in the past 5 years?',
+          questionType: QuestionType.yesNo,
+          isRequired: true,
+          category: 'medical',
+        ),
+        OnboardingQuestion(
+          id: 'med_05',
+          questionText:
+              'Are you currently under a doctor\'s care for a specific health issue?',
+          questionType: QuestionType.yesNo,
+          isRequired: true,
+          category: 'medical',
+        ),
+      ],
     ),
 
-    // Lifestyle/Concierge Questions
-    const OnboardingQuestion(
-      id: 'life_001',
-      questionText: 'Coffee or Tea in the morning?',
-      questionType: QuestionType.multipleChoice,
-      options: ['Coffee', 'Tea', 'Both', 'Neither', 'Other'],
-      isRequired: false,
-      category: 'concierge',
-    ),
-    const OnboardingQuestion(
-      id: 'life_002',
-      questionText: 'What are your preferred meal times?',
-      questionType: QuestionType.multipleSelection,
-      options: [
-        'Early Morning (5-7 AM)',
-        'Morning (7-9 AM)',
-        'Midday (12-2 PM)',
-        'Afternoon (2-4 PM)',
-        'Evening (6-8 PM)',
-        'Night (8-10 PM)',
+    // SECTION 2: CONCIERGE & PERSONAL PREFERENCES
+    const OnboardingSection(
+      title: 'Concierge & Personal Preferences',
+      questions: [
+        OnboardingQuestion(
+          id: 'con_01',
+          questionText:
+              'To ensure your mornings are perfect, do you prefer: Coffee or a selection of Herbal Teas?',
+          questionType: QuestionType.multipleChoice,
+          options: ['Coffee', 'Herbal Teas', 'Both'],
+          isRequired: true,
+          category: 'concierge',
+        ),
+        OnboardingQuestion(
+          id: 'con_02',
+          questionText:
+              'Do you have any strict dietary restrictions or preferences? (e.g., vegan, gluten-free, keto)',
+          questionType: QuestionType.text,
+          isRequired: true,
+          category: 'concierge',
+        ),
+        OnboardingQuestion(
+          id: 'con_03',
+          questionText:
+              'For your comfort, how do you prefer your suite\'s temperature?',
+          questionType: QuestionType.multipleChoice,
+          options: ['Cool', 'Mild', 'Warm'],
+          isRequired: true,
+          category: 'concierge',
+        ),
+        OnboardingQuestion(
+          id: 'con_04',
+          questionText:
+              'During your relaxation time, what type of music or sound do you prefer?',
+          questionType: QuestionType.multipleChoice,
+          options: [
+            'Nature Sounds',
+            'Classical',
+            'Ambient Electronic',
+            'Silence',
+          ],
+          isRequired: true,
+          category: 'concierge',
+        ),
+        OnboardingQuestion(
+          id: 'con_05',
+          questionText:
+              'Is there anything, no matter how small, we can prepare to make your arrival and stay exceptional?',
+          questionType: QuestionType.text,
+          isRequired: true,
+          category: 'concierge',
+        ),
       ],
-      isRequired: false,
-      category: 'concierge',
-    ),
-    const OnboardingQuestion(
-      id: 'life_003',
-      questionText: 'Do you have any dietary preferences or restrictions?',
-      questionType: QuestionType.multipleSelection,
-      options: [
-        'Vegetarian',
-        'Vegan',
-        'Gluten-Free',
-        'Dairy-Free',
-        'Kosher',
-        'Halal',
-        'Keto',
-        'Paleo',
-        'None',
-      ],
-      isRequired: true,
-      category: 'concierge',
-    ),
-    const OnboardingQuestion(
-      id: 'life_004',
-      questionText: 'How often do you exercise?',
-      questionType: QuestionType.multipleChoice,
-      options: [
-        'Daily',
-        '4-6 times per week',
-        '2-3 times per week',
-        'Once a week',
-        'Rarely',
-        'Never',
-      ],
-      isRequired: true,
-      category: 'lifestyle',
-    ),
-    const OnboardingQuestion(
-      id: 'life_005',
-      questionText: 'What is your typical bedtime?',
-      questionType: QuestionType.multipleChoice,
-      options: [
-        'Before 9 PM',
-        '9-10 PM',
-        '10-11 PM',
-        '11 PM-12 AM',
-        'After midnight',
-      ],
-      isRequired: false,
-      category: 'lifestyle',
-    ),
-    const OnboardingQuestion(
-      id: 'pref_001',
-      questionText: 'Would you like to receive daily wellness reminders?',
-      questionType: QuestionType.yesNo,
-      isRequired: true,
-      category: 'preferences',
     ),
   ];
 }
