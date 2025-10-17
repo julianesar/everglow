@@ -1027,7 +1027,7 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
 /// This widget displays a dynamic button that:
 /// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
 /// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates directly to /report
-/// - Uses Liquid Gold color (#FFD700)
+/// - Uses the app theme's Subtle Gold color for consistency
 class _FooterButton extends StatelessWidget {
   const _FooterButton({required this.dayNumber});
 
@@ -1070,21 +1070,8 @@ class _FooterButton extends StatelessWidget {
               // Navigate to next day or report screen
               context.go(navigationPath);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD700), // Liquid Gold
-              foregroundColor: Colors.black87, // Dark text on gold background
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 4,
-            ),
-            child: Text(
-              buttonText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-                color: Colors.black87,
-              ),
-            ),
+            // Uses theme's ElevatedButton style (Subtle Gold background, Deep Charcoal text)
+            child: Text(buttonText),
           ),
         ),
       ),

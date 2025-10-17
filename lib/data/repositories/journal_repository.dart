@@ -313,8 +313,8 @@ class IsarJournalRepository implements JournalRepository {
       if (existingLog != null) {
         // Check if task is already completed
         if (!existingLog.completedTasks.contains(taskId)) {
-          // Add task to completed list
-          existingLog.completedTasks.add(taskId);
+          // Create a new growable list from the existing fixed-length list
+          existingLog.completedTasks = List<String>.from(existingLog.completedTasks)..add(taskId);
           await _isar.dailyLogs.put(existingLog);
         }
       } else {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../data/repositories/onboarding_repository_provider.dart';
 import '../../../domain/models/onboarding_question.dart';
+import '../../../domain/models/onboarding_section.dart';
 
 /// Modern onboarding screen with step-by-step PageView experience
 ///
@@ -102,7 +103,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: repositoryAsync.when(
-        data: (repository) => FutureBuilder<List<OnboardingQuestion>>(
+        data: (repository) => FutureBuilder<List<OnboardingSection>>(
           future: repository.getOnboardingQuestions(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -141,7 +142,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               );
             }
 
-            final questions = snapshot.data ?? [];
+            final sections = snapshot.data ?? [];
+            // Flatten sections into a list of questions
+            final questions = sections.expand((section) => section.questions).toList();
             if (questions.isEmpty) {
               return const Center(
                 child: Text('No onboarding questions available'),
@@ -271,7 +274,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _getCategoryColor(question.category).withOpacity(0.15),
+                color: _getCategoryColor(question.category).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -580,7 +583,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
