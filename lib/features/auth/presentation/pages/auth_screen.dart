@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/repositories/auth_repository_impl.dart'
     show authRepositoryProvider;
@@ -169,12 +170,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         );
       }
 
-      // Success - navigation will be handled by auth state listener
+      // Success - navigate to onboarding intro
       if (mounted) {
         // Clear form
         _nameController.clear();
         _emailController.clear();
         _passwordController.clear();
+        // Navigate to onboarding intro screen
+        context.go('/onboarding-intro');
       }
     } catch (e) {
       // Handle error
@@ -471,7 +474,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithGoogle();
 
-      // Success - navigation will be handled by auth state listener
+      // Success - navigate to onboarding intro
+      if (mounted) {
+        context.go('/onboarding-intro');
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -496,7 +502,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithApple();
 
-      // Success - navigation will be handled by auth state listener
+      // Success - navigate to onboarding intro
+      if (mounted) {
+        context.go('/onboarding-intro');
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -521,7 +530,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInAsGuest();
 
-      // Success - navigation will be handled by auth state listener
+      // Success - navigate to onboarding intro
+      if (mounted) {
+        context.go('/onboarding-intro');
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');

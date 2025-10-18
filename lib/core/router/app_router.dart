@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:everglow_app/features/welcome/presentation/pages/welcome_screen.dart';
+import 'package:everglow_app/features/booking/presentation/pages/booking_screen.dart';
 import 'package:everglow_app/features/splash/presentation/pages/splash_screen.dart';
 import 'package:everglow_app/features/onboarding/presentation/pages/onboarding_screen.dart';
+import 'package:everglow_app/features/onboarding/presentation/pages/onboarding_intro_screen.dart';
 import 'package:everglow_app/features/daily_journey/presentation/pages/day_screen.dart';
 import 'package:everglow_app/features/report/presentation/pages/report_screen.dart';
 import 'package:everglow_app/features/hub/presentation/pages/hub_screen.dart';
@@ -21,7 +24,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
 
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/',
     // Listen to auth state changes and refresh routes automatically
     refreshListenable: authNotifier,
     // Redirect logic - acts as the gatekeeper for protected routes
@@ -32,22 +35,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Get the location the user is trying to access
       final targetLocation = state.matchedLocation;
 
+      // Public routes that don't require authentication
+      final publicRoutes = ['/', '/booking', '/auth'];
+
       // Rule 1: User is NOT logged in AND trying to access a protected page
       // Redirect to /auth
-      if (currentUser == null && targetLocation != '/auth') {
+      if (currentUser == null && !publicRoutes.contains(targetLocation)) {
         return '/auth';
       }
 
       // Rule 2: User IS logged in AND on the auth page
-      // Redirect to /splash (which handles intelligent routing)
+      // Redirect to /onboarding-intro (transition screen before onboarding)
       if (currentUser != null && targetLocation == '/auth') {
-        return '/splash';
+        return '/onboarding-intro';
       }
 
       // Rule 3: Allow navigation in all other cases
       return null;
     },
     routes: [
+      // Welcome landing page (public)
+      GoRoute(
+        path: '/',
+        name: 'welcome',
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const WelcomeScreen()),
+      ),
+
+      // Booking screen (public)
+      GoRoute(
+        path: '/booking',
+        name: 'booking',
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const BookingScreen()),
+      ),
+
       // Authentication route
       GoRoute(
         path: '/auth',
@@ -62,6 +84,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'splash',
         pageBuilder: (context, state) =>
             MaterialPage(key: state.pageKey, child: const SplashScreen()),
+      ),
+
+      // Onboarding intro route - transition screen after auth
+      GoRoute(
+        path: '/onboarding-intro',
+        name: 'onboarding-intro',
+        pageBuilder: (context, state) => MaterialPage(
+            key: state.pageKey, child: const OnboardingIntroScreen()),
       ),
 
       // Onboarding route
@@ -114,7 +144,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/check-in-celebration',
         name: 'checkInCelebration',
         pageBuilder: (context, state) => MaterialPage(
-            key: state.pageKey, child: const CheckInCelebrationScreen()),
+          key: state.pageKey,
+          child: const CheckInCelebrationScreen(),
+        ),
       ),
     ],
 

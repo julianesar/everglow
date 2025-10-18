@@ -6,14 +6,16 @@ part of 'booking_repository_impl.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bookingRepositoryHash() => r'76cf0292e1fb23fdb25b1d4d1eab3c269e2c21f4';
+String _$bookingRepositoryHash() => r'2ba9a5a1cf7f8744f06789b92c4a168a589b585b';
 
 /// Provider for [BookingRepository].
 ///
+/// This provider maintains a singleton instance to preserve the in-memory
+/// cached booking across the application lifecycle.
+///
 /// Copied from [bookingRepository].
 @ProviderFor(bookingRepository)
-final bookingRepositoryProvider =
-    AutoDisposeProvider<BookingRepository>.internal(
+final bookingRepositoryProvider = Provider<BookingRepository>.internal(
   bookingRepository,
   name: r'bookingRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -23,6 +25,29 @@ final bookingRepositoryProvider =
   allTransitiveDependencies: null,
 );
 
-typedef BookingRepositoryRef = AutoDisposeProviderRef<BookingRepository>;
+typedef BookingRepositoryRef = ProviderRef<BookingRepository>;
+String _$selectedBookingDateHash() =>
+    r'1eaf8afaf26e09dcd71eaa60c9dc8ae9b6d51b24';
+
+/// State notifier to store the current booking date selected by the user.
+///
+/// This provider maintains the real booking date that the user selected
+/// during the booking flow, making it accessible across the application.
+/// Uses keepAlive to preserve the date across the authentication flow.
+///
+/// Copied from [SelectedBookingDate].
+@ProviderFor(SelectedBookingDate)
+final selectedBookingDateProvider =
+    NotifierProvider<SelectedBookingDate, DateTime?>.internal(
+  SelectedBookingDate.new,
+  name: r'selectedBookingDateProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$selectedBookingDateHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$SelectedBookingDate = Notifier<DateTime?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

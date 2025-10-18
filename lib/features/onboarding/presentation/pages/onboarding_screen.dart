@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../domain/entities/onboarding_question.dart';
 import '../../domain/entities/onboarding_section.dart';
 import '../../data/repositories/onboarding_repository_provider.dart';
+import '../../../booking/data/repositories/booking_repository_impl.dart';
+import '../../../auth/data/repositories/auth_repository_impl.dart';
 
 /// Section-based onboarding screen with transition pages
 ///
@@ -159,13 +161,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     });
 
     try {
+      // Submit onboarding answers
       final repository = await ref.read(onboardingRepositoryProvider.future);
       await repository.submitOnboardingAnswers(_answers);
 
+      // Get the authenticated user's ID
+      final authRepository = ref.read(authRepositoryProvider);
+      final currentUser = authRepository.currentUser;
+
+      if (currentUser == null) {
+        throw Exception('No authenticated user found');
+      }
+
+      // Create the booking using the saved date from the booking screen
+      // This ensures the user has an active booking before accessing logistics hub
+      final bookingRepository = ref.read(bookingRepositoryProvider);
+      final selectedDate = ref.read(selectedBookingDateProvider);
+
+      if (selectedDate != null) {
+        // Create booking with the selected date and current user's ID
+        await bookingRepository.createBooking(
+          startDate: selectedDate,
+          userId: currentUser.id,
+        );
+      } else {
+        // Fallback: Create booking with default date (30 days from now)
+        // This handles the case where user skipped booking screen
+        final defaultDate = DateTime.now().add(const Duration(days: 30));
+        await bookingRepository.createBooking(
+          startDate: defaultDate,
+          userId: currentUser.id,
+        );
+      }
+
       if (mounted) {
-        // Navigate to splash to re-evaluate journey status
-        // SplashScreen will redirect to the correct destination (logistics-hub)
-        context.go('/splash');
+        // Navigate directly to logistics hub after onboarding completion
+        context.go('/logistics-hub');
       }
     } catch (e) {
       setState(() {

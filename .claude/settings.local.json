@@ -36,7 +36,8 @@
       "Bash(move libdataremoteai_report_service.g.dart libcorenetwork )",
       "Bash(move libdataremoteai_report_service_provider.dart libcorenetwork )",
       "Bash(move libdataremoteai_report_service_provider.g.dart libcorenetwork)",
-      "Bash(move \"lib\\features\\auth\\domain\\entities\\auth_user.dart\" \"lib\\features\\auth\\domain\\entities\\app_user.dart\")"
+      "Bash(move \"lib\\features\\auth\\domain\\entities\\auth_user.dart\" \"lib\\features\\auth\\domain\\entities\\app_user.dart\")",
+      "Bash(del assetsimageswelcome_hero.jpg)"
     ],
     "deny": [],
     "ask": []

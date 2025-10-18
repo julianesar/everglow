@@ -293,85 +293,113 @@ class LogisticsHubScreen extends ConsumerWidget {
   /// Builds the arrival mode UI (on or after arrival day).
   ///
   /// Displays:
-  /// - Welcome message
+  /// - Emotional header with "Today is the Day" message
   /// - Driver information with call button
   /// - Villa information with image
   /// - Check-in instructions
+  /// - Sticky check-in button at the bottom
   Widget _buildArrivalMode(BuildContext context, WidgetRef ref, LogisticsHubState state) {
     final theme = Theme.of(context);
     final concierge = state.conciergeInfo;
 
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          // App bar with welcome message
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            backgroundColor: theme.colorScheme.surface,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Welcome to EverGlow',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              centerTitle: true,
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF1A1A1A),
-                      theme.colorScheme.surface,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 60),
-                    child: Icon(
-                      Icons.spa_outlined,
-                      size: 64,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+    return Stack(
+      children: [
+        // Scrollable content
+        ListView(
+          padding: EdgeInsets.only(
+            top: 0,
+            left: 24,
+            right: 24,
+            bottom: !state.booking.isCheckedIn ? 120 : 24, // Extra padding for sticky button
+          ),
+          children: [
+            // Emotional Header
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 48, bottom: 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Today is the Day!',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w400,
+                        height: 1.2,
+                        letterSpacing: -0.5,
+                      ),
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Welcome to EverGlow. We are ready for your arrival.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontSize: 18,
+                        height: 1.5,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (concierge != null) ...[
+              // Driver information card
+              _buildDriverCard(context, concierge),
+              const SizedBox(height: 24),
+
+              // Villa information card
+              _buildVillaCard(context, concierge),
+              const SizedBox(height: 24),
+
+              // Check-in instructions card
+              _buildCheckInCard(context, concierge),
+            ] else ...[
+              // Fallback if no concierge info
+              _buildNoConciergeInfo(context),
+            ],
+          ],
+        ),
+
+        // Sticky check-in button at the bottom (only if not checked in yet)
+        if (concierge != null && !state.booking.isCheckedIn)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    offset: const Offset(0, -4),
+                    blurRadius: 16,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ref.read(logisticsHubControllerProvider.notifier).performCheckIn(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                    ),
+                    child: const Text('Confirm Arrival & Check In'),
                   ),
                 ),
               ),
             ),
           ),
-
-          // Content
-          SliverPadding(
-            padding: const EdgeInsets.all(24.0),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                if (concierge != null) ...[
-                  // Driver information card
-                  _buildDriverCard(context, concierge),
-                  const SizedBox(height: 24),
-
-                  // Villa information card
-                  _buildVillaCard(context, concierge),
-                  const SizedBox(height: 24),
-
-                  // Check-in instructions card
-                  _buildCheckInCard(context, concierge),
-                  const SizedBox(height: 32),
-
-                  // Check-in button (if not checked in yet)
-                  if (!state.booking.isCheckedIn)
-                    _buildCheckInButton(context, ref),
-                ] else ...[
-                  // Fallback if no concierge info
-                  _buildNoConciergeInfo(context),
-                ],
-              ]),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -551,18 +579,6 @@ class LogisticsHubScreen extends ConsumerWidget {
     );
   }
 
-  /// Builds the check-in button.
-  Widget _buildCheckInButton(BuildContext context, WidgetRef ref) {
-    return ElevatedButton(
-      onPressed: () {
-        ref.read(logisticsHubControllerProvider.notifier).performCheckIn(context);
-      },
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 56),
-      ),
-      child: const Text('Confirm Arrival & Check In'),
-    );
-  }
 
   /// Builds a fallback message when no concierge info is available.
   Widget _buildNoConciergeInfo(BuildContext context) {

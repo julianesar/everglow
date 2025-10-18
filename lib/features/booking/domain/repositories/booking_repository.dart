@@ -11,4 +11,13 @@ abstract class BookingRepository {
   ///
   /// This method persists the updated booking data.
   Future<void> updateBooking(Booking booking);
+
+  /// Creates a new booking with the specified start date and user ID.
+  ///
+  /// The booking duration is determined by the business logic.
+  /// Returns the newly created [Booking].
+  Future<Booking> createBooking({
+    required DateTime startDate,
+    required String userId,
+  });
 }
