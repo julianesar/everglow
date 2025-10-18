@@ -215,48 +215,52 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
                               ),
                             ),
                             const SizedBox(height: 8),
-                            // Audio progress indicator
-                            if (isThisPracticePlaying ||
-                                isThisPracticePaused) ...[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    isThisPracticePlaying
-                                        ? Icons.play_arrow
-                                        : Icons.pause,
-                                    size: 16,
-                                    color: primaryColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    isThisPracticePlaying
-                                        ? 'Playing...'
-                                        : 'Paused',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w500,
+                            // Audio progress indicator - always reserves the same space
+                            SizedBox(
+                              height: 24, // Fixed height to maintain consistent size
+                              child: isThisPracticePlaying ||
+                                      isThisPracticePaused
+                                  ? Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          isThisPracticePlaying
+                                              ? Icons.play_arrow
+                                              : Icons.pause,
+                                          size: 16,
+                                          color: primaryColor,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          isThisPracticePlaying
+                                              ? 'Playing...'
+                                              : 'Paused',
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        'Tap to start guided practice',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurface.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ] else ...[
-                              Text(
-                                'Tap to start guided practice',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Completion chip centered at the bottom
-                    Center(
+                    // Completion chip centered
+                    Align(
+                      alignment: Alignment.center,
                       child: CompletionChip(
                         isCompleted: widget.practice.isCompleted,
                         onPressed: widget.practice.isCompleted

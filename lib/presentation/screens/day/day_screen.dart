@@ -335,6 +335,25 @@ class _SinglePrioritySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Split priority text to separate main text from subtitle (text in parentheses)
+    String mainText = priority;
+    String? subtitleText;
+
+    // Check if there's a parenthesis in the priority text
+    final openParenIndex = priority.indexOf('(');
+    final closeParenIndex = priority.indexOf(')');
+
+    if (openParenIndex != -1 &&
+        closeParenIndex != -1 &&
+        closeParenIndex > openParenIndex) {
+      // Extract main text (before the opening parenthesis, trimmed)
+      mainText = priority.substring(0, openParenIndex).trim();
+      // Extract subtitle (text inside parentheses)
+      subtitleText = priority
+          .substring(openParenIndex + 1, closeParenIndex)
+          .trim();
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -393,12 +412,25 @@ class _SinglePrioritySection extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    priority,
+                    mainText,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       height: 1.3,
                     ),
                   ),
+                  // Show subtitle if it exists
+                  if (subtitleText != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitleText,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -579,8 +611,9 @@ class _MedicalEventCardState extends ConsumerState<_MedicalEventCard>
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Completion chip centered at the bottom
-                    Center(
+                    // Completion chip centered
+                    Align(
+                      alignment: Alignment.center,
                       child: CompletionChip(
                         isCompleted: widget.event.isCompleted,
                         onPressed: widget.event.isCompleted
@@ -989,8 +1022,9 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
                           );
                         }),
                         const SizedBox(height: 16),
-                        // Completion chip centered at the bottom of expanded content
-                        Center(
+                        // Completion chip centered
+                        Align(
+                          alignment: Alignment.center,
                           child: CompletionChip(
                             isCompleted: widget.section.isCompleted,
                             onPressed: widget.section.isCompleted
