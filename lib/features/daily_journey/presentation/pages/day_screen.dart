@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -625,17 +626,23 @@ class _MedicalEventCardState extends ConsumerState<_MedicalEventCard>
             ),
           ),
         ),
-        // Confetti overlay
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ConfettiCelebration(
-              controller: confettiController,
-              numberOfParticles: 20,
-              minBlastForce: 5,
-              maxBlastForce: 15,
+        // Full-screen confetti overlay (top-centered)
+        if (widget.event.isCompleted)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiCelebration(
+                  controller: confettiController,
+                  numberOfParticles: 30,
+                  minBlastForce: 10,
+                  maxBlastForce: 20,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  festiveColors: true,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -1038,17 +1045,23 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
             ),
           ),
         ),
-        // Confetti overlay
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ConfettiCelebration(
-              controller: confettiController,
-              numberOfParticles: 20,
-              minBlastForce: 5,
-              maxBlastForce: 15,
+        // Full-screen confetti overlay (top-centered)
+        if (widget.section.isCompleted)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiCelebration(
+                  controller: confettiController,
+                  numberOfParticles: 30,
+                  minBlastForce: 10,
+                  maxBlastForce: 20,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  festiveColors: true,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

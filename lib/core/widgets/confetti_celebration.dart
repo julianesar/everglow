@@ -21,6 +21,9 @@ class ConfettiCelebration extends StatelessWidget {
   /// The direction of the confetti blast
   final double blastDirection;
 
+  /// The directionality of the confetti blast
+  final BlastDirectionality blastDirectionality;
+
   /// The number of particles to emit
   final int numberOfParticles;
 
@@ -33,38 +36,58 @@ class ConfettiCelebration extends StatelessWidget {
   /// The gravity force applied to particles
   final double gravity;
 
+  /// Whether to use festive colors (more vibrant) vs theme colors
+  final bool festiveColors;
+
   /// Creates a [ConfettiCelebration] widget
   const ConfettiCelebration({
     required this.controller,
     this.blastDirection = pi / 2, // Default: upward
+    this.blastDirectionality = BlastDirectionality.directional,
     this.numberOfParticles = 20,
     this.minBlastForce = 5,
     this.maxBlastForce = 15,
     this.gravity = 0.3,
+    this.festiveColors = false,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Define color palette based on festiveColors flag
+    final List<Color> colorPalette = festiveColors
+        ? [
+            const Color(0xFFFFD700), // Gold
+            const Color(0xFFFF6B9D), // Pink
+            const Color(0xFF9B59B6), // Purple
+            const Color(0xFF3498DB), // Blue
+            const Color(0xFF2ECC71), // Green
+            const Color(0xFFE74C3C), // Red
+            const Color(0xFFF39C12), // Orange
+            const Color(0xFF1ABC9C), // Turquoise
+          ]
+        : [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+            const Color(0xFFFFD700), // Gold
+            Colors.green,
+            Colors.purple,
+            Colors.pink,
+          ];
+
     return Align(
       alignment: Alignment.center,
       child: ConfettiWidget(
         confettiController: controller,
         blastDirection: blastDirection,
+        blastDirectionality: blastDirectionality,
         numberOfParticles: numberOfParticles,
         minBlastForce: minBlastForce,
         maxBlastForce: maxBlastForce,
         gravity: gravity,
         emissionFrequency: 0.05,
         shouldLoop: false,
-        colors: [
-          Theme.of(context).colorScheme.primary,
-          Theme.of(context).colorScheme.secondary,
-          const Color(0xFFFFD700), // Gold
-          Colors.green,
-          Colors.purple,
-          Colors.pink,
-        ],
+        colors: colorPalette,
         createParticlePath: _drawStar,
       ),
     );

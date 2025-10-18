@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/daily_journey_models.dart';
@@ -217,11 +218,13 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
                             const SizedBox(height: 8),
                             // Audio progress indicator - always reserves the same space
                             SizedBox(
-                              height: 24, // Fixed height to maintain consistent size
-                              child: isThisPracticePlaying ||
-                                      isThisPracticePaused
+                              height:
+                                  24, // Fixed height to maintain consistent size
+                              child:
+                                  isThisPracticePlaying || isThisPracticePaused
                                   ? Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           isThisPracticePlaying
@@ -235,21 +238,22 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
                                           isThisPracticePlaying
                                               ? 'Playing...'
                                               : 'Paused',
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: primaryColor,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ],
                                     )
                                   : Center(
                                       child: Text(
                                         'Tap to start guided practice',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurface.withValues(
-                                            alpha: 0.7,
-                                          ),
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.colorScheme.onSurface
+                                                  .withValues(alpha: 0.7),
+                                            ),
                                       ),
                                     ),
                             ),
@@ -274,17 +278,23 @@ class _GuidedPracticeWidgetState extends ConsumerState<GuidedPracticeWidget>
             ),
           ),
         ),
-        // Confetti overlay
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ConfettiCelebration(
-              controller: confettiController,
-              numberOfParticles: 20,
-              minBlastForce: 5,
-              maxBlastForce: 15,
+        // Full-screen confetti overlay (top-centered)
+        if (widget.practice.isCompleted)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiCelebration(
+                  controller: confettiController,
+                  numberOfParticles: 30,
+                  minBlastForce: 10,
+                  maxBlastForce: 20,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  festiveColors: true,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
