@@ -241,34 +241,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // Main onboarding flow
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: _currentPageIndex > 0
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: _previousPage,
-              )
-            : null,
-        actions: [
-          // Page indicator
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
-            child: Center(
-              child: Text(
-                '${_currentPageIndex + 1} / ${_pages.length}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+      body: Stack(
+        children: [
+          // Progress bar at top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: _OnboardingProgressBar(
+                currentPage: _currentPageIndex,
+                totalPages: _pages.length,
               ),
             ),
           ),
-        ],
-      ),
-      body: Stack(
-        children: [
+
           // PageView with all pages
-          PageView(
+          Padding(
+            padding: const EdgeInsets.only(top: 80),
+            child: PageView(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             onPageChanged: (index) {
@@ -277,6 +269,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               });
             },
             children: _pages,
+            ),
           ),
 
           // Navigation buttons at bottom
@@ -765,6 +758,70 @@ class _QuestionPageState extends State<QuestionPage> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Progress bar widget showing onboarding completion percentage
+///
+/// Displays visual progress through the onboarding flow with page count
+class _OnboardingProgressBar extends StatelessWidget {
+  const _OnboardingProgressBar({
+    required this.currentPage,
+    required this.totalPages,
+  });
+
+  final int currentPage;
+  final int totalPages;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = totalPages > 0 ? (currentPage + 1) / totalPages : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 12.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                '${currentPage + 1} / $totalPages',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

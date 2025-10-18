@@ -249,9 +249,7 @@ class _ProgressBar extends StatelessWidget {
                 context,
               ).colorScheme.primary.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
-                progress == 1.0
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
