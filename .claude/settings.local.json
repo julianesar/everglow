@@ -26,7 +26,16 @@
       "Bash(findstr:*)",
       "Bash(dart run flutter_native_splash:create:*)",
       "Bash(move \"lib\\presentation\\screens\\onboarding\\onboarding_screen.dart\" \"lib\\presentation\\screens\\onboarding\\legacy_onboarding_screen.dart\")",
-      "Bash(ren \"lib\\presentation\\screens\\onboarding\\onboarding_screen.dart\" \"legacy_onboarding_screen.dart\")"
+      "Bash(ren \"lib\\presentation\\screens\\onboarding\\onboarding_screen.dart\" \"legacy_onboarding_screen.dart\")",
+      "Bash(move libdatalocalisar_provider.dart libcoredatabase )",
+      "Bash(move libdatalocalisar_provider.g.dart libcoredatabase)",
+      "Bash(move libdataremotedio_provider.dart libcorenetwork )",
+      "Bash(move libdataremotedio_provider.g.dart libcorenetwork )",
+      "Bash(move libdataremoteapi_keys.dart libcorenetwork )",
+      "Bash(move libdataremoteai_report_service.dart libcorenetwork )",
+      "Bash(move libdataremoteai_report_service.g.dart libcorenetwork )",
+      "Bash(move libdataremoteai_report_service_provider.dart libcorenetwork )",
+      "Bash(move libdataremoteai_report_service_provider.g.dart libcorenetwork)"
     ],
     "deny": [],
     "ask": []

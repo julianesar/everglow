@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:everglow_app/presentation/core/theme/app_theme.dart';
-import 'package:everglow_app/presentation/core/router/app_router.dart';
-import 'package:everglow_app/data/local/isar_provider.dart';
-import 'package:everglow_app/presentation/core/services/notification_service.dart';
+import 'package:everglow_app/core/theme/app_theme.dart';
+import 'package:everglow_app/core/router/app_router.dart';
+import 'package:everglow_app/core/database/isar_provider.dart';
+import 'package:everglow_app/core/services/notification_service.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
