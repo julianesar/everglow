@@ -74,6 +74,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ///
   /// Creates question pages for each question and inserts transition pages
   /// between sections (if there are multiple sections).
+  /// Adds a final completion page after all sections.
   List<Widget> _flattenSectionsIntoPages(List<OnboardingSection> sections) {
     final List<Widget> pages = [];
 
@@ -118,6 +119,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           );
         }
       }
+    }
+
+    // Add final completion page after all sections
+    if (sections.isNotEmpty) {
+      pages.add(const CompletionPage());
     }
 
     return pages;
@@ -759,6 +765,93 @@ class _QuestionPageState extends State<QuestionPage> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Completion page displayed after all onboarding questions are finished
+///
+/// Shows a congratulatory message and indicates that the user is ready
+/// to start their experience.
+class CompletionPage extends StatelessWidget {
+  const CompletionPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Success icon
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.celebration,
+                    color: Color(0xFF4CAF50),
+                    size: 72,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Completion message
+                Text(
+                  'All Set!',
+                  style: theme.textTheme.headlineLarge,
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Encouragement message
+                Text(
+                  'Thank you for completing the onboarding. Your personalized experience is ready.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 48),
+
+                // Visual separator
+                Container(
+                  height: 2,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Next step indication
+                Text(
+                  'Press "Complete" to begin your journey',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
