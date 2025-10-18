@@ -8,6 +8,12 @@ enum JourneyStatus {
   /// This is the initial state when the app is first launched.
   needsOnboarding,
 
+  /// User has completed onboarding and has a booking, but has not checked in yet.
+  ///
+  /// This state indicates that the user is waiting for their arrival date
+  /// or has arrived but not yet completed the check-in process.
+  awaitingArrival,
+
   /// User has completed onboarding and is actively working through the journey.
   ///
   /// This state indicates that a user exists but has not yet completed

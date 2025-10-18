@@ -23,6 +23,9 @@ class User {
   /// Flag indicating whether the user has completed the onboarding process
   bool hasCompletedOnboarding = false;
 
+  /// ID of the user's current booking (if any)
+  String? bookingId;
+
   /// Default constructor
   User();
 

@@ -17,23 +17,28 @@ const UserSchema = CollectionSchema(
   name: r'User',
   id: -7838171048429979076,
   properties: {
-    r'generatedReport': PropertySchema(
+    r'bookingId': PropertySchema(
       id: 0,
+      name: r'bookingId',
+      type: IsarType.string,
+    ),
+    r'generatedReport': PropertySchema(
+      id: 1,
       name: r'generatedReport',
       type: IsarType.string,
     ),
     r'hasCompletedOnboarding': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'hasCompletedOnboarding',
       type: IsarType.bool,
     ),
     r'integrationStatement': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'integrationStatement',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'name',
       type: IsarType.string,
     )
@@ -59,6 +64,12 @@ int _userEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
+    final value = object.bookingId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.generatedReport;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -75,10 +86,11 @@ void _userSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.generatedReport);
-  writer.writeBool(offsets[1], object.hasCompletedOnboarding);
-  writer.writeString(offsets[2], object.integrationStatement);
-  writer.writeString(offsets[3], object.name);
+  writer.writeString(offsets[0], object.bookingId);
+  writer.writeString(offsets[1], object.generatedReport);
+  writer.writeBool(offsets[2], object.hasCompletedOnboarding);
+  writer.writeString(offsets[3], object.integrationStatement);
+  writer.writeString(offsets[4], object.name);
 }
 
 User _userDeserialize(
@@ -88,11 +100,12 @@ User _userDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = User();
-  object.generatedReport = reader.readStringOrNull(offsets[0]);
-  object.hasCompletedOnboarding = reader.readBool(offsets[1]);
+  object.bookingId = reader.readStringOrNull(offsets[0]);
+  object.generatedReport = reader.readStringOrNull(offsets[1]);
+  object.hasCompletedOnboarding = reader.readBool(offsets[2]);
   object.id = id;
-  object.integrationStatement = reader.readString(offsets[2]);
-  object.name = reader.readString(offsets[3]);
+  object.integrationStatement = reader.readString(offsets[3]);
+  object.name = reader.readString(offsets[4]);
   return object;
 }
 
@@ -106,10 +119,12 @@ P _userDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -204,6 +219,152 @@ extension UserQueryWhere on QueryBuilder<User, User, QWhereClause> {
 }
 
 extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'bookingId',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'bookingId',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bookingId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'bookingId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'bookingId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bookingId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> bookingIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'bookingId',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<User, User, QAfterFilterCondition> generatedReportIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -680,6 +841,18 @@ extension UserQueryObject on QueryBuilder<User, User, QFilterCondition> {}
 extension UserQueryLinks on QueryBuilder<User, User, QFilterCondition> {}
 
 extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
+  QueryBuilder<User, User, QAfterSortBy> sortByBookingId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bookingId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByBookingIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bookingId', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> sortByGeneratedReport() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generatedReport', Sort.asc);
@@ -730,6 +903,18 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
 }
 
 extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
+  QueryBuilder<User, User, QAfterSortBy> thenByBookingId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bookingId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByBookingIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bookingId', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> thenByGeneratedReport() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generatedReport', Sort.asc);
@@ -792,6 +977,13 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
 }
 
 extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
+  QueryBuilder<User, User, QDistinct> distinctByBookingId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bookingId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<User, User, QDistinct> distinctByGeneratedReport(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -826,6 +1018,12 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
   QueryBuilder<User, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<User, String?, QQueryOperations> bookingIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bookingId');
     });
   }
 

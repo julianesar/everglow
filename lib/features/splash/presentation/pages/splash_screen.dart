@@ -39,6 +39,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   ///
   /// Navigation logic:
   /// - [JourneyStatus.needsOnboarding] → `/onboarding`
+  /// - [JourneyStatus.awaitingArrival] → `/logistics-hub`
   /// - [JourneyStatus.inProgress] → `/day/X` where X = currentDay + 1
   /// - [JourneyStatus.completed] → `/hub`
   Future<void> _navigateBasedOnStatus() async {
@@ -66,6 +67,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         case JourneyStatus.needsOnboarding:
           // User hasn't completed onboarding yet
           context.go('/onboarding');
+          break;
+
+        case JourneyStatus.awaitingArrival:
+          // User has completed onboarding but hasn't checked in yet
+          // Navigate to the logistics hub
+          context.go('/logistics-hub');
           break;
 
         case JourneyStatus.inProgress:

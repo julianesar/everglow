@@ -163,8 +163,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       await repository.submitOnboardingAnswers(_answers);
 
       if (mounted) {
-        // Navigate to day 1 after successful onboarding
-        context.go('/day/1');
+        // Navigate to splash to re-evaluate journey status
+        // SplashScreen will redirect to the correct destination (logistics-hub)
+        context.go('/splash');
       }
     } catch (e) {
       setState(() {

@@ -6,6 +6,8 @@ import 'package:everglow_app/features/onboarding/presentation/pages/onboarding_s
 import 'package:everglow_app/features/daily_journey/presentation/pages/day_screen.dart';
 import 'package:everglow_app/features/report/presentation/pages/report_screen.dart';
 import 'package:everglow_app/features/hub/presentation/pages/hub_screen.dart';
+import 'package:everglow_app/features/logistics_hub/presentation/pages/logistics_hub_screen.dart';
+import 'package:everglow_app/features/logistics_hub/presentation/pages/check_in_celebration_screen.dart';
 import 'package:everglow_app/features/auth/presentation/pages/auth_screen.dart';
 import 'package:everglow_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:everglow_app/core/router/auth_notifier.dart';
@@ -97,6 +99,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'hub',
         pageBuilder: (context, state) =>
             MaterialPage(key: state.pageKey, child: const HubScreen()),
+      ),
+
+      // Logistics Hub route - Pre-arrival and arrival day logistics
+      GoRoute(
+        path: '/logistics-hub',
+        name: 'logistics-hub',
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const LogisticsHubScreen()),
+      ),
+
+      // Check-in celebration route - Shown after successful check-in
+      GoRoute(
+        path: '/check-in-celebration',
+        name: 'checkInCelebration',
+        pageBuilder: (context, state) => MaterialPage(
+            key: state.pageKey, child: const CheckInCelebrationScreen()),
       ),
     ],
 

@@ -49,3 +49,6 @@ app.*.map.json
 
 # Supabase credentials
 /lib/core/secrets/supabase_keys.dart
+
+# Development configuration
+/lib/core/config/dev_config.dart

@@ -5,6 +5,8 @@ import '../../../user/data/models/user_model.dart';
 import '../../../user/domain/repositories/user_repository.dart';
 import '../../../user/data/repositories/user_repository_impl.dart';
 import '../../../journal/data/models/daily_log_model.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
+import '../../../booking/data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/journey_status.dart';
 import '../../../../core/database/isar_provider.dart';
 
@@ -20,6 +22,7 @@ abstract class ProgressRepository {
   ///
   /// Returns [JourneyStatus.needsOnboarding] if no user exists in the database
   /// or if the user has not completed the onboarding process.
+  /// Returns [JourneyStatus.awaitingArrival] if the user has a booking but is not checked in.
   /// Returns [JourneyStatus.completed] if a generated report exists and is not empty.
   /// Returns [JourneyStatus.inProgress] otherwise.
   ///
@@ -27,7 +30,9 @@ abstract class ProgressRepository {
   /// 1. Verify if a user exists (if not, return needsOnboarding)
   /// 2. Check if the user has completed onboarding (if not, return needsOnboarding)
   /// 3. Check if a generated report exists and is not empty (if yes, return completed)
-  /// 4. Otherwise, return inProgress
+  /// 4. Check if the user has a booking and if they are checked in
+  /// 5. If booking exists but not checked in, return awaitingArrival
+  /// 6. Otherwise, return inProgress
   Future<JourneyStatus> getJourneyStatus();
 
   /// Gets the current day number based on saved Single Priorities.
@@ -54,11 +59,19 @@ class IsarProgressRepository implements ProgressRepository {
   /// The user repository to check for user existence and generated reports.
   final UserRepository _userRepository;
 
+  /// The booking repository to check for booking status.
+  final BookingRepository _bookingRepository;
+
   /// Creates an instance of [IsarProgressRepository].
   ///
   /// [isar] The Isar database instance to use for queries.
   /// [userRepository] The user repository to check for user data.
-  const IsarProgressRepository(this._isar, this._userRepository);
+  /// [bookingRepository] The booking repository to check for booking data.
+  const IsarProgressRepository(
+    this._isar,
+    this._userRepository,
+    this._bookingRepository,
+  );
 
   @override
   Future<JourneyStatus> getJourneyStatus() async {
@@ -81,7 +94,15 @@ class IsarProgressRepository implements ProgressRepository {
       return JourneyStatus.completed;
     }
 
-    // Step 4: User exists and completed onboarding but no report generated,
+    // Step 4: Check if the user has a booking
+    final booking = await _bookingRepository.getActiveBookingForUser(user.id.toString());
+
+    // Step 5: If booking exists but user is not checked in, they are awaiting arrival
+    if (booking != null && !booking.isCheckedIn) {
+      return JourneyStatus.awaitingArrival;
+    }
+
+    // Step 6: User exists, completed onboarding, checked in, but no report generated,
     // journey is in progress
     return JourneyStatus.inProgress;
   }
@@ -109,9 +130,10 @@ class IsarProgressRepository implements ProgressRepository {
 /// This provider creates and manages the [IsarProgressRepository] instance,
 /// which uses Isar for querying progress data.
 ///
-/// The provider watches [isarProvider] to get the database instance
-/// and [userRepositoryProvider] to get the user repository instance,
-/// then passes both to the repository constructor.
+/// The provider watches [isarProvider] to get the database instance,
+/// [userRepositoryProvider] to get the user repository instance,
+/// and [bookingRepositoryProvider] to get the booking repository instance,
+/// then passes all three to the repository constructor.
 ///
 /// Usage example:
 /// ```dart
@@ -123,5 +145,6 @@ class IsarProgressRepository implements ProgressRepository {
 Future<ProgressRepository> progressRepository(ProgressRepositoryRef ref) async {
   final isar = await ref.watch(isarProvider.future);
   final userRepo = await ref.watch(userRepositoryProvider.future);
-  return IsarProgressRepository(isar, userRepo);
+  final bookingRepo = ref.watch(bookingRepositoryProvider);
+  return IsarProgressRepository(isar, userRepo, bookingRepo);
 }

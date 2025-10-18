@@ -2,6 +2,8 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../features/booking/data/models/booking_model.dart';
+import '../../features/concierge/data/models/concierge_info_model.dart';
 import '../../features/journal/data/models/daily_log_model.dart';
 import '../../features/journal/data/models/journal_entry_model.dart';
 import '../../features/user/data/models/user_model.dart';
@@ -33,6 +35,8 @@ Future<Isar> openIsar() async {
       JournalEntrySchema,
       MedicalProfileSchema,
       ConciergePreferencesSchema,
+      BookingModelSchema,
+      ConciergeInfoModelSchema,
     ],
     directory: dir.path,
     // Inspector is useful for debugging in development

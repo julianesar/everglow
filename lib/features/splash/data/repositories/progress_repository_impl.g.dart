@@ -7,16 +7,17 @@ part of 'progress_repository_impl.dart';
 // **************************************************************************
 
 String _$progressRepositoryHash() =>
-    r'52829aa11adf7cc18482aed43b33ce0dd30b1848';
+    r'138649322db4d55d6587e150a91fd2bf48d840d5';
 
 /// Provides an instance of [ProgressRepository].
 ///
 /// This provider creates and manages the [IsarProgressRepository] instance,
 /// which uses Isar for querying progress data.
 ///
-/// The provider watches [isarProvider] to get the database instance
-/// and [userRepositoryProvider] to get the user repository instance,
-/// then passes both to the repository constructor.
+/// The provider watches [isarProvider] to get the database instance,
+/// [userRepositoryProvider] to get the user repository instance,
+/// and [bookingRepositoryProvider] to get the booking repository instance,
+/// then passes all three to the repository constructor.
 ///
 /// Usage example:
 /// ```dart
