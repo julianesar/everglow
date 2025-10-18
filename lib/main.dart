@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:everglow_app/core/theme/app_theme.dart';
 import 'package:everglow_app/core/router/app_router.dart';
 import 'package:everglow_app/core/database/isar_provider.dart';
 import 'package:everglow_app/core/services/notification_service.dart';
+import 'package:everglow_app/core/secrets/supabase_keys.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -11,6 +13,18 @@ import 'package:timezone/timezone.dart' as tz;
 void main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase client
+  try {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  } catch (e) {
+    // Log the error and rethrow to prevent app from running with uninitialized Supabase
+    debugPrint('Failed to initialize Supabase: $e');
+    rethrow;
+  }
 
   // Initialize timezone database
   // This MUST be called before using any timezone functionality

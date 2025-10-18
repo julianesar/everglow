@@ -6,12 +6,54 @@ import 'package:everglow_app/features/onboarding/presentation/pages/onboarding_s
 import 'package:everglow_app/features/daily_journey/presentation/pages/day_screen.dart';
 import 'package:everglow_app/features/report/presentation/pages/report_screen.dart';
 import 'package:everglow_app/features/hub/presentation/pages/hub_screen.dart';
+import 'package:everglow_app/features/auth/presentation/pages/auth_screen.dart';
+import 'package:everglow_app/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:everglow_app/core/router/auth_notifier.dart';
 
 /// Provider for the app router instance
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Get the auth notifier that will trigger router refreshes
+  final authNotifier = ref.watch(authNotifierProvider);
+
+  // Get the auth repository for checking current user state
+  final authRepository = ref.watch(authRepositoryProvider);
+
   return GoRouter(
     initialLocation: '/splash',
+    // Listen to auth state changes and refresh routes automatically
+    refreshListenable: authNotifier,
+    // Redirect logic - acts as the gatekeeper for protected routes
+    redirect: (context, state) {
+      // Get the current authenticated user synchronously
+      final currentUser = authRepository.currentUser;
+
+      // Get the location the user is trying to access
+      final targetLocation = state.matchedLocation;
+
+      // Rule 1: User is NOT logged in AND trying to access a protected page
+      // Redirect to /auth
+      if (currentUser == null && targetLocation != '/auth') {
+        return '/auth';
+      }
+
+      // Rule 2: User IS logged in AND on the auth page
+      // Redirect to /splash (which handles intelligent routing)
+      if (currentUser != null && targetLocation == '/auth') {
+        return '/splash';
+      }
+
+      // Rule 3: Allow navigation in all other cases
+      return null;
+    },
     routes: [
+      // Authentication route
+      GoRoute(
+        path: '/auth',
+        name: 'auth',
+        pageBuilder: (context, state) =>
+            MaterialPage(key: state.pageKey, child: const AuthScreen()),
+      ),
+
       // Splash screen that handles intelligent navigation
       GoRoute(
         path: '/splash',

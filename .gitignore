@@ -46,3 +46,6 @@ app.*.map.json
 /android/app/release
 
 /lib/data/remote/api_keys.dart
+
+# Supabase credentials
+/lib/core/secrets/supabase_keys.dart

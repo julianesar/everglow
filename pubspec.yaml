@@ -24,6 +24,7 @@ dependencies:
   # Networking
   dio: ^5.7.0
   json_annotation: ^4.9.0
+  supabase_flutter: ^2.10.2
 
   # Audio
   just_audio: ^0.9.42
