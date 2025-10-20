@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-This is a Flutter application named "everglow_app" using Flutter SDK 3.9.2+. The project supports multiple platforms: Android, iOS, Linux, macOS, Windows, and Web.
-
 ## Architecture
 
 ### Clean Architecture (Feature-First)

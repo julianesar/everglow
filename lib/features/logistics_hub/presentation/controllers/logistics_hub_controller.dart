@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../auth/data/repositories/auth_repository_impl.dart';
 import '../../../booking/data/repositories/booking_repository_impl.dart';
@@ -33,11 +31,18 @@ class LogisticsHubState {
   /// the assigned driver, villa, and check-in instructions.
   final ConciergeInfo? conciergeInfo;
 
+  /// Indicates whether to show the check-in celebration overlay.
+  ///
+  /// When true, the celebration overlay is displayed on top of the
+  /// Logistics Hub screen with confetti and welcome message.
+  final bool showCelebration;
+
   /// Creates a new [LogisticsHubState] instance.
   const LogisticsHubState({
     required this.isArrivalDay,
     required this.booking,
     this.conciergeInfo,
+    this.showCelebration = false,
   });
 
   /// Creates a copy of this state with the given fields replaced with new values.
@@ -45,11 +50,13 @@ class LogisticsHubState {
     bool? isArrivalDay,
     Booking? booking,
     ConciergeInfo? conciergeInfo,
+    bool? showCelebration,
   }) {
     return LogisticsHubState(
       isArrivalDay: isArrivalDay ?? this.isArrivalDay,
       booking: booking ?? this.booking,
       conciergeInfo: conciergeInfo ?? this.conciergeInfo,
+      showCelebration: showCelebration ?? this.showCelebration,
     );
   }
 
@@ -60,19 +67,21 @@ class LogisticsHubState {
     return other is LogisticsHubState &&
         other.isArrivalDay == isArrivalDay &&
         other.booking == booking &&
-        other.conciergeInfo == conciergeInfo;
+        other.conciergeInfo == conciergeInfo &&
+        other.showCelebration == showCelebration;
   }
 
   @override
   int get hashCode {
     return isArrivalDay.hashCode ^
         booking.hashCode ^
-        conciergeInfo.hashCode;
+        conciergeInfo.hashCode ^
+        showCelebration.hashCode;
   }
 
   @override
   String toString() {
-    return 'LogisticsHubState(isArrivalDay: $isArrivalDay, booking: $booking, conciergeInfo: $conciergeInfo)';
+    return 'LogisticsHubState(isArrivalDay: $isArrivalDay, booking: $booking, conciergeInfo: $conciergeInfo, showCelebration: $showCelebration)';
   }
 }
 
@@ -174,12 +183,11 @@ class LogisticsHubController extends _$LogisticsHubController {
   /// This method:
   /// 1. Updates the booking's isCheckedIn status to true
   /// 2. Persists the updated booking via the repository
-  /// 3. Refreshes the controller state to reflect the changes
-  /// 4. Navigates to the check-in celebration screen
+  /// 3. Updates the state to show the celebration overlay
   ///
   /// Throws an exception if the state is not currently loaded or if
   /// the booking update fails.
-  Future<void> performCheckIn(BuildContext context) async {
+  Future<void> performCheckIn() async {
     // Ensure we have a valid state with booking data
     final currentState = state.value;
     if (currentState == null) {
@@ -196,14 +204,30 @@ class LogisticsHubController extends _$LogisticsHubController {
       // Persist the updated booking
       await bookingRepository.updateBooking(updatedBooking);
 
-      // Refresh the state to reflect the changes
-      await refresh();
-
-      // Navigate to the check-in celebration screen
-      GoRouter.of(context).go('/check-in-celebration');
+      // Update the state to show celebration overlay
+      state = AsyncValue.data(
+        currentState.copyWith(
+          booking: updatedBooking,
+          showCelebration: true,
+        ),
+      );
     } catch (e) {
       // Re-throw the exception to let the UI handle the error
       throw Exception('Failed to check in: $e');
+    }
+  }
+
+  /// Dismisses the check-in celebration overlay.
+  ///
+  /// This method updates the state to hide the celebration overlay.
+  /// Should be called when the user dismisses the celebration or
+  /// when the auto-dismiss timer completes.
+  void dismissCelebration() {
+    final currentState = state.value;
+    if (currentState != null && currentState.showCelebration) {
+      state = AsyncValue.data(
+        currentState.copyWith(showCelebration: false),
+      );
     }
   }
 

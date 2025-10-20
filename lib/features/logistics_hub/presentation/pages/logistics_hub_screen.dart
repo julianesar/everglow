@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../concierge/domain/entities/concierge_info.dart';
+import '../../../main_tabs/presentation/controllers/main_tabs_controller.dart';
 import '../controllers/logistics_hub_controller.dart';
+import '../widgets/check_in_celebration_overlay.dart';
 
 /// Main screen for the Logistics Hub.
 ///
@@ -18,31 +20,62 @@ import '../controllers/logistics_hub_controller.dart';
 /// **Arrival Mode (isArrivalDay == true):**
 /// - Welcome message
 /// - Concierge information (driver, villa, check-in instructions)
-/// - Call-to-action buttons
-class LogisticsHubScreen extends ConsumerWidget {
+/// - Check-in button
+class LogisticsHubScreen extends ConsumerStatefulWidget {
   const LogisticsHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LogisticsHubScreen> createState() => _LogisticsHubScreenState();
+}
+
+class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
+
+  @override
+  Widget build(BuildContext context) {
     final asyncState = ref.watch(logisticsHubControllerProvider);
 
     return Scaffold(
       body: asyncState.when(
         loading: () => _buildLoadingState(),
         error: (error, stackTrace) => _buildErrorState(context, error),
-        data: (state) => state.isArrivalDay
-            ? _buildArrivalMode(context, ref, state)
-            : _buildWaitingMode(context, state),
+        data: (state) => Stack(
+          children: [
+            // Main content
+            state.isArrivalDay
+                ? _buildArrivalMode(context, ref, state)
+                : _buildWaitingMode(context, state),
+
+            // Celebration overlay (shown after check-in)
+            if (state.showCelebration)
+              CheckInCelebrationOverlay(
+                onDismiss: () {
+                  // Dismiss the celebration overlay
+                  ref
+                      .read(logisticsHubControllerProvider.notifier)
+                      .dismissCelebration();
+
+                  // Switch to Journey tab (index 1)
+                  ref.read(mainTabsControllerProvider.notifier).setTab(1);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
 
   /// Builds the loading state with a centered progress indicator.
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFB89A6A)),
-      ),
+    return Builder(
+      builder: (context) {
+        return Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -56,11 +89,7 @@ class LogisticsHubScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 24),
             Text(
               'Something went wrong',
@@ -169,7 +198,7 @@ class LogisticsHubScreen extends ConsumerWidget {
                   Text(
                     _formatDate(state.booking.startDate),
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      color: const Color(0xFFB89A6A),
+                      color: theme.colorScheme.primary,
                       letterSpacing: 0.5,
                     ),
                     textAlign: TextAlign.center,
@@ -194,10 +223,10 @@ class LogisticsHubScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
-        color: const Color(0xFF121212).withValues(alpha: 0.7),
+        color: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFB89A6A).withValues(alpha: 0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -210,14 +239,18 @@ class LogisticsHubScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Days
-                _buildTimeUnit(context, days.toString().padLeft(2, '0'), 'DAYS'),
+                _buildTimeUnit(
+                  context,
+                  days.toString().padLeft(2, '0'),
+                  'DAYS',
+                ),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     ':',
                     style: theme.textTheme.displayMedium?.copyWith(
-                      color: const Color(0xFFB89A6A),
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w300,
                       height: 1.0,
                     ),
@@ -225,14 +258,18 @@ class LogisticsHubScreen extends ConsumerWidget {
                 ),
 
                 // Hours
-                _buildTimeUnit(context, hours.toString().padLeft(2, '0'), 'HOURS'),
+                _buildTimeUnit(
+                  context,
+                  hours.toString().padLeft(2, '0'),
+                  'HOURS',
+                ),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     ':',
                     style: theme.textTheme.displayMedium?.copyWith(
-                      color: const Color(0xFFB89A6A),
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w300,
                       height: 1.0,
                     ),
@@ -240,14 +277,18 @@ class LogisticsHubScreen extends ConsumerWidget {
                 ),
 
                 // Minutes
-                _buildTimeUnit(context, minutes.toString().padLeft(2, '0'), 'MINS'),
+                _buildTimeUnit(
+                  context,
+                  minutes.toString().padLeft(2, '0'),
+                  'MINS',
+                ),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
                     ':',
                     style: theme.textTheme.displayMedium?.copyWith(
-                      color: const Color(0xFFB89A6A),
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w300,
                       height: 1.0,
                     ),
@@ -255,7 +296,11 @@ class LogisticsHubScreen extends ConsumerWidget {
                 ),
 
                 // Seconds
-                _buildTimeUnit(context, seconds.toString().padLeft(2, '0'), 'SECS'),
+                _buildTimeUnit(
+                  context,
+                  seconds.toString().padLeft(2, '0'),
+                  'SECS',
+                ),
               ],
             ),
           ),
@@ -282,7 +327,7 @@ class LogisticsHubScreen extends ConsumerWidget {
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: const Color(0xFFB89A6A),
+            color: theme.colorScheme.primary,
             letterSpacing: 1.5,
           ),
         ),
@@ -294,57 +339,83 @@ class LogisticsHubScreen extends ConsumerWidget {
   ///
   /// Displays:
   /// - Emotional header with "Today is the Day" message
-  /// - Driver information with call button
-  /// - Villa information with image
-  /// - Check-in instructions
+  /// - Arrival logistics information
   /// - Sticky check-in button at the bottom
-  Widget _buildArrivalMode(BuildContext context, WidgetRef ref, LogisticsHubState state) {
+  Widget _buildArrivalMode(
+    BuildContext context,
+    WidgetRef ref,
+    LogisticsHubState state,
+  ) {
     final theme = Theme.of(context);
     final concierge = state.conciergeInfo;
+
+    return Column(
+      children: [
+        // Emotional Header
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 48,
+              left: 24,
+              right: 24,
+              bottom: 24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Today is the Day!',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Welcome to EverGlow. We are ready for your arrival.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    fontSize: 18,
+                    height: 1.5,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Main content
+        Expanded(
+          child: _buildArrivalContent(context, ref, state, concierge),
+        ),
+      ],
+    );
+  }
+
+  /// Builds arrival content with arrival logistics information.
+  Widget _buildArrivalContent(
+    BuildContext context,
+    WidgetRef ref,
+    LogisticsHubState state,
+    ConciergeInfo? concierge,
+  ) {
+    final theme = Theme.of(context);
 
     return Stack(
       children: [
         // Scrollable content
         ListView(
           padding: EdgeInsets.only(
-            top: 0,
+            top: 24,
             left: 24,
             right: 24,
-            bottom: !state.booking.isCheckedIn ? 120 : 24, // Extra padding for sticky button
+            bottom: !state.booking.isCheckedIn ? 120 : 24,
           ),
           children: [
-            // Emotional Header
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 48, bottom: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today is the Day!',
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w400,
-                        height: 1.2,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Welcome to EverGlow. We are ready for your arrival.',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                        fontSize: 18,
-                        height: 1.5,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             if (concierge != null) ...[
               // Driver information card
               _buildDriverCard(context, concierge),
@@ -388,7 +459,9 @@ class LogisticsHubScreen extends ConsumerWidget {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      ref.read(logisticsHubControllerProvider.notifier).performCheckIn(context);
+                      ref
+                          .read(logisticsHubControllerProvider.notifier)
+                          .performCheckIn();
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 56),
@@ -435,7 +508,9 @@ class LogisticsHubScreen extends ConsumerWidget {
                       Text(
                         'Your Driver',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -569,16 +644,13 @@ class LogisticsHubScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               concierge.checkInInstructions,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.6,
-              ),
+              style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
             ),
           ],
         ),
       ),
     );
   }
-
 
   /// Builds a fallback message when no concierge info is available.
   Widget _buildNoConciergeInfo(BuildContext context) {

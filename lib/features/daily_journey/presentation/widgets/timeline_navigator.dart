@@ -5,18 +5,32 @@ import 'package:go_router/go_router.dart';
 ///
 /// Displays the current day number with left and right navigation buttons.
 /// Navigation buttons are automatically disabled at the boundaries (day 1 and day 3).
+///
+/// This widget supports two navigation modes:
+/// 1. Callback-based (for in-tab navigation): Provide [onNavigateToDay]
+/// 2. Router-based (for standalone navigation): Uses GoRouter when callback is null
 class TimelineNavigator extends StatelessWidget {
   /// The current day number (1-3).
   final int currentDay;
 
+  /// Optional callback for navigating to a specific day.
+  /// When provided, this callback is used instead of GoRouter navigation.
+  /// This allows navigation to stay within a tab context.
+  final void Function(int day)? onNavigateToDay;
+
   /// Creates a [TimelineNavigator].
   ///
   /// The [currentDay] parameter must be between 1 and 3 inclusive.
-  const TimelineNavigator({super.key, required this.currentDay})
-    : assert(
-        currentDay >= 1 && currentDay <= 3,
-        'currentDay must be between 1 and 3',
-      );
+  /// If [onNavigateToDay] is provided, it will be used for navigation.
+  /// Otherwise, GoRouter navigation will be used.
+  const TimelineNavigator({
+    super.key,
+    required this.currentDay,
+    this.onNavigateToDay,
+  }) : assert(
+          currentDay >= 1 && currentDay <= 3,
+          'currentDay must be between 1 and 3',
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +44,15 @@ class TimelineNavigator extends StatelessWidget {
         // Previous day button
         IconButton(
           onPressed: canGoPrevious
-              ? () => context.go('/day/${currentDay - 1}')
+              ? () {
+                  if (onNavigateToDay != null) {
+                    // Use callback-based navigation (stays in tab)
+                    onNavigateToDay!(currentDay - 1);
+                  } else {
+                    // Use router-based navigation (full-screen)
+                    context.go('/day/${currentDay - 1}');
+                  }
+                }
               : null,
           icon: const Icon(Icons.chevron_left),
           tooltip: canGoPrevious ? 'Previous day' : null,
@@ -53,7 +75,15 @@ class TimelineNavigator extends StatelessWidget {
         // Next day button
         IconButton(
           onPressed: canGoNext
-              ? () => context.go('/day/${currentDay + 1}')
+              ? () {
+                  if (onNavigateToDay != null) {
+                    // Use callback-based navigation (stays in tab)
+                    onNavigateToDay!(currentDay + 1);
+                  } else {
+                    // Use router-based navigation (full-screen)
+                    context.go('/day/${currentDay + 1}');
+                  }
+                }
               : null,
           icon: const Icon(Icons.chevron_right),
           tooltip: canGoNext ? 'Next day' : null,

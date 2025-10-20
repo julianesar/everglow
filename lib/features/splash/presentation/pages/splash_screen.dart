@@ -8,11 +8,10 @@ import '../../domain/entities/journey_status.dart';
 ///
 /// This screen performs the following:
 /// 1. Displays a loading indicator while checking user progress
-/// 2. Queries [ProgressRepository] to determine journey status and current day
+/// 2. Queries [ProgressRepository] to determine journey status
 /// 3. Redirects to the appropriate screen:
 ///    - `/onboarding` if [JourneyStatus.needsOnboarding]
-///    - `/day/X` if [JourneyStatus.inProgress] (where X is the current day + 1)
-///    - `/hub` if [JourneyStatus.completed]
+///    - `/tabs` if user has completed onboarding (all other statuses)
 ///
 /// The redirection is near-instantaneous once the status is determined.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -34,14 +33,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   ///
   /// This method:
   /// 1. Waits for the [ProgressRepository] to be available
-  /// 2. Fetches the [JourneyStatus] and current day
+  /// 2. Fetches the [JourneyStatus]
   /// 3. Navigates to the correct route using [GoRouter]
   ///
   /// Navigation logic:
   /// - [JourneyStatus.needsOnboarding] → `/onboarding`
-  /// - [JourneyStatus.awaitingArrival] → `/logistics-hub`
-  /// - [JourneyStatus.inProgress] → `/day/X` where X = currentDay + 1
-  /// - [JourneyStatus.completed] → `/hub`
+  /// - [JourneyStatus.awaitingArrival] → `/tabs` (logistics hub accessible via tab 1)
+  /// - [JourneyStatus.inProgress] → `/tabs` (daily journey accessible via tab 2)
+  /// - [JourneyStatus.completed] → `/tabs` (all features accessible)
   Future<void> _navigateBasedOnStatus() async {
     // Ensure the widget is still mounted before proceeding
     if (!mounted) return;
@@ -50,14 +49,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // Get the progress repository instance
       final progressRepo = await ref.read(progressRepositoryProvider.future);
 
-      // Get the journey status and current day in parallel for efficiency
-      final results = await Future.wait([
-        progressRepo.getJourneyStatus(),
-        progressRepo.getCurrentDay(),
-      ]);
-
-      final status = results[0] as JourneyStatus;
-      final currentDay = results[1] as int;
+      // Get the journey status
+      final status = await progressRepo.getJourneyStatus();
 
       // Ensure widget is still mounted before navigating
       if (!mounted) return;
@@ -71,23 +64,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
         case JourneyStatus.awaitingArrival:
           // User has completed onboarding but hasn't checked in yet
-          // Navigate to the logistics hub
-          context.go('/logistics-hub');
+          // Navigate to the main tabs (logistics hub will be accessible there)
+          context.go('/tabs');
           break;
 
         case JourneyStatus.inProgress:
           // User is actively working through the journey
-          // Navigate to the next day they should work on (currentDay + 1)
-          // If currentDay is 0, they start at day 1
-          // If currentDay is 1, they go to day 2, etc.
-          final nextDay = currentDay + 1;
-          context.go('/day/$nextDay');
+          // Navigate to main tabs (they can access daily journey from there)
+          context.go('/tabs');
           break;
 
         case JourneyStatus.completed:
           // User has completed all three days
-          // Navigate to the hub screen
-          context.go('/hub');
+          // Navigate to main tabs (they can access hub and other features)
+          context.go('/tabs');
           break;
       }
     } catch (e) {

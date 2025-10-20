@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
 
-/// App theme configuration with "Silent Luxury" visual identity.
+/// App theme configuration with "Charcoal & Gold" visual identity.
 ///
-/// Inspired by six-star regenerative medicine retreats, this theme provides:
+/// This theme provides a modern, vibrant aesthetic with:
 /// - Deep Charcoal background (#121212) - sophisticated, almost black
-/// - Subtle Gold accent (#B89A6A) - elegant, not brilliant
-/// - Soft Cream text (#F5F5F0) - warm, off-white for reduced eye strain
-/// - Lora Serif for elegant headlines
-/// - Satoshi Sans-Serif for clean body text and buttons
-/// - Minimalist, refined aesthetic
+/// - Everglow Gold accent (#F5B800) - vibrant, energetic
+/// - Soft Off-White text (#FAFAFA) - clean, excellent contrast
+/// - Inter font family for all text (headlines, body, buttons)
+/// - Modern, clean aesthetic with rounded components
 class AppTheme {
   // Private constructor to prevent instantiation
   AppTheme._();
 
-  // Silent Luxury Color Palette
+  // Charcoal & Gold Color Palette
   static const Color _deepCharcoal = Color(0xFF121212);
-  static const Color _subtleGold = Color(0xFFB89A6A);
-  static const Color _softCream = Color(0xFFF5F5F0);
-  static const Color _mutedGrey = Color(0xFF4A4A4A);
+  static const Color _everglowGold = Color(0xFFF5B800);
+  static const Color _softWhite = Color(0xFFFAFAFA);
+  static const Color _cardBackground = Color(0xFF1A1A1A);
 
-  /// Returns the light theme configuration.
-  ///
-  /// Note: Despite the name "lightTheme", this implements a dark theme
-  /// based on the "Silent Luxury" visual identity specification.
-  static ThemeData lightTheme() {
+  /// Returns the theme configuration with "Charcoal & Gold" visual identity.
+  static ThemeData getTheme() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -32,140 +28,146 @@ class AppTheme {
       scaffoldBackgroundColor: _deepCharcoal,
 
       // Primary color
-      primaryColor: _subtleGold,
+      primaryColor: _everglowGold,
 
       // Color scheme
       colorScheme: const ColorScheme.dark(
-        primary: _subtleGold,
-        secondary: _mutedGrey,
+        primary: _everglowGold,
+        secondary: _everglowGold,
         surface: _deepCharcoal,
         onPrimary: _deepCharcoal,
-        onSecondary: _softCream,
-        onSurface: _softCream,
+        onSecondary: _deepCharcoal,
+        onSurface: _softWhite,
+        error: Color(0xFFCF6679),
+        onError: _deepCharcoal,
       ),
 
-      // Text theme with custom fonts
+      // Text theme with Inter font family
       textTheme: const TextTheme(
-        // Headlines - Lora Serif (elegant, luxury aesthetic)
+        // Display styles
         displayLarge: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 57,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
           height: 1.12,
         ),
         displayMedium: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 45,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.25,
           height: 1.16,
         ),
         displaySmall: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 36,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           letterSpacing: 0,
           height: 1.22,
         ),
+
+        // Headline styles
         headlineLarge: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 32,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
           height: 1.25,
         ),
         headlineMedium: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 28,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
           height: 1.29,
         ),
         headlineSmall: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 24,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
           height: 1.33,
         ),
+
+        // Title styles
         titleLarge: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 22,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           height: 1.27,
         ),
         titleMedium: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.15,
           height: 1.50,
         ),
         titleSmall: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.1,
           height: 1.43,
         ),
 
-        // Body text - Satoshi Sans-Serif (clean, modern, readable)
+        // Body text
         bodyLarge: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 16,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.5,
           height: 1.50,
         ),
         bodyMedium: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 14,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.25,
           height: 1.43,
         ),
         bodySmall: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 12,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.4,
           height: 1.33,
         ),
 
-        // Labels - Satoshi Sans-Serif (buttons, UI elements)
+        // Labels (buttons, UI elements)
         labelLarge: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
           height: 1.43,
         ),
         labelMedium: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
           height: 1.33,
         ),
         labelSmall: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 11,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,
@@ -173,15 +175,16 @@ class AppTheme {
         ),
       ),
 
-      // AppBar theme
+      // AppBar theme with Everglow Gold accents
       appBarTheme: const AppBarTheme(
         backgroundColor: _deepCharcoal,
-        foregroundColor: _softCream,
+        foregroundColor: _everglowGold,
+        iconTheme: IconThemeData(color: _everglowGold),
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontFamily: 'Lora',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _everglowGold,
           fontSize: 20,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.15,
@@ -190,30 +193,29 @@ class AppTheme {
 
       // Card theme
       cardTheme: CardThemeData(
-        color: Color(0xFF1A1A1A), // Slightly lighter than background for depth
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
+        color: _cardBackground,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
-          side: BorderSide(color: _subtleGold.withValues(alpha: 0.1), width: 1),
         ),
       ),
 
-      // Elevated button theme
+      // Elevated button theme - Fully rounded with Everglow Gold
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _subtleGold,
+          backgroundColor: _everglowGold,
           foregroundColor: _deepCharcoal,
           elevation: 0,
           shadowColor: Colors.transparent,
           textStyle: const TextStyle(
-            fontFamily: 'Satoshi',
+            fontFamily: 'Inter',
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(56),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           minimumSize: const Size(120, 48),
@@ -223,9 +225,9 @@ class AppTheme {
       // Text button theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: _subtleGold,
+          foregroundColor: _everglowGold,
           textStyle: const TextStyle(
-            fontFamily: 'Satoshi',
+            fontFamily: 'Inter',
             fontSize: 14,
             fontWeight: FontWeight.w500,
             letterSpacing: 0.5,
@@ -237,16 +239,16 @@ class AppTheme {
       // Outlined button theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: _subtleGold,
-          side: const BorderSide(color: _subtleGold, width: 1.5),
+          foregroundColor: _everglowGold,
+          side: const BorderSide(color: _everglowGold, width: 1.5),
           textStyle: const TextStyle(
-            fontFamily: 'Satoshi',
+            fontFamily: 'Inter',
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.0,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(56),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           minimumSize: const Size(120, 48),
@@ -256,60 +258,81 @@ class AppTheme {
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Color(0xFF1A1A1A),
+        fillColor: _cardBackground,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: _mutedGrey.withValues(alpha: 0.3),
+            color: _softWhite.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: _mutedGrey.withValues(alpha: 0.3),
+            color: _softWhite.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _subtleGold, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _everglowGold, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFFCF6679), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFCF6679), width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFCF6679), width: 2),
         ),
         labelStyle: const TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream,
+          fontFamily: 'Inter',
+          color: _softWhite,
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Satoshi',
-          color: _softCream.withValues(alpha: 0.5),
+          fontFamily: 'Inter',
+          color: _softWhite.withValues(alpha: 0.5),
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
       ),
 
       // Icon theme
-      iconTheme: const IconThemeData(color: _softCream, size: 24),
+      iconTheme: const IconThemeData(color: _softWhite, size: 24),
 
       // Divider theme
       dividerTheme: DividerThemeData(
-        color: _subtleGold.withValues(alpha: 0.15),
+        color: _everglowGold.withValues(alpha: 0.2),
         thickness: 1,
         space: 1,
       ),
     );
+  }
+
+  /// Returns a contextual gradient color based on the day number.
+  ///
+  /// This allows UI components (like DayScreen headers) to use dynamic
+  /// colors that vary by day while maintaining the overall visual identity.
+  ///
+  /// - Day 1: Warm amber (#E67E22)
+  /// - Day 2: Soft teal (#1ABC9C)
+  /// - Day 3+: Everglow Gold (#F5B800)
+  static Color getGradientColorForDay(int dayNumber) {
+    switch (dayNumber) {
+      case 1:
+        return const Color(0xFFE67E22); // Warm amber
+      case 2:
+        return const Color(0xFF1ABC9C); // Soft teal
+      case 3:
+        return _everglowGold; // Everglow Gold
+      default:
+        return _everglowGold; // Everglow Gold (default)
+    }
   }
 }

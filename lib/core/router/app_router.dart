@@ -9,9 +9,8 @@ import 'package:everglow_app/features/onboarding/presentation/pages/onboarding_i
 import 'package:everglow_app/features/daily_journey/presentation/pages/day_screen.dart';
 import 'package:everglow_app/features/report/presentation/pages/report_screen.dart';
 import 'package:everglow_app/features/hub/presentation/pages/hub_screen.dart';
-import 'package:everglow_app/features/logistics_hub/presentation/pages/logistics_hub_screen.dart';
-import 'package:everglow_app/features/logistics_hub/presentation/pages/check_in_celebration_screen.dart';
 import 'package:everglow_app/features/auth/presentation/pages/auth_screen.dart';
+import 'package:everglow_app/features/main_tabs/presentation/pages/main_tabs_screen.dart';
 import 'package:everglow_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:everglow_app/core/router/auth_notifier.dart';
 
@@ -131,22 +130,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             MaterialPage(key: state.pageKey, child: const HubScreen()),
       ),
 
-      // Logistics Hub route - Pre-arrival and arrival day logistics
+      // Logistics Hub route - Redirects to main tabs with Logistics tab selected
+      // This ensures LogisticsHub is always shown within the tab navigation
       GoRoute(
         path: '/logistics-hub',
         name: 'logistics-hub',
-        pageBuilder: (context, state) =>
-            MaterialPage(key: state.pageKey, child: const LogisticsHubScreen()),
+        redirect: (context, state) => '/tabs?tab=0',
       ),
 
-      // Check-in celebration route - Shown after successful check-in
+      // Main tabs route - For authenticated users who completed onboarding
+      // Supports optional query parameter 'tab' to specify initial tab (0, 1, or 2)
+      // Example: /tabs?tab=0 (Logistics), /tabs?tab=1 (Journey), /tabs?tab=2 (Profile)
       GoRoute(
-        path: '/check-in-celebration',
-        name: 'checkInCelebration',
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: const CheckInCelebrationScreen(),
-        ),
+        path: '/tabs',
+        name: 'tabs',
+        pageBuilder: (context, state) {
+          // Parse the 'tab' query parameter, default to 0 if not provided or invalid
+          final tabParam = state.uri.queryParameters['tab'];
+          final initialTab = int.tryParse(tabParam ?? '') ?? 0;
+
+          return MaterialPage(
+            key: state.pageKey,
+            child: MainTabsScreen(initialTab: initialTab),
+          );
+        },
       ),
     ],
 

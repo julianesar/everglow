@@ -63,7 +63,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Everglow App',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
+      theme: AppTheme.getTheme(),
       routerConfig: router,
     );
   }

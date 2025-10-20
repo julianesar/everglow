@@ -1,24 +1,34 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 
-/// Celebratory screen shown after check-in completion.
+/// Overlay widget shown after successful check-in.
 ///
-/// Features:
+/// This widget appears as an overlay on top of the Logistics Hub screen,
+/// featuring:
 /// - Animated checkmark icon
 /// - Confetti celebration
-/// - Auto-navigation to day 1 after 3-4 seconds
-/// - Silent Luxury design aesthetic
-class CheckInCelebrationScreen extends StatefulWidget {
-  const CheckInCelebrationScreen({super.key});
+/// - Welcome message
+/// - Auto-dismiss after 3.5 seconds
+/// - Manual dismiss via button
+///
+/// After dismissal, it triggers the [onDismiss] callback to navigate
+/// to the Journey tab.
+class CheckInCelebrationOverlay extends StatefulWidget {
+  /// Callback invoked when the celebration is dismissed.
+  final VoidCallback onDismiss;
+
+  const CheckInCelebrationOverlay({
+    super.key,
+    required this.onDismiss,
+  });
 
   @override
-  State<CheckInCelebrationScreen> createState() =>
-      _CheckInCelebrationScreenState();
+  State<CheckInCelebrationOverlay> createState() =>
+      _CheckInCelebrationOverlayState();
 }
 
-class _CheckInCelebrationScreenState extends State<CheckInCelebrationScreen>
+class _CheckInCelebrationOverlayState extends State<CheckInCelebrationOverlay>
     with SingleTickerProviderStateMixin {
   late ConfettiController _confettiController;
   late AnimationController _checkmarkController;
@@ -56,10 +66,10 @@ class _CheckInCelebrationScreenState extends State<CheckInCelebrationScreen>
     _confettiController.play();
     _checkmarkController.forward();
 
-    // Navigate to day 1 after 3.5 seconds
+    // Auto-dismiss after 3.5 seconds
     Future.delayed(const Duration(milliseconds: 3500), () {
       if (mounted) {
-        context.go('/day/1');
+        widget.onDismiss();
       }
     });
   }
@@ -77,18 +87,19 @@ class _CheckInCelebrationScreenState extends State<CheckInCelebrationScreen>
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      body: Stack(
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
         children: [
-          // Background gradient
+          // Semi-transparent backdrop
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  colorScheme.surface,
                   colorScheme.surface.withValues(alpha: 0.95),
+                  colorScheme.surface.withValues(alpha: 0.98),
                   colorScheme.primary.withValues(alpha: 0.15),
                 ],
                 stops: const [0.0, 0.6, 1.0],
@@ -175,6 +186,19 @@ class _CheckInCelebrationScreenState extends State<CheckInCelebrationScreen>
                 colorScheme.onSurface.withValues(alpha: 0.5),
                 colorScheme.onSurface.withValues(alpha: 0.3),
               ],
+            ),
+          ),
+
+          // Bottom button
+          Positioned(
+            left: 32,
+            right: 32,
+            bottom: 48,
+            child: SafeArea(
+              child: ElevatedButton(
+                onPressed: widget.onDismiss,
+                child: const Text('GET STARTED'),
+              ),
             ),
           ),
         ],

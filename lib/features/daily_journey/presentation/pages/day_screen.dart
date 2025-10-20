@@ -17,11 +17,20 @@ import '../../../../core/widgets/completion_chip.dart';
 /// - Single priority input section
 /// - Itinerary items (medical events, guided practices, journaling)
 /// - Footer button for day progression (driven by isPrioritySet state)
+///
+/// This screen supports two navigation modes:
+/// 1. Callback-based (for in-tab navigation): Provide [onNavigateToDay]
+/// 2. Router-based (for standalone navigation): Uses GoRouter when callback is null
 class DayScreen extends ConsumerWidget {
-  const DayScreen({super.key, required this.dayId});
+  const DayScreen({super.key, required this.dayId, this.onNavigateToDay});
 
   /// The ID of the day to display (as a string from the router)
   final String dayId;
+
+  /// Optional callback for navigating to a specific day.
+  /// When provided, this callback is used instead of GoRouter navigation.
+  /// This allows navigation to stay within a tab context.
+  final void Function(int day)? onNavigateToDay;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -117,7 +126,10 @@ class DayScreen extends ConsumerWidget {
             return Column(
               children: [
                 // Timeline Navigator - fixed at top
-                TimelineNavigator(currentDay: dayNumber),
+                TimelineNavigator(
+                  currentDay: dayNumber,
+                  onNavigateToDay: onNavigateToDay,
+                ),
 
                 // Progress bar showing task completion
                 _ProgressBar(
@@ -166,7 +178,10 @@ class DayScreen extends ConsumerWidget {
                 ),
 
                 // Footer button for day progression
-                _FooterButton(dayNumber: dayNumber),
+                _FooterButton(
+                  dayNumber: dayNumber,
+                  onNavigateToDay: onNavigateToDay,
+                ),
               ],
             );
           },
@@ -1073,25 +1088,34 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
 /// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
 /// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates directly to /report
 /// - Uses the app theme's Subtle Gold color for consistency
+///
+/// This widget supports two navigation modes:
+/// 1. Callback-based (for in-tab navigation): Provide [onNavigateToDay]
+/// 2. Router-based (for standalone navigation): Uses GoRouter when callback is null
 class _FooterButton extends StatelessWidget {
-  const _FooterButton({required this.dayNumber});
+  const _FooterButton({required this.dayNumber, this.onNavigateToDay});
 
   final int dayNumber;
+
+  /// Optional callback for navigating to a specific day.
+  /// When provided, this callback is used instead of GoRouter navigation for day changes.
+  /// Report navigation always uses GoRouter.
+  final void Function(int day)? onNavigateToDay;
 
   @override
   Widget build(BuildContext context) {
     // Determine button text and navigation based on day number
     final String buttonText;
-    final String navigationPath;
+    final bool isReportButton;
 
     if (dayNumber < 3) {
       // Days 1-2: Proceed to next day
       buttonText = 'Proceed to Day ${dayNumber + 1}';
-      navigationPath = '/day/${dayNumber + 1}';
+      isReportButton = false;
     } else {
       // Day 3 onwards: Go directly to report
       buttonText = 'Forge my Rebirth Report';
-      navigationPath = '/report';
+      isReportButton = true;
     }
 
     return Container(
@@ -1112,8 +1136,17 @@ class _FooterButton extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
-              // Navigate to next day or report screen
-              context.go(navigationPath);
+              if (isReportButton) {
+                // Always use router navigation for report screen
+                context.go('/report');
+              } else {
+                // For day progression, use callback if available, otherwise use router
+                if (onNavigateToDay != null) {
+                  onNavigateToDay!(dayNumber + 1);
+                } else {
+                  context.go('/day/${dayNumber + 1}');
+                }
+              }
             },
             // Uses theme's ElevatedButton style (Subtle Gold background, Deep Charcoal text)
             child: Text(buttonText),

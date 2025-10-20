@@ -195,8 +195,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
 
       if (mounted) {
-        // Navigate directly to logistics hub after onboarding completion
-        context.go('/logistics-hub');
+        // Navigate to main tabs after onboarding completion
+        // This will show the Logistics Hub as the first tab
+        context.go('/tabs');
       }
     } catch (e) {
       setState(() {
