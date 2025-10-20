@@ -6,16 +6,16 @@ part of 'booking_repository_impl.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bookingRepositoryHash() => r'2ba9a5a1cf7f8744f06789b92c4a168a589b585b';
+String _$bookingRepositoryHash() => r'7aadf5d62b079cd6a048e279cff5911b97c017ff';
 
 /// Provider for [BookingRepository].
 ///
-/// This provider maintains a singleton instance to preserve the in-memory
-/// cached booking across the application lifecycle.
+/// This provider creates and provides the Isar-based booking repository.
+/// It automatically injects the Isar database dependency.
 ///
 /// Copied from [bookingRepository].
 @ProviderFor(bookingRepository)
-final bookingRepositoryProvider = Provider<BookingRepository>.internal(
+final bookingRepositoryProvider = FutureProvider<BookingRepository>.internal(
   bookingRepository,
   name: r'bookingRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -25,7 +25,7 @@ final bookingRepositoryProvider = Provider<BookingRepository>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef BookingRepositoryRef = ProviderRef<BookingRepository>;
+typedef BookingRepositoryRef = FutureProviderRef<BookingRepository>;
 String _$selectedBookingDateHash() =>
     r'1eaf8afaf26e09dcd71eaa60c9dc8ae9b6d51b24';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../logistics_hub/presentation/pages/logistics_hub_screen.dart';
 import '../../../daily_journey/presentation/pages/day_screen.dart';
-import '../../../user_profile/presentation/pages/user_profile_screen.dart';
+import '../../../aftercare/presentation/pages/aftercare_screen.dart';
 import '../controllers/main_tabs_controller.dart';
 
 /// Main tabs screen for authenticated users who have completed onboarding.
@@ -10,7 +10,7 @@ import '../controllers/main_tabs_controller.dart';
 /// This screen provides access to three main tabs:
 /// - Tab 0: Logistics Hub (booking and arrival information)
 /// - Tab 1: Daily Journey (3 days of practices)
-/// - Tab 2: User Profile (account settings and logout)
+/// - Tab 2: Aftercare (post-journey wellness protocol and account settings)
 ///
 /// The screen uses a bottom navigation bar for tab switching and maintains
 /// the state of each tab independently.
@@ -21,7 +21,7 @@ class MainTabsScreen extends ConsumerStatefulWidget {
   /// Defaults to 0 (Logistics Hub).
   const MainTabsScreen({super.key, this.initialTab = 0});
 
-  /// The index of the tab to display initially (0 = Logistics, 1 = Journey, 2 = Profile)
+  /// The index of the tab to display initially (0 = Logistics, 1 = Journey, 2 = Aftercare)
   final int initialTab;
 
   @override
@@ -33,7 +33,7 @@ class _MainTabsScreenState extends ConsumerState<MainTabsScreen> {
   static final List<Widget> _pages = const [
     LogisticsHubScreen(),
     _DailyJourneyTab(),
-    UserProfileScreen(),
+    AftercareScreen(),
   ];
 
   @override
@@ -81,12 +81,12 @@ class _MainTabsScreenState extends ConsumerState<MainTabsScreen> {
             label: 'Journey',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.health_and_safety_outlined),
             selectedIcon: Icon(
-              Icons.person_rounded,
+              Icons.health_and_safety,
               color: theme.colorScheme.primary,
             ),
-            label: 'Profile',
+            label: 'Aftercare',
           ),
         ],
       ),

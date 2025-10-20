@@ -22,23 +22,29 @@ const UserSchema = CollectionSchema(
       name: r'bookingId',
       type: IsarType.string,
     ),
-    r'generatedReport': PropertySchema(
+    r'commitments': PropertySchema(
       id: 1,
+      name: r'commitments',
+      type: IsarType.objectList,
+      target: r'CommitmentModel',
+    ),
+    r'generatedReport': PropertySchema(
+      id: 2,
       name: r'generatedReport',
       type: IsarType.string,
     ),
     r'hasCompletedOnboarding': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'hasCompletedOnboarding',
       type: IsarType.bool,
     ),
     r'integrationStatement': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'integrationStatement',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     )
@@ -50,7 +56,7 @@ const UserSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {},
+  embeddedSchemas: {r'CommitmentModel': CommitmentModelSchema},
   getId: _userGetId,
   getLinks: _userGetLinks,
   attach: _userAttach,
@@ -67,6 +73,15 @@ int _userEstimateSize(
     final value = object.bookingId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.commitments.length * 3;
+  {
+    final offsets = allOffsets[CommitmentModel]!;
+    for (var i = 0; i < object.commitments.length; i++) {
+      final value = object.commitments[i];
+      bytesCount +=
+          CommitmentModelSchema.estimateSize(value, offsets, allOffsets);
     }
   }
   {
@@ -87,10 +102,16 @@ void _userSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.bookingId);
-  writer.writeString(offsets[1], object.generatedReport);
-  writer.writeBool(offsets[2], object.hasCompletedOnboarding);
-  writer.writeString(offsets[3], object.integrationStatement);
-  writer.writeString(offsets[4], object.name);
+  writer.writeObjectList<CommitmentModel>(
+    offsets[1],
+    allOffsets,
+    CommitmentModelSchema.serialize,
+    object.commitments,
+  );
+  writer.writeString(offsets[2], object.generatedReport);
+  writer.writeBool(offsets[3], object.hasCompletedOnboarding);
+  writer.writeString(offsets[4], object.integrationStatement);
+  writer.writeString(offsets[5], object.name);
 }
 
 User _userDeserialize(
@@ -101,11 +122,18 @@ User _userDeserialize(
 ) {
   final object = User();
   object.bookingId = reader.readStringOrNull(offsets[0]);
-  object.generatedReport = reader.readStringOrNull(offsets[1]);
-  object.hasCompletedOnboarding = reader.readBool(offsets[2]);
+  object.commitments = reader.readObjectList<CommitmentModel>(
+        offsets[1],
+        CommitmentModelSchema.deserialize,
+        allOffsets,
+        CommitmentModel(),
+      ) ??
+      [];
+  object.generatedReport = reader.readStringOrNull(offsets[2]);
+  object.hasCompletedOnboarding = reader.readBool(offsets[3]);
   object.id = id;
-  object.integrationStatement = reader.readString(offsets[3]);
-  object.name = reader.readString(offsets[4]);
+  object.integrationStatement = reader.readString(offsets[4]);
+  object.name = reader.readString(offsets[5]);
   return object;
 }
 
@@ -119,12 +147,20 @@ P _userDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readObjectList<CommitmentModel>(
+            offset,
+            CommitmentModelSchema.deserialize,
+            allOffsets,
+            CommitmentModel(),
+          ) ??
+          []) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -362,6 +398,90 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
         property: r'bookingId',
         value: '',
       ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'commitments',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -836,7 +956,14 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
   }
 }
 
-extension UserQueryObject on QueryBuilder<User, User, QFilterCondition> {}
+extension UserQueryObject on QueryBuilder<User, User, QFilterCondition> {
+  QueryBuilder<User, User, QAfterFilterCondition> commitmentsElement(
+      FilterQuery<CommitmentModel> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'commitments');
+    });
+  }
+}
 
 extension UserQueryLinks on QueryBuilder<User, User, QFilterCondition> {}
 
@@ -1024,6 +1151,13 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
   QueryBuilder<User, String?, QQueryOperations> bookingIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'bookingId');
+    });
+  }
+
+  QueryBuilder<User, List<CommitmentModel>, QQueryOperations>
+      commitmentsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'commitments');
     });
   }
 

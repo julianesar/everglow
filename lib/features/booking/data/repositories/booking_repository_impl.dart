@@ -1,6 +1,9 @@
+import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/database/isar_provider.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
+import '../models/booking_model.dart';
 
 part 'booking_repository_impl.g.dart';
 
@@ -25,37 +28,56 @@ class SelectedBookingDate extends _$SelectedBookingDate {
   }
 }
 
-/// Implementation of [BookingRepository] with in-memory storage.
+/// Implementation of [BookingRepository] with Isar database persistence.
 ///
-/// This repository uses a simple in-memory cache to store booking data.
-/// In a production application, this would be replaced with actual
-/// API calls and database persistence.
+/// This repository uses Isar to store booking data persistently,
+/// ensuring bookings survive app restarts.
 class BookingRepositoryImpl implements BookingRepository {
-  // In-memory storage for the booking (simulates database)
-  Booking? _cachedBooking;
+  /// The Isar database instance.
+  final Isar _isar;
+
+  /// Creates an instance of [BookingRepositoryImpl].
+  ///
+  /// [isar] The Isar database instance to use for storage.
+  const BookingRepositoryImpl(this._isar);
 
   @override
   Future<Booking?> getActiveBookingForUser(String userId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Query for a booking with the given userId
+    final bookingModel = await _isar.bookingModels
+        .filter()
+        .userIdEqualTo(userId)
+        .findFirst();
 
-    // Return cached booking if it exists and belongs to the user
-    if (_cachedBooking != null && _cachedBooking!.userId == userId) {
-      return _cachedBooking;
-    }
-
-    // If no cached booking exists, return null
-    // The booking should be created explicitly via createBooking
-    return null;
+    // Convert to domain entity if found
+    return bookingModel?.toEntity();
   }
 
   @override
   Future<void> updateBooking(Booking booking) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    await _isar.writeTxn(() async {
+      // Find existing booking model by ID
+      final existingModel = await _isar.bookingModels
+          .filter()
+          .idEqualTo(booking.id)
+          .findFirst();
 
-    // Update the cached booking
-    _cachedBooking = booking;
+      if (existingModel != null) {
+        // Update the existing model with new values
+        existingModel
+          ..userId = booking.userId
+          ..startDateMillis = booking.startDate.millisecondsSinceEpoch
+          ..endDateMillis = booking.endDate.millisecondsSinceEpoch
+          ..isCheckedIn = booking.isCheckedIn;
+
+        // Save the updated model
+        await _isar.bookingModels.put(existingModel);
+      } else {
+        // If not found, create a new one
+        final model = BookingModel.fromEntity(booking);
+        await _isar.bookingModels.put(model);
+      }
+    });
   }
 
   @override
@@ -63,9 +85,6 @@ class BookingRepositoryImpl implements BookingRepository {
     required DateTime startDate,
     required String userId,
   }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-
     // Print the selected date and userId for debugging
     print('Creating booking with start date: $startDate for user: $userId');
 
@@ -79,8 +98,11 @@ class BookingRepositoryImpl implements BookingRepository {
       isCheckedIn: false,
     );
 
-    // Cache the new booking
-    _cachedBooking = newBooking;
+    // Persist the new booking in the database
+    await _isar.writeTxn(() async {
+      final model = BookingModel.fromEntity(newBooking);
+      await _isar.bookingModels.put(model);
+    });
 
     print('Created booking: ${newBooking.id} for user ${newBooking.userId} (${newBooking.startDate} - ${newBooking.endDate})');
 
@@ -90,9 +112,10 @@ class BookingRepositoryImpl implements BookingRepository {
 
 /// Provider for [BookingRepository].
 ///
-/// This provider maintains a singleton instance to preserve the in-memory
-/// cached booking across the application lifecycle.
+/// This provider creates and provides the Isar-based booking repository.
+/// It automatically injects the Isar database dependency.
 @Riverpod(keepAlive: true)
-BookingRepository bookingRepository(BookingRepositoryRef ref) {
-  return BookingRepositoryImpl();
+Future<BookingRepository> bookingRepository(BookingRepositoryRef ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  return BookingRepositoryImpl(isar);
 }

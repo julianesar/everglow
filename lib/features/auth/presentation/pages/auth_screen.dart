@@ -170,14 +170,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         );
       }
 
-      // Success - navigate to onboarding intro
+      // Success - navigate to booking screen
       if (mounted) {
         // Clear form
         _nameController.clear();
         _emailController.clear();
         _passwordController.clear();
-        // Navigate to onboarding intro screen
-        context.go('/onboarding-intro');
+        // Navigate to booking screen
+        context.go('/booking');
       }
     } catch (e) {
       // Handle error
@@ -474,9 +474,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithGoogle();
 
-      // Success - navigate to onboarding intro
+      // Success - navigate to booking screen
       if (mounted) {
-        context.go('/onboarding-intro');
+        context.go('/booking');
       }
     } catch (e) {
       setState(() {
@@ -502,9 +502,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithApple();
 
-      // Success - navigate to onboarding intro
+      // Success - navigate to booking screen
       if (mounted) {
-        context.go('/onboarding-intro');
+        context.go('/booking');
       }
     } catch (e) {
       setState(() {
@@ -530,9 +530,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInAsGuest();
 
-      // Success - navigate to onboarding intro
+      // Success - navigate to booking screen
       if (mounted) {
-        context.go('/onboarding-intro');
+        context.go('/booking');
       }
     } catch (e) {
       setState(() {

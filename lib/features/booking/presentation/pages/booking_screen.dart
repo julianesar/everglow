@@ -290,12 +290,12 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
     try {
       // Save the selected booking date to the provider
-      // This will be used to create the actual booking after authentication
+      // The user is already authenticated at this point
       ref.read(selectedBookingDateProvider.notifier).setDate(_selectedDay!);
 
-      // Navigate to auth screen on success
+      // Navigate to onboarding intro screen on success
       if (context.mounted) {
-        context.go('/auth');
+        context.go('/onboarding-intro');
       }
     } catch (error) {
       // Show error message

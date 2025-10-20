@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import '../../../aftercare/data/models/commitment_model.dart';
 
 part 'user_model.g.dart';
 
@@ -25,6 +26,9 @@ class User {
 
   /// ID of the user's current booking (if any)
   String? bookingId;
+
+  /// List of extracted commitments from the user's journal entries
+  List<CommitmentModel> commitments = [];
 
   /// Default constructor
   User();

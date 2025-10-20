@@ -82,7 +82,7 @@ class WelcomeScreen extends StatelessWidget {
 
                   // CTA Button
                   ElevatedButton(
-                    onPressed: () => context.go('/booking'),
+                    onPressed: () => context.go('/auth'),
                     child: const Text('BEGIN YOUR TRANSFORMATION'),
                   ),
 

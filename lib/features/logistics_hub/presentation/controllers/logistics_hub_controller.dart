@@ -127,7 +127,7 @@ class LogisticsHubController extends _$LogisticsHubController {
     }
 
     // Step 2: Fetch the user's active booking
-    final bookingRepository = ref.watch(bookingRepositoryProvider);
+    final bookingRepository = await ref.watch(bookingRepositoryProvider.future);
     final booking = await bookingRepository.getActiveBookingForUser(currentUser.id);
 
     if (booking == null) {
@@ -196,7 +196,7 @@ class LogisticsHubController extends _$LogisticsHubController {
 
     try {
       // Get the booking repository
-      final bookingRepository = ref.watch(bookingRepositoryProvider);
+      final bookingRepository = await ref.read(bookingRepositoryProvider.future);
 
       // Create an updated booking with isCheckedIn set to true
       final updatedBooking = currentState.booking.copyWith(isCheckedIn: true);

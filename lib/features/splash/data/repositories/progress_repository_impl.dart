@@ -145,6 +145,6 @@ class IsarProgressRepository implements ProgressRepository {
 Future<ProgressRepository> progressRepository(ProgressRepositoryRef ref) async {
   final isar = await ref.watch(isarProvider.future);
   final userRepo = await ref.watch(userRepositoryProvider.future);
-  final bookingRepo = ref.watch(bookingRepositoryProvider);
+  final bookingRepo = await ref.watch(bookingRepositoryProvider.future);
   return IsarProgressRepository(isar, userRepo, bookingRepo);
 }

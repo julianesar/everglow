@@ -175,7 +175,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       // Create the booking using the saved date from the booking screen
       // This ensures the user has an active booking before accessing logistics hub
-      final bookingRepository = ref.read(bookingRepositoryProvider);
+      final bookingRepository = await ref.read(bookingRepositoryProvider.future);
       final selectedDate = ref.read(selectedBookingDateProvider);
 
       if (selectedDate != null) {

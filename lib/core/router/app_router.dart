@@ -35,21 +35,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final targetLocation = state.matchedLocation;
 
       // Public routes that don't require authentication
-      final publicRoutes = ['/', '/booking', '/auth'];
+      final publicRoutes = ['/', '/auth'];
 
       // Rule 1: User is NOT logged in AND trying to access a protected page
-      // Redirect to /auth
+      // Redirect to /auth (but allow access to welcome page)
       if (currentUser == null && !publicRoutes.contains(targetLocation)) {
         return '/auth';
       }
 
       // Rule 2: User IS logged in AND on the auth page
-      // Redirect to /onboarding-intro (transition screen before onboarding)
+      // Redirect to /booking (next step after authentication)
       if (currentUser != null && targetLocation == '/auth') {
-        return '/onboarding-intro';
+        return '/booking';
       }
 
-      // Rule 3: Allow navigation in all other cases
+      // Rule 3: User IS logged in AND on the welcome screen (/)
+      // Redirect to /splash which will intelligently route based on journey status
+      if (currentUser != null && targetLocation == '/') {
+        return '/splash';
+      }
+
+      // Rule 4: Allow navigation in all other cases
       return null;
     },
     routes: [

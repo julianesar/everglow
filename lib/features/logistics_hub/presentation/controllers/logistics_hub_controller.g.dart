@@ -7,7 +7,7 @@ part of 'logistics_hub_controller.dart';
 // **************************************************************************
 
 String _$logisticsHubControllerHash() =>
-    r'b84d4156981127b5e356236dccf8702ac02c673c';
+    r'6ca398a183c88b106daa3ef15ccc95b9a10bf529';
 
 /// Controller for managing the Logistics Hub screen state.
 ///
