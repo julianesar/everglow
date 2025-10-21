@@ -3,24 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../concierge/domain/entities/concierge_info.dart';
 import '../../../main_tabs/presentation/controllers/main_tabs_controller.dart';
+import '../../../user/data/repositories/user_repository_impl.dart';
 import '../controllers/logistics_hub_controller.dart';
 import '../widgets/check_in_celebration_overlay.dart';
 
 /// Main screen for the Logistics Hub.
 ///
-/// This screen displays different UI states based on whether the user
-/// is waiting for their arrival date (pre-arrival mode) or has reached
-/// their arrival date (arrival mode).
-///
-/// **Pre-Arrival Mode (isArrivalDay == false):**
-/// - Serene background with centered message
-/// - Elegant countdown timer showing time until arrival
-/// - Formatted start date display
-///
-/// **Arrival Mode (isArrivalDay == true):**
-/// - Welcome message
-/// - Concierge information (driver, villa, check-in instructions)
-/// - Check-in button
+/// This unified screen displays:
+/// - Welcome header with user name and countdown
+/// - Pre-arrival information (when before arrival date)
+/// - Arrival logistics (when on or after arrival date)
+/// - All content is integrated into a single scrollable page
 class LogisticsHubScreen extends ConsumerStatefulWidget {
   const LogisticsHubScreen({super.key});
 
@@ -32,6 +25,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(logisticsHubControllerProvider);
+    final userAsyncValue = ref.watch(userRepositoryProvider);
 
     return Scaffold(
       body: asyncState.when(
@@ -39,10 +33,18 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
         error: (error, stackTrace) => _buildErrorState(context, error),
         data: (state) => Stack(
           children: [
-            // Main content
-            state.isArrivalDay
-                ? _buildArrivalMode(context, ref, state)
-                : _buildWaitingMode(context, state),
+            // Main unified content
+            userAsyncValue.when(
+              data: (userRepo) => FutureBuilder(
+                future: userRepo.getUser(),
+                builder: (context, snapshot) {
+                  final userName = snapshot.data?.name ?? 'Guest';
+                  return _buildUnifiedContent(context, ref, state, userName);
+                },
+              ),
+              loading: () => _buildLoadingState(),
+              error: (_, __) => _buildUnifiedContent(context, ref, state, 'Guest'),
+            ),
 
             // Celebration overlay (shown after check-in)
             if (state.showCelebration)
@@ -109,105 +111,146 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
     );
   }
 
-  /// Builds the waiting mode UI (before arrival day).
+  /// Builds the unified content for the Logistics Hub.
   ///
   /// Displays:
-  /// - Serene background image
-  /// - Centered "Your transformation is booked" message
-  /// - Countdown timer to arrival date
-  /// - Formatted arrival date
-  Widget _buildWaitingMode(BuildContext context, LogisticsHubState state) {
+  /// - Welcome header with user name and days countdown
+  /// - Pre-arrival information (countdown timer and date) OR
+  /// - Arrival logistics (concierge, driver, villa, check-in)
+  /// - All in a single scrollable page
+  Widget _buildUnifiedContent(
+    BuildContext context,
+    WidgetRef ref,
+    LogisticsHubState state,
+    String userName,
+  ) {
     final theme = Theme.of(context);
     final now = DateTime.now();
     final difference = state.booking.startDate.difference(now);
+    final daysUntil = difference.inDays;
 
-    return Stack(
+    return Column(
       children: [
-        // Background with gradient (fallback if image not available)
-        Positioned.fill(
+        // Welcome Header (always visible)
+        SafeArea(
+          bottom: false,
           child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF0A0A0A),
-                  const Color(0xFF1A1A1A),
-                  const Color(0xFF121212),
+                  theme.colorScheme.primary.withValues(alpha: 0.05),
+                  theme.colorScheme.surface,
                 ],
-                stops: const [0.0, 0.5, 1.0],
               ),
             ),
-          ),
-        ),
-
-        // Optional background image overlay
-        // Note: Image file should be added to assets/images/serene_background.jpg
-        // See assets/images/README.md for details
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/serene_background.jpg',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // Return transparent container if image doesn't exist
-              return const SizedBox.shrink();
-            },
-            color: Colors.black.withValues(alpha: 0.4),
-            colorBlendMode: BlendMode.darken,
-          ),
-        ),
-
-        // Content
-        SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Main message
-                  Text(
-                    'Your transformation\nis booked.',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      color: const Color(0xFFF5F5F0),
-                      height: 1.2,
-                    ),
-                    textAlign: TextAlign.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome, $userName',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: -0.5,
                   ),
-
-                  const SizedBox(height: 64),
-
-                  // Countdown timer
-                  _buildCountdownTimer(context, difference),
-
-                  const SizedBox(height: 48),
-
-                  // Arrival date message
+                ),
+                const SizedBox(height: 8),
+                if (!state.isArrivalDay)
                   Text(
-                    'We await your arrival on',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: const Color(0xFFF5F5F0).withValues(alpha: 0.8),
-                      letterSpacing: 1.0,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    _formatDate(state.booking.startDate),
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                    daysUntil == 1
+                        ? '1 day until your transformation'
+                        : '$daysUntil days until your transformation',
+                    style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.3,
                     ),
-                    textAlign: TextAlign.center,
+                  )
+                else
+                  Text(
+                    'Your transformation begins today',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      letterSpacing: 0.3,
+                    ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
+        ),
+
+        // Main scrollable content
+        Expanded(
+          child: state.isArrivalDay
+              ? _buildArrivalContent(context, ref, state, state.conciergeInfo)
+              : _buildPreArrivalContent(context, state, difference),
         ),
       ],
+    );
+  }
+
+  /// Builds the pre-arrival content (before arrival day).
+  ///
+  /// Displays:
+  /// - Centered "Your transformation is booked" message
+  /// - Countdown timer to arrival date
+  /// - Formatted arrival date
+  Widget _buildPreArrivalContent(
+    BuildContext context,
+    LogisticsHubState state,
+    Duration difference,
+  ) {
+    final theme = Theme.of(context);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 48),
+
+          // Main message
+          Text(
+            'Your transformation\nis booked.',
+            style: theme.textTheme.headlineLarge?.copyWith(
+              height: 1.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 64),
+
+          // Countdown timer
+          _buildCountdownTimer(context, difference),
+
+          const SizedBox(height: 48),
+
+          // Arrival date message
+          Text(
+            'We await your arrival on',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              letterSpacing: 1.0,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            _formatDate(state.booking.startDate),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          const SizedBox(height: 48),
+        ],
+      ),
     );
   }
 
@@ -334,65 +377,6 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
     );
   }
 
-  /// Builds the arrival mode UI (on or after arrival day).
-  ///
-  /// Displays:
-  /// - Emotional header with "Today is the Day" message
-  /// - Arrival logistics information
-  /// - Sticky check-in button at the bottom
-  Widget _buildArrivalMode(
-    BuildContext context,
-    WidgetRef ref,
-    LogisticsHubState state,
-  ) {
-    final theme = Theme.of(context);
-    final concierge = state.conciergeInfo;
-
-    return Column(
-      children: [
-        // Emotional Header
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              top: 48,
-              left: 24,
-              right: 24,
-              bottom: 24,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Today is the Day!',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Welcome to EverGlow. We are ready for your arrival.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    fontSize: 18,
-                    height: 1.5,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Main content
-        Expanded(child: _buildArrivalContent(context, ref, state, concierge)),
-      ],
-    );
-  }
-
   /// Builds arrival content with arrival logistics information.
   Widget _buildArrivalContent(
     BuildContext context,
@@ -402,41 +386,57 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   ) {
     final theme = Theme.of(context);
 
+    if (concierge == null) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: _buildNoConciergeInfo(context),
+      );
+    }
+
     return Stack(
       children: [
         // Scrollable content
         ListView(
           padding: EdgeInsets.only(
-            top: 24,
+            top: 16,
             left: 24,
             right: 24,
             bottom: !state.booking.isCheckedIn ? 120 : 24,
           ),
           children: [
-            if (concierge != null) ...[
-              // Concierge information card
-              _buildConciergeCard(context, concierge),
-              const SizedBox(height: 24),
+            // Welcome message for arrival day
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                'We are ready for your arrival.',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
 
-              // Driver information card
-              _buildDriverCard(context, concierge),
-              const SizedBox(height: 24),
+            // Concierge information card
+            _buildConciergeCard(context, concierge),
+            const SizedBox(height: 24),
 
-              // Villa information card
-              _buildVillaCard(context, concierge),
-              const SizedBox(height: 24),
+            // Driver information card
+            _buildDriverCard(context, concierge),
+            const SizedBox(height: 24),
 
-              // Check-in instructions card
-              _buildCheckInCard(context, concierge),
-            ] else ...[
-              // Fallback if no concierge info
-              _buildNoConciergeInfo(context),
-            ],
+            // Villa information card
+            _buildVillaCard(context, concierge),
+            const SizedBox(height: 24),
+
+            // Check-in instructions card
+            _buildCheckInCard(context, concierge),
           ],
         ),
 
         // Sticky check-in button at the bottom (only if not checked in yet)
-        if (concierge != null && !state.booking.isCheckedIn)
+        if (!state.booking.isCheckedIn)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
