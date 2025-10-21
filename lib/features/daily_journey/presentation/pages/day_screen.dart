@@ -171,16 +171,8 @@ class DayScreen extends ConsumerWidget {
                         ),
                       ),
 
-                      // Add bottom padding to avoid button overlap
-                      const SizedBox(height: 80),
                     ],
                   ),
-                ),
-
-                // Footer button for day progression
-                _FooterButton(
-                  dayNumber: dayNumber,
-                  onNavigateToDay: onNavigateToDay,
                 ),
               ],
             );
@@ -1078,81 +1070,6 @@ class _JournalingCardState extends ConsumerState<_JournalingCard>
             ),
           ),
       ],
-    );
-  }
-}
-
-/// Footer button widget for day progression
-///
-/// This widget displays a dynamic button that:
-/// - For dayId < 3 (days 1-2): Shows 'Proceed to Day X' and navigates to next day
-/// - For dayId >= 3 (day 3 onwards): Shows 'Forge my Rebirth Report' and navigates directly to /report
-/// - Uses the app theme's Subtle Gold color for consistency
-///
-/// This widget supports two navigation modes:
-/// 1. Callback-based (for in-tab navigation): Provide [onNavigateToDay]
-/// 2. Router-based (for standalone navigation): Uses GoRouter when callback is null
-class _FooterButton extends StatelessWidget {
-  const _FooterButton({required this.dayNumber, this.onNavigateToDay});
-
-  final int dayNumber;
-
-  /// Optional callback for navigating to a specific day.
-  /// When provided, this callback is used instead of GoRouter navigation for day changes.
-  /// Report navigation always uses GoRouter.
-  final void Function(int day)? onNavigateToDay;
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine button text and navigation based on day number
-    final String buttonText;
-    final bool isReportButton;
-
-    if (dayNumber < 3) {
-      // Days 1-2: Proceed to next day
-      buttonText = 'Proceed to Day ${dayNumber + 1}';
-      isReportButton = false;
-    } else {
-      // Day 3 onwards: Go directly to report
-      buttonText = 'Forge my Rebirth Report';
-      isReportButton = true;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16.0),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              if (isReportButton) {
-                // Always use router navigation for report screen
-                context.go('/report');
-              } else {
-                // For day progression, use callback if available, otherwise use router
-                if (onNavigateToDay != null) {
-                  onNavigateToDay!(dayNumber + 1);
-                } else {
-                  context.go('/day/${dayNumber + 1}');
-                }
-              }
-            },
-            // Uses theme's ElevatedButton style (Subtle Gold background, Deep Charcoal text)
-            child: Text(buttonText),
-          ),
-        ),
-      ),
     );
   }
 }
