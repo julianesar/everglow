@@ -29,7 +29,6 @@ class LogisticsHubScreen extends ConsumerStatefulWidget {
 }
 
 class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
-
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(logisticsHubControllerProvider);
@@ -389,9 +388,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
         ),
 
         // Main content
-        Expanded(
-          child: _buildArrivalContent(context, ref, state, concierge),
-        ),
+        Expanded(child: _buildArrivalContent(context, ref, state, concierge)),
       ],
     );
   }
