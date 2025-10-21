@@ -5,6 +5,9 @@ import '../../domain/entities/onboarding_question.dart';
 import '../../domain/entities/onboarding_section.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 
+// MIGRATION TO SUPABASE: Export the new Supabase implementation
+export 'onboarding_repository_impl_supabase.dart';
+
 /// Static implementation of [OnboardingRepository]
 ///
 /// This implementation uses hardcoded dummy data for onboarding questions

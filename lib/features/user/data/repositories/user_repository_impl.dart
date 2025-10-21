@@ -1,11 +1,11 @@
 import 'package:isar/isar.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/database/isar_provider.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../models/user_model.dart';
 
-part 'user_repository_impl.g.dart';
+// MIGRATION TO SUPABASE: Export the new Supabase implementation
+export 'user_repository_impl_supabase.dart';
 
 /// In-memory implementation of [UserRepository].
 ///
@@ -142,15 +142,5 @@ class IsarUserRepository implements UserRepository {
   }
 }
 
-/// Provides an instance of [UserRepository].
-///
-/// This provider creates and manages the [IsarUserRepository] instance,
-/// which uses Isar for persistent storage.
-///
-/// The provider watches [isarProvider] to get the database instance
-/// and passes it to the repository constructor.
-@riverpod
-Future<UserRepository> userRepository(UserRepositoryRef ref) async {
-  final isar = await ref.watch(isarProvider.future);
-  return IsarUserRepository(isar);
-}
+// MIGRATION TO SUPABASE: Provider now comes from user_repository_impl_supabase.dart
+// The old Isar implementation above is kept for reference but not used.

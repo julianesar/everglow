@@ -6,6 +6,9 @@ import '../../domain/repositories/journal_repository.dart';
 import '../models/daily_log_model.dart';
 import '../models/journal_entry_model.dart';
 
+// MIGRATION TO SUPABASE: Export the new Supabase implementation
+export 'journal_repository_impl_supabase.dart';
+
 part 'journal_repository_impl.g.dart';
 
 /// Isar database implementation of [JournalRepository].

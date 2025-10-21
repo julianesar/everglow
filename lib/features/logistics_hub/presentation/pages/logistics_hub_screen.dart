@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../concierge/domain/entities/concierge_info.dart';
 import '../../../main_tabs/presentation/controllers/main_tabs_controller.dart';
 import '../../../user/data/repositories/user_repository_impl.dart';
@@ -43,7 +42,8 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                 },
               ),
               loading: () => _buildLoadingState(),
-              error: (_, __) => _buildUnifiedContent(context, ref, state, 'Guest'),
+              error: (_, __) =>
+                  _buildUnifiedContent(context, ref, state, 'Guest'),
             ),
 
             // Celebration overlay (shown after check-in)
@@ -115,8 +115,9 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   ///
   /// Displays:
   /// - Welcome header with user name and days countdown
-  /// - Pre-arrival information (countdown timer and date) OR
-  /// - Arrival logistics (concierge, driver, villa, check-in)
+  /// - "Your transformation is booked" message
+  /// - Countdown timer (if before arrival) or arrival message
+  /// - Arrival logistics (concierge, driver, villa, check-in) - always visible
   /// - All in a single scrollable page
   Widget _buildUnifiedContent(
     BuildContext context,
@@ -181,217 +182,24 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
           ),
         ),
 
-        // Main scrollable content
-        Expanded(
-          child: state.isArrivalDay
-              ? _buildArrivalContent(context, ref, state, state.conciergeInfo)
-              : _buildPreArrivalContent(context, state, difference),
-        ),
+        // Main scrollable content - merged view
+        Expanded(child: _buildMergedContent(context, ref, state, difference)),
       ],
     );
   }
 
-  /// Builds the pre-arrival content (before arrival day).
+  /// Builds the merged content showing only logistics info.
   ///
   /// Displays:
-  /// - Centered "Your transformation is booked" message
-  /// - Countdown timer to arrival date
-  /// - Formatted arrival date
-  Widget _buildPreArrivalContent(
+  /// - Arrival logistics (concierge, driver, villa, check-in) - always visible
+  Widget _buildMergedContent(
     BuildContext context,
+    WidgetRef ref,
     LogisticsHubState state,
     Duration difference,
   ) {
     final theme = Theme.of(context);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 48),
-
-          // Main message
-          Text(
-            'Your transformation\nis booked.',
-            style: theme.textTheme.headlineLarge?.copyWith(
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 64),
-
-          // Countdown timer
-          _buildCountdownTimer(context, difference),
-
-          const SizedBox(height: 48),
-
-          // Arrival date message
-          Text(
-            'We await your arrival on',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              letterSpacing: 1.0,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            _formatDate(state.booking.startDate),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.primary,
-              letterSpacing: 0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 48),
-        ],
-      ),
-    );
-  }
-
-  /// Builds the countdown timer display.
-  Widget _buildCountdownTimer(BuildContext context, Duration difference) {
-    final theme = Theme.of(context);
-    final days = difference.inDays;
-    final hours = difference.inHours % 24;
-    final minutes = difference.inMinutes % 60;
-    final seconds = difference.inSeconds % 60;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Days
-                _buildTimeUnit(
-                  context,
-                  days.toString().padLeft(2, '0'),
-                  'DAYS',
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    ':',
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w300,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-
-                // Hours
-                _buildTimeUnit(
-                  context,
-                  hours.toString().padLeft(2, '0'),
-                  'HOURS',
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    ':',
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w300,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-
-                // Minutes
-                _buildTimeUnit(
-                  context,
-                  minutes.toString().padLeft(2, '0'),
-                  'MINS',
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    ':',
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w300,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-
-                // Seconds
-                _buildTimeUnit(
-                  context,
-                  seconds.toString().padLeft(2, '0'),
-                  'SECS',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds a single time unit display (days, hours, minutes, or seconds).
-  Widget _buildTimeUnit(BuildContext context, String value, String label) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        Text(
-          value,
-          style: theme.textTheme.displayMedium?.copyWith(
-            color: const Color(0xFFF5F5F0),
-            fontWeight: FontWeight.w300,
-            height: 1.0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.primary,
-            letterSpacing: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Builds arrival content with arrival logistics information.
-  Widget _buildArrivalContent(
-    BuildContext context,
-    WidgetRef ref,
-    LogisticsHubState state,
-    ConciergeInfo? concierge,
-  ) {
-    final theme = Theme.of(context);
-
-    if (concierge == null) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: _buildNoConciergeInfo(context),
-      );
-    }
+    final concierge = state.conciergeInfo;
 
     return Stack(
       children: [
@@ -404,39 +212,28 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
             bottom: !state.booking.isCheckedIn ? 120 : 24,
           ),
           children: [
-            // Welcome message for arrival day
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Text(
-                'We are ready for your arrival.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  fontSize: 16,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            const SizedBox(height: 16),
 
+            // Logistics information (always visible)
             // Concierge information card
             _buildConciergeCard(context, concierge),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Driver information card
             _buildDriverCard(context, concierge),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Villa information card
             _buildVillaCard(context, concierge),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Check-in instructions card
             _buildCheckInCard(context, concierge),
           ],
         ),
 
-        // Sticky check-in button at the bottom (only if not checked in yet)
-        if (!state.booking.isCheckedIn)
+        // Sticky check-in button at the bottom (only if arrival day and not checked in)
+        if (state.isArrivalDay && !state.booking.isCheckedIn)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -514,7 +311,9 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           child: Icon(
                             Icons.person,
                             size: 40,
@@ -538,7 +337,9 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                       Text(
                         'Available 24/7 for your comfort',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -740,44 +541,4 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
     );
   }
 
-  /// Builds a fallback message when no concierge info is available.
-  Widget _buildNoConciergeInfo(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          children: [
-            Icon(
-              Icons.pending_outlined,
-              size: 64,
-              color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Your arrival details are being prepared',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Please check back shortly',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Formats a date in a human-readable format.
-  String _formatDate(DateTime date) {
-    return DateFormat('EEEE, MMMM d, y').format(date);
-  }
 }

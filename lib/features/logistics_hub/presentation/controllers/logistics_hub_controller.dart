@@ -25,11 +25,11 @@ class LogisticsHubState {
   /// Contains booking dates, check-in status, and other booking details.
   final Booking booking;
 
-  /// Optional concierge information for arrival day.
+  /// Concierge information including driver, villa, and check-in details.
   ///
-  /// Only populated when [isArrivalDay] is true. Contains details about
-  /// the assigned driver, villa, and check-in instructions.
-  final ConciergeInfo? conciergeInfo;
+  /// Always available for users to review their arrival logistics,
+  /// regardless of whether it's arrival day or pre-arrival period.
+  final ConciergeInfo conciergeInfo;
 
   /// Indicates whether to show the check-in celebration overlay.
   ///
@@ -41,7 +41,7 @@ class LogisticsHubState {
   const LogisticsHubState({
     required this.isArrivalDay,
     required this.booking,
-    this.conciergeInfo,
+    required this.conciergeInfo,
     this.showCelebration = false,
   });
 
@@ -102,13 +102,13 @@ class LogisticsHubController extends _$LogisticsHubController {
   /// Timer for updating the countdown every second when in pre-arrival mode.
   Timer? _countdownTimer;
 
-  /// Builds the initial state by fetching booking and optional concierge data.
+  /// Builds the initial state by fetching booking and concierge data.
   ///
   /// This method:
   /// 1. Gets the current user ID from [AuthRepository]
   /// 2. Fetches the active booking for the user
   /// 3. Determines if today is arrival day by comparing booking start date
-  /// 4. If arrival day, fetches concierge information
+  /// 4. Fetches concierge information (always loaded for user preview)
   /// 5. Returns a complete [LogisticsHubState]
   /// 6. Starts a timer to update the countdown every second (if pre-arrival)
   ///
@@ -147,12 +147,9 @@ class LogisticsHubController extends _$LogisticsHubController {
     // If today is on or after the start date, it's arrival day or later
     final isArrivalDay = today.isAtSameMomentAs(startDay) || today.isAfter(startDay);
 
-    // Step 4: Conditionally fetch concierge information
-    ConciergeInfo? conciergeInfo;
-    if (isArrivalDay) {
-      final conciergeRepository = ref.watch(conciergeRepositoryProvider);
-      conciergeInfo = await conciergeRepository.getConciergeInfo(booking.id);
-    }
+    // Step 4: Fetch concierge information (always available for user review)
+    final conciergeRepository = ref.watch(conciergeRepositoryProvider);
+    final conciergeInfo = await conciergeRepository.getConciergeInfo(booking.id);
 
     // Step 5: Return the complete state
     final initialState = LogisticsHubState(

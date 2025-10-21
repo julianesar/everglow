@@ -43,7 +43,8 @@
       "Bash(where:*)",
       "Bash(npx supabase db push:*)",
       "Bash(node apply_migration.js:*)",
-      "Bash(del apply_migration.js)"
+      "Bash(del apply_migration.js)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
