@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../user/domain/repositories/user_repository.dart';
-import '../../../user/data/repositories/user_repository_impl.dart';
-import '../../../user/data/models/user_model.dart';
+import '../../../user/presentation/controllers/user_controller.dart';
 
 /// Provider to track if this is the user's first time viewing the hub.
 /// Defaults to true and is set to false after the first render.
@@ -25,8 +23,18 @@ class HubScreen extends ConsumerWidget {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
-    // Watch the user repository provider
-    final userRepositoryAsync = ref.watch(userRepositoryProvider);
+    // Watch the user controller provider
+    final userAsync = ref.watch(userControllerProvider);
+
+    // Watch the isFirstHubView provider
+    final isFirstHubView = ref.watch(isFirstHubViewProvider);
+
+    // After the first render, set isFirstHubView to false
+    ref.listen(userControllerProvider, (_, __) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(isFirstHubViewProvider.notifier).state = false;
+      });
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +47,7 @@ class HubScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: const Color(0xFF111111), // Charcoal Soul
       ),
-      body: userRepositoryAsync.when(
+      body: userAsync.when(
         // Loading state
         loading: () => const Center(child: CircularProgressIndicator()),
 
@@ -68,166 +76,114 @@ class HubScreen extends ConsumerWidget {
           ),
         ),
 
-        // Data state - user repository loaded
-        data: (userRepository) => _HubContent(userRepository: userRepository),
-      ),
-    );
-  }
-}
+        // Data state - user data loaded
+        data: (user) {
+          // Default values if user data is not available
+          final userName = user?.name ?? 'Transformer';
+          final integrationStatement = user?.integrationStatement ??
+              'Your personal integration statement will appear here.';
 
-/// Content widget that loads and displays user data.
-class _HubContent extends ConsumerStatefulWidget {
-  const _HubContent({required this.userRepository});
+          // Determine the greeting based on whether this is the first visit
+          final greeting = isFirstHubView ? 'Congratulations,' : 'Welcome back,';
 
-  final UserRepository userRepository;
-
-  @override
-  ConsumerState<_HubContent> createState() => _HubContentState();
-}
-
-class _HubContentState extends ConsumerState<_HubContent> {
-  /// Retrieves user data from the repository.
-  Future<User?> _getUserData() async {
-    return await widget.userRepository.getUser();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // After the first render, set isFirstHubView to false
-    // This ensures that on subsequent visits, the user sees "Welcome back" instead
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(isFirstHubViewProvider.notifier).state = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
-
-    // Watch the isFirstHubView provider
-    final isFirstHubView = ref.watch(isFirstHubViewProvider);
-
-    return FutureBuilder<User?>(
-      future: _getUserData(),
-      builder: (context, snapshot) {
-        // Default values if user data is not available
-        String userName = 'Transformer';
-        String integrationStatement =
-            'Your personal integration statement will appear here.';
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasData && snapshot.data != null) {
-          final user = snapshot.data!;
-          userName = user.name;
-          integrationStatement = user.integrationStatement;
-        }
-
-        // Determine the greeting based on whether this is the first visit
-        final greeting = isFirstHubView ? 'Congratulations,' : 'Welcome back,';
-
-        return SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // Welcome section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Greeting - subtle and light
-                      Text(
-                        greeting,
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: const Color(
-                            0xFFEAEAEA,
-                          ).withValues(alpha: 0.8), // Alabaster
-                          fontWeight: FontWeight.w300,
+          return SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                // Welcome section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Greeting - subtle and light
+                        Text(
+                          greeting,
+                          style: textTheme.headlineMedium?.copyWith(
+                            color: const Color(
+                              0xFFEAEAEA,
+                            ).withValues(alpha: 0.8), // Alabaster
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
-                      ),
-                      // User name - large and prominent with Liquid Gold
-                      Text(
-                        userName,
-                        style: textTheme.headlineLarge?.copyWith(
-                          color: const Color(0xFFFFD700), // Liquid Gold
-                          fontWeight: FontWeight.w700,
-                          fontSize: 40,
-                          letterSpacing: -0.5,
+                        // User name - large and prominent with Liquid Gold
+                        Text(
+                          userName,
+                          style: textTheme.headlineLarge?.copyWith(
+                            color: const Color(0xFFFFD700), // Liquid Gold
+                            fontWeight: FontWeight.w700,
+                            fontSize: 40,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Integration Statement
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
-                  child: _IntegrationStatementCard(
-                    statement: integrationStatement,
-                  ),
-                ),
-              ),
-
-              // Main featured card - Rebirth Protocol
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-                  child: _RebirthProtocolCard(
-                    onTap: () => context.push('/report'),
-                  ),
-                ),
-              ),
-
-              // Section title for day reviews
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 40, 24, 16),
-                  child: Text(
-                    'Review Your Journey',
-                    style: textTheme.titleLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                      ],
                     ),
                   ),
                 ),
-              ),
 
-              // Day review list - elegant ListTile design
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                  child: Column(
-                    children: [
-                      _DayListTile(
-                        dayNumber: 1,
-                        onTap: () => context.push('/day/1'),
-                      ),
-                      const SizedBox(height: 12),
-                      _DayListTile(
-                        dayNumber: 2,
-                        onTap: () => context.push('/day/2'),
-                      ),
-                      const SizedBox(height: 12),
-                      _DayListTile(
-                        dayNumber: 3,
-                        onTap: () => context.push('/day/3'),
-                      ),
-                    ],
+                // Integration Statement
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
+                    child: _IntegrationStatementCard(
+                      statement: integrationStatement,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+
+                // Main featured card - Rebirth Protocol
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+                    child: _RebirthProtocolCard(
+                      onTap: () => context.push('/report'),
+                    ),
+                  ),
+                ),
+
+                // Section title for day reviews
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 16),
+                    child: Text(
+                      'Review Your Journey',
+                      style: textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Day review list - elegant ListTile design
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                    child: Column(
+                      children: [
+                        _DayListTile(
+                          dayNumber: 1,
+                          onTap: () => context.push('/day/1'),
+                        ),
+                        const SizedBox(height: 12),
+                        _DayListTile(
+                          dayNumber: 2,
+                          onTap: () => context.push('/day/2'),
+                        ),
+                        const SizedBox(height: 12),
+                        _DayListTile(
+                          dayNumber: 3,
+                          onTap: () => context.push('/day/3'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

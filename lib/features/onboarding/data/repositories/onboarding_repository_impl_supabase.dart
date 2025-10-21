@@ -67,10 +67,16 @@ class SupabaseOnboardingRepository implements OnboardingRepository {
 
   @override
   Future<void> submitOnboardingAnswers(Map<String, dynamic> answers) async {
+    print('📝 [ONBOARDING] Starting submitOnboardingAnswers...');
+    print('📝 [ONBOARDING] Answers count: ${answers.length}');
+
     final userId = _userId;
     if (userId == null) {
+      print('❌ [ONBOARDING] User not authenticated');
       throw Exception('User not authenticated');
     }
+
+    print('✅ [ONBOARDING] User ID: $userId');
 
     // Convert answers to OnboardingResponseData objects
     final responses = <OnboardingResponseData>[];
@@ -90,27 +96,58 @@ class SupabaseOnboardingRepository implements OnboardingRepository {
         responseOptions = answer.map((e) => e.toString()).toList();
       }
 
-      responses.add(
-        OnboardingResponseData(
-          id: _uuid.v4(),
-          userId: userId,
-          questionId: questionId,
-          responseText: responseText,
-          responseOptions: responseOptions,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final responseData = OnboardingResponseData(
+        id: _uuid.v4(),
+        userId: userId,
+        questionId: questionId,
+        responseText: responseText,
+        responseOptions: responseOptions,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
+
+      responses.add(responseData);
+      print('📋 [ONBOARDING] Response for $questionId: text=$responseText, options=$responseOptions');
     }
 
-    // Save all responses at once
-    await _remoteDatasource.saveUserResponses(responses);
+    print('💾 [ONBOARDING] Saving ${responses.length} responses to Supabase...');
 
-    // Also update user_profiles table with has_completed_onboarding flag
-    await _supabase.from('user_profiles').upsert({
-      'user_id': userId,
-      'has_completed_onboarding': true,
-    });
+    // Save all responses at once
+    try {
+      await _remoteDatasource.saveUserResponses(responses);
+      print('✅ [ONBOARDING] Responses saved successfully');
+    } catch (e) {
+      print('❌ [ONBOARDING] Failed to save responses: $e');
+      rethrow;
+    }
+
+    // Get user's name from auth metadata
+    final currentUser = _supabase.auth.currentUser;
+    final userName = currentUser?.userMetadata?['name'] as String?;
+
+    print('👤 [ONBOARDING] Updating user profile... userName=$userName');
+
+    // Update user_profiles table with has_completed_onboarding flag and name
+    try {
+      final profileData = {
+        'user_id': userId,
+        'has_completed_onboarding': true,
+        if (userName != null) 'name': userName,
+      };
+      print('📋 [ONBOARDING] Profile data to upsert: $profileData');
+
+      final profileResult = await _supabase.from('user_profiles').upsert(profileData);
+
+      print('✅ [ONBOARDING] User profile updated successfully');
+      print('📊 [ONBOARDING] Profile update result: $profileResult');
+    } catch (e, stackTrace) {
+      print('❌ [ONBOARDING] Failed to update user profile: $e');
+      print('❌ [ONBOARDING] Stack trace: $stackTrace');
+      rethrow;
+    }
+
+    print('🎉 [ONBOARDING] submitOnboardingAnswers completed successfully');
+    print('═══════════════════════════════════════════════════');
   }
 
   /// Maps Supabase question type string to QuestionType enum.

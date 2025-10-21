@@ -7,12 +7,11 @@ part of 'onboarding_repository_provider.dart';
 // **************************************************************************
 
 String _$onboardingRepositoryHash() =>
-    r'c9f6dd3a21379f14987a0c43c2f9c7d2124b8024';
+    r'0dbeab44d0c39de7cf08f0b6501df8a4aab55b51';
 
 /// Provider for [OnboardingRepository]
 ///
-/// Returns a static implementation for now. When switching to Supabase,
-/// simply update the return statement to use SupabaseOnboardingRepository.
+/// Now using the Supabase implementation to save data in the cloud.
 ///
 /// Copied from [onboardingRepository].
 @ProviderFor(onboardingRepository)

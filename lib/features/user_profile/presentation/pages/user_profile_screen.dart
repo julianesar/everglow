@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/data/repositories/auth_repository_impl.dart';
-import '../../../user/data/repositories/user_repository_impl.dart';
+import '../../../user/presentation/controllers/user_controller.dart';
 
 /// User profile screen displaying user information and account options.
 ///
@@ -64,7 +64,7 @@ class UserProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final userAsync = ref.watch(userRepositoryProvider);
+    final userAsync = ref.watch(userControllerProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -96,14 +96,7 @@ class UserProfileScreen extends ConsumerWidget {
               ),
             ),
           ),
-          data: (userRepository) => FutureBuilder(
-            future: userRepository.getUser(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final user = snapshot.data;
+          data: (user) {
 
               return ListView(
                 padding: const EdgeInsets.all(24.0),
@@ -246,8 +239,7 @@ class UserProfileScreen extends ConsumerWidget {
                   ),
                 ],
               );
-            },
-          ),
+          },
         ),
       ),
     );

@@ -1,25 +1,18 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/repositories/onboarding_repository.dart';
-import '../../../../core/database/isar_provider.dart';
-import 'onboarding_repository_impl.dart';
+
+// Use the Supabase implementation provider
+import 'onboarding_repository_impl_supabase.dart' as supabase_impl;
 
 part 'onboarding_repository_provider.g.dart';
 
 /// Provider for [OnboardingRepository]
 ///
-/// Returns a static implementation for now. When switching to Supabase,
-/// simply update the return statement to use SupabaseOnboardingRepository.
+/// Now using the Supabase implementation to save data in the cloud.
 @riverpod
 Future<OnboardingRepository> onboardingRepository(
   OnboardingRepositoryRef ref,
 ) async {
-  final isar = await ref.watch(isarProvider.future);
-
-  // Return static implementation for now
-  return StaticOnboardingRepository(isar);
-
-  // When switching to Supabase, just change this line:
-  // return SupabaseOnboardingRepository(
-  //   supabaseClient: ref.watch(supabaseClientProvider),
-  // );
+  // Delegate to the Supabase implementation provider
+  return ref.watch(supabase_impl.onboardingRepositoryProvider.future);
 }

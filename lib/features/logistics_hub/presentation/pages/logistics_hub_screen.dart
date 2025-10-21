@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../concierge/domain/entities/concierge_info.dart';
 import '../../../main_tabs/presentation/controllers/main_tabs_controller.dart';
-import '../../../user/data/repositories/user_repository_impl.dart';
+import '../../../user/presentation/controllers/user_controller.dart';
 import '../controllers/logistics_hub_controller.dart';
 import '../widgets/check_in_celebration_overlay.dart';
 
@@ -24,7 +24,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(logisticsHubControllerProvider);
-    final userAsyncValue = ref.watch(userRepositoryProvider);
+    final userAsyncValue = ref.watch(userControllerProvider);
 
     return Scaffold(
       body: asyncState.when(
@@ -34,13 +34,10 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
           children: [
             // Main unified content
             userAsyncValue.when(
-              data: (userRepo) => FutureBuilder(
-                future: userRepo.getUser(),
-                builder: (context, snapshot) {
-                  final userName = snapshot.data?.name ?? 'Guest';
-                  return _buildUnifiedContent(context, ref, state, userName);
-                },
-              ),
+              data: (user) {
+                final userName = user?.name ?? 'Guest';
+                return _buildUnifiedContent(context, ref, state, userName);
+              },
               loading: () => _buildLoadingState(),
               error: (_, __) =>
                   _buildUnifiedContent(context, ref, state, 'Guest'),

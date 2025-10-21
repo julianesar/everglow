@@ -61,9 +61,10 @@ class OnboardingRemoteDatasource {
   Future<OnboardingResponseData> saveUserResponse(
       OnboardingResponseData response) async {
     try {
+      // Don't include id in the JSON - let Supabase generate it
       final result = await _supabase
           .from('user_onboarding_responses')
-          .upsert(response.toJson())
+          .upsert(response.toJson(includeId: false))
           .select()
           .single();
 
@@ -76,11 +77,36 @@ class OnboardingRemoteDatasource {
   /// Saves multiple user responses at once.
   Future<void> saveUserResponses(
       List<OnboardingResponseData> responses) async {
+    print('═══════════════════════════════════════════════════');
+    print('🔄 [DATASOURCE] saveUserResponses called');
+    print('🔄 [DATASOURCE] Number of responses: ${responses.length}');
+
     try {
-      await _supabase
+      // Don't include id in the JSON - let Supabase generate it
+      final jsonData = responses.map((r) => r.toJson(includeId: false)).toList();
+
+      print('📋 [DATASOURCE] JSON Data to be inserted:');
+      for (int i = 0; i < jsonData.length; i++) {
+        print('   Response $i: ${jsonData[i]}');
+      }
+
+      print('💾 [DATASOURCE] Starting upsert to user_onboarding_responses table...');
+
+      final result = await _supabase
           .from('user_onboarding_responses')
-          .upsert(responses.map((r) => r.toJson()).toList());
-    } catch (e) {
+          .upsert(jsonData);
+
+      print('✅ [DATASOURCE] Upsert operation completed successfully');
+      print('📊 [DATASOURCE] Result type: ${result.runtimeType}');
+      print('📊 [DATASOURCE] Result data: $result');
+      print('═══════════════════════════════════════════════════');
+    } catch (e, stackTrace) {
+      print('❌ [DATASOURCE] ERROR occurred during upsert!');
+      print('❌ [DATASOURCE] Error type: ${e.runtimeType}');
+      print('❌ [DATASOURCE] Error message: $e');
+      print('❌ [DATASOURCE] Stack trace:');
+      print(stackTrace);
+      print('═══════════════════════════════════════════════════');
       throw Exception('Failed to save user responses: $e');
     }
   }
@@ -193,9 +219,9 @@ class OnboardingResponseData {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool includeId = true}) {
     return {
-      'id': id,
+      if (includeId) 'id': id,
       'user_id': userId,
       'question_id': questionId,
       'response_text': responseText,

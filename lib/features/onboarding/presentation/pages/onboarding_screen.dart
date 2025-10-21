@@ -156,24 +156,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   /// Submits the onboarding answers
   Future<void> _submitAnswers() async {
+    print('═══════════════════════════════════════════════════');
+    print('🚀 [ONBOARDING_SCREEN] _submitAnswers called');
+    print('📝 [ONBOARDING_SCREEN] Answers collected: ${_answers.length}');
+    print('📋 [ONBOARDING_SCREEN] Answers data: $_answers');
+
     setState(() {
       _isSubmitting = true;
     });
 
     try {
-      // Submit onboarding answers
+      print('📥 [ONBOARDING_SCREEN] Getting repository...');
       final repository = await ref.read(onboardingRepositoryProvider.future);
+      print('✅ [ONBOARDING_SCREEN] Repository obtained, calling submitOnboardingAnswers...');
+
       await repository.submitOnboardingAnswers(_answers);
 
+      print('✅ [ONBOARDING_SCREEN] submitOnboardingAnswers completed!');
+
       // Get the authenticated user's ID
+      print('👤 [ONBOARDING_SCREEN] Getting authenticated user...');
       final authRepository = ref.read(authRepositoryProvider);
       final currentUser = authRepository.currentUser;
+      print('✅ [ONBOARDING_SCREEN] Current user: ${currentUser?.id}');
 
       if (currentUser == null) {
+        print('❌ [ONBOARDING_SCREEN] No authenticated user found!');
         throw Exception('No authenticated user found');
       }
 
       // Create the booking using the saved date from the booking screen
+      print('📅 [ONBOARDING_SCREEN] Creating booking...');
       // This ensures the user has an active booking before accessing logistics hub
       final bookingRepository = await ref.read(bookingRepositoryProvider.future);
       final selectedDate = ref.read(selectedBookingDateProvider);
@@ -199,7 +212,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         // This will show the Logistics Hub as the first tab
         context.go('/tabs');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [ONBOARDING_SCREEN] ERROR in _submitAnswers!');
+      print('❌ [ONBOARDING_SCREEN] Error: $e');
+      print('❌ [ONBOARDING_SCREEN] Stack trace:');
+      print(stackTrace);
+      print('═══════════════════════════════════════════════════');
+
       setState(() {
         _isSubmitting = false;
       });

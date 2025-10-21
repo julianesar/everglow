@@ -41,13 +41,22 @@ class SupabaseUserRepository implements UserRepository {
 
   @override
   Future<User?> getUser() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) {
+    final currentUser = _supabase.auth.currentUser;
+    if (currentUser == null) {
       return null;
     }
 
-    final userData = await _remoteDatasource.getUserBasicInfo(userId);
+    final userData = await _remoteDatasource.getUserBasicInfo(currentUser.id);
     if (userData == null) {
+      // Fallback: Try to get name from auth metadata if not in user_profiles
+      final nameFromAuth = currentUser.userMetadata?['name'] as String?;
+      if (nameFromAuth != null) {
+        // Return a user with just the name from auth, no integration statement yet
+        return User.create(
+          name: nameFromAuth,
+          integrationStatement: '', // Empty until onboarding is completed
+        );
+      }
       return null;
     }
 
