@@ -19,6 +19,15 @@ class ConciergeInfoModel {
   /// Phone number of the assigned driver.
   late String driverPhone;
 
+  /// Name of the assigned concierge.
+  late String conciergeName;
+
+  /// Phone number of the assigned concierge.
+  late String conciergePhone;
+
+  /// URL to the concierge's photo.
+  late String conciergePhotoUrl;
+
   /// Physical address of the assigned villa.
   late String villaAddress;
 
@@ -33,6 +42,9 @@ class ConciergeInfoModel {
     return ConciergeInfo(
       driverName: driverName,
       driverPhone: driverPhone,
+      conciergeName: conciergeName,
+      conciergePhone: conciergePhone,
+      conciergePhotoUrl: conciergePhotoUrl,
       villaAddress: villaAddress,
       villaImageUrl: villaImageUrl,
       checkInInstructions: checkInInstructions,
@@ -45,6 +57,9 @@ class ConciergeInfoModel {
       ..bookingId = bookingId
       ..driverName = info.driverName
       ..driverPhone = info.driverPhone
+      ..conciergeName = info.conciergeName
+      ..conciergePhone = info.conciergePhone
+      ..conciergePhotoUrl = info.conciergePhotoUrl
       ..villaAddress = info.villaAddress
       ..villaImageUrl = info.villaImageUrl
       ..checkInInstructions = info.checkInInstructions;

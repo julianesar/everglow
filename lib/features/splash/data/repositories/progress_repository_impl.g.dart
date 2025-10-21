@@ -7,7 +7,7 @@ part of 'progress_repository_impl.dart';
 // **************************************************************************
 
 String _$progressRepositoryHash() =>
-    r'138649322db4d55d6587e150a91fd2bf48d840d5';
+    r'a4fede8596435a10d3130e1848dc4d058242cd1e';
 
 /// Provides an instance of [ProgressRepository].
 ///

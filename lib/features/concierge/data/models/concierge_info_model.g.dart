@@ -28,23 +28,38 @@ const ConciergeInfoModelSchema = CollectionSchema(
       name: r'checkInInstructions',
       type: IsarType.string,
     ),
-    r'driverName': PropertySchema(
+    r'conciergeName': PropertySchema(
       id: 2,
+      name: r'conciergeName',
+      type: IsarType.string,
+    ),
+    r'conciergePhone': PropertySchema(
+      id: 3,
+      name: r'conciergePhone',
+      type: IsarType.string,
+    ),
+    r'conciergePhotoUrl': PropertySchema(
+      id: 4,
+      name: r'conciergePhotoUrl',
+      type: IsarType.string,
+    ),
+    r'driverName': PropertySchema(
+      id: 5,
       name: r'driverName',
       type: IsarType.string,
     ),
     r'driverPhone': PropertySchema(
-      id: 3,
+      id: 6,
       name: r'driverPhone',
       type: IsarType.string,
     ),
     r'villaAddress': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'villaAddress',
       type: IsarType.string,
     ),
     r'villaImageUrl': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'villaImageUrl',
       type: IsarType.string,
     )
@@ -85,6 +100,9 @@ int _conciergeInfoModelEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.bookingId.length * 3;
   bytesCount += 3 + object.checkInInstructions.length * 3;
+  bytesCount += 3 + object.conciergeName.length * 3;
+  bytesCount += 3 + object.conciergePhone.length * 3;
+  bytesCount += 3 + object.conciergePhotoUrl.length * 3;
   bytesCount += 3 + object.driverName.length * 3;
   bytesCount += 3 + object.driverPhone.length * 3;
   bytesCount += 3 + object.villaAddress.length * 3;
@@ -100,10 +118,13 @@ void _conciergeInfoModelSerialize(
 ) {
   writer.writeString(offsets[0], object.bookingId);
   writer.writeString(offsets[1], object.checkInInstructions);
-  writer.writeString(offsets[2], object.driverName);
-  writer.writeString(offsets[3], object.driverPhone);
-  writer.writeString(offsets[4], object.villaAddress);
-  writer.writeString(offsets[5], object.villaImageUrl);
+  writer.writeString(offsets[2], object.conciergeName);
+  writer.writeString(offsets[3], object.conciergePhone);
+  writer.writeString(offsets[4], object.conciergePhotoUrl);
+  writer.writeString(offsets[5], object.driverName);
+  writer.writeString(offsets[6], object.driverPhone);
+  writer.writeString(offsets[7], object.villaAddress);
+  writer.writeString(offsets[8], object.villaImageUrl);
 }
 
 ConciergeInfoModel _conciergeInfoModelDeserialize(
@@ -115,11 +136,14 @@ ConciergeInfoModel _conciergeInfoModelDeserialize(
   final object = ConciergeInfoModel();
   object.bookingId = reader.readString(offsets[0]);
   object.checkInInstructions = reader.readString(offsets[1]);
-  object.driverName = reader.readString(offsets[2]);
-  object.driverPhone = reader.readString(offsets[3]);
+  object.conciergeName = reader.readString(offsets[2]);
+  object.conciergePhone = reader.readString(offsets[3]);
+  object.conciergePhotoUrl = reader.readString(offsets[4]);
+  object.driverName = reader.readString(offsets[5]);
+  object.driverPhone = reader.readString(offsets[6]);
   object.isarId = id;
-  object.villaAddress = reader.readString(offsets[4]);
-  object.villaImageUrl = reader.readString(offsets[5]);
+  object.villaAddress = reader.readString(offsets[7]);
+  object.villaImageUrl = reader.readString(offsets[8]);
   return object;
 }
 
@@ -141,6 +165,12 @@ P _conciergeInfoModelDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -613,6 +643,414 @@ extension ConciergeInfoModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'checkInInstructions',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'conciergeName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'conciergeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'conciergeName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergeName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'conciergeName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'conciergePhone',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'conciergePhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'conciergePhone',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergePhone',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'conciergePhone',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'conciergePhotoUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'conciergePhotoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'conciergePhotoUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'conciergePhotoUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'conciergePhotoUrl',
         value: '',
       ));
     });
@@ -1256,6 +1694,48 @@ extension ConciergeInfoModelQuerySortBy
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergeName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergeName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergeNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergeName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergePhone() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhone', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergePhoneDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhone', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergePhotoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhotoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      sortByConciergePhotoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhotoUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
       sortByDriverName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'driverName', Sort.asc);
@@ -1339,6 +1819,48 @@ extension ConciergeInfoModelQuerySortThenBy
       thenByCheckInInstructionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'checkInInstructions', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergeName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergeName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergeNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergeName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergePhone() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhone', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergePhoneDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhone', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergePhotoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhotoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterSortBy>
+      thenByConciergePhotoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'conciergePhotoUrl', Sort.desc);
     });
   }
 
@@ -1431,6 +1953,30 @@ extension ConciergeInfoModelQueryWhereDistinct
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QDistinct>
+      distinctByConciergeName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'conciergeName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QDistinct>
+      distinctByConciergePhone({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'conciergePhone',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QDistinct>
+      distinctByConciergePhotoUrl({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'conciergePhotoUrl',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QDistinct>
       distinctByDriverName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'driverName', caseSensitive: caseSensitive);
@@ -1479,6 +2025,27 @@ extension ConciergeInfoModelQueryProperty
       checkInInstructionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'checkInInstructions');
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+      conciergeNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'conciergeName');
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+      conciergePhoneProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'conciergePhone');
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+      conciergePhotoUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'conciergePhotoUrl');
     });
   }
 

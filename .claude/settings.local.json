@@ -38,7 +38,8 @@
       "Bash(move libdataremoteai_report_service_provider.g.dart libcorenetwork)",
       "Bash(move \"lib\\features\\auth\\domain\\entities\\auth_user.dart\" \"lib\\features\\auth\\domain\\entities\\app_user.dart\")",
       "Bash(del assetsimageswelcome_hero.jpg)",
-      "Bash(del \"d:\\Development\\chad\\everglow_app\\lib\\features\\logistics_hub\\presentation\\pages\\check_in_celebration_screen.dart\")"
+      "Bash(del \"d:\\Development\\chad\\everglow_app\\lib\\features\\logistics_hub\\presentation\\pages\\check_in_celebration_screen.dart\")",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

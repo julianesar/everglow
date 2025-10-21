@@ -414,6 +414,10 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
           ),
           children: [
             if (concierge != null) ...[
+              // Concierge information card
+              _buildConciergeCard(context, concierge),
+              const SizedBox(height: 24),
+
               // Driver information card
               _buildDriverCard(context, concierge),
               const SizedBox(height: 24),
@@ -470,6 +474,93 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  /// Builds the concierge information card.
+  Widget _buildConciergeCard(BuildContext context, ConciergeInfo concierge) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your Concierge',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                // Concierge photo
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      concierge.conciergePhotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: theme.colorScheme.primary,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        concierge.conciergeName,
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Available 24/7 for your comfort',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () {
+                // TODO: Implement phone call functionality
+              },
+              icon: const Icon(Icons.phone_outlined),
+              label: Text(concierge.conciergePhone),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

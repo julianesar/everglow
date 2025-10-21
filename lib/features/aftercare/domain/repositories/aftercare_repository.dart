@@ -11,7 +11,11 @@ abstract class AftercareRepository {
   /// - Uses AI to identify 3-5 key actionable commitments
   /// - Caches the results to avoid redundant AI calls
   ///
+  /// [forceRefresh] If true, bypasses the cache and regenerates commitments
+  ///
   /// Returns a list of [Commitment] objects representing the user's
   /// actionable commitments made during their journey.
-  Future<List<Commitment>> extractCommitmentsFromJournal();
+  Future<List<Commitment>> extractCommitmentsFromJournal({
+    bool forceRefresh = false,
+  });
 }

@@ -1,21 +1,27 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/database/isar_provider.dart';
 import '../../../../core/network/ai_report_service.dart';
 import '../../../../core/network/ai_report_service_provider.dart';
 import '../../../journal/domain/repositories/journal_repository.dart';
 import '../../../journal/data/repositories/journal_repository_impl.dart';
+import '../../../user/data/models/user_model.dart';
 
 part 'ai_report_repository_impl.g.dart';
 
 /// Repository responsible for generating comprehensive AI-powered transformation reports.
 ///
 /// This repository orchestrates the report generation process by:
-/// 1. Fetching all user journal data from [JournalRepository]
-/// 2. Constructing a detailed prompt for the AI
-/// 3. Sending the request to Google's Gemini API via [AiReportService]
-/// 4. Parsing and returning the generated report text
+/// 1. Checking if a report is already cached in the User model
+/// 2. If not cached, fetching all user journal data from [JournalRepository]
+/// 3. Constructing a detailed prompt for the AI
+/// 4. Sending the request to Google's Gemini API via [AiReportService]
+/// 5. Caching the result in the User model
+/// 6. Parsing and returning the generated report text
 ///
 /// The repository acts as the single source of truth for AI report generation,
 /// encapsulating the business logic of prompt construction and response handling.
@@ -26,24 +32,34 @@ class AIReportRepository {
   /// The repository for accessing user journal data.
   final JournalRepository _journalRepository;
 
+  /// The Isar database instance for caching reports.
+  final Isar _isar;
+
   /// Creates an instance of [AIReportRepository].
   ///
   /// [aiReportService] Service for making API calls to Gemini
   /// [journalRepository] Repository for fetching user journal data
+  /// [isar] Database instance for caching reports
   const AIReportRepository({
     required AiReportService aiReportService,
     required JournalRepository journalRepository,
+    required Isar isar,
   }) : _aiReportService = aiReportService,
-       _journalRepository = journalRepository;
+       _journalRepository = journalRepository,
+       _isar = isar;
 
   /// Generates a comprehensive transformation report based on all user data.
   ///
   /// This method orchestrates the entire report generation workflow:
-  /// 1. Retrieves all user journal entries and priorities from the database
-  /// 2. Constructs a master prompt instructing the AI to act as a compassionate coach
-  /// 3. Combines the prompt with user data into a comprehensive context
-  /// 4. Formats the request according to Gemini API specifications
-  /// 5. Sends the request and parses the response
+  /// 1. Checks if a report is already cached (unless forceRefresh is true)
+  /// 2. Retrieves all user journal entries and priorities from the database
+  /// 3. Constructs a master prompt instructing the AI to act as a compassionate coach
+  /// 4. Combines the prompt with user data into a comprehensive context
+  /// 5. Formats the request according to Gemini API specifications
+  /// 6. Sends the request and parses the response
+  /// 7. Caches the report in the User model
+  ///
+  /// [forceRefresh] If true, bypasses the cache and regenerates the report
   ///
   /// Returns the generated report text as a String.
   ///
@@ -62,17 +78,37 @@ class AIReportRepository {
   ///   print('Failed to generate report: $e');
   /// }
   /// ```
-  Future<String> generateFinalReport() async {
-    // Step 1: Retrieve all user data from the journal repository
+  Future<String> generateFinalReport({bool forceRefresh = false}) async {
+    debugPrint('[AIReportRepository] === STARTING REPORT GENERATION ===');
+    debugPrint('[AIReportRepository] Force refresh: $forceRefresh');
+
+    // Step 1: Check if report is already cached (unless force refresh)
+    if (!forceRefresh) {
+      debugPrint('[AIReportRepository] Checking cache...');
+      final cachedReport = await _getCachedReport();
+      if (cachedReport != null && cachedReport.isNotEmpty) {
+        debugPrint('[AIReportRepository] Found cached report. Returning cache.');
+        return cachedReport;
+      }
+      debugPrint('[AIReportRepository] No cached report found.');
+    } else {
+      debugPrint('[AIReportRepository] Skipping cache check (force refresh enabled).');
+    }
+
+    // Step 2: Retrieve all user data from the journal repository
+    debugPrint('[AIReportRepository] Fetching user journal data...');
     final userData = await _journalRepository.getAllUserData();
 
-    // Step 2: Construct the master prompt
+    // Step 3: Construct the master prompt
+    debugPrint('[AIReportRepository] Building master prompt...');
     final masterPrompt = _buildMasterPrompt();
 
-    // Step 3: Combine the master prompt with user data
+    // Step 4: Combine the master prompt with user data
+    debugPrint('[AIReportRepository] Combining prompt with user data...');
     final fullPrompt = _combinePromptWithUserData(masterPrompt, userData);
 
-    // Step 4: Format the request body for Gemini API
+    // Step 5: Format the request body for Gemini API
+    debugPrint('[AIReportRepository] Formatting API request...');
     // The Gemini API expects this exact structure:
     // {"contents": [{"parts": [{"text": "YOUR_FULL_PROMPT_STRING"}]}]}
     final requestBody = {
@@ -85,16 +121,49 @@ class AIReportRepository {
       ],
     };
 
-    // Step 5: Call the AI service and parse the response
+    // Step 6: Call the AI service and parse the response
+    debugPrint('[AIReportRepository] Calling Gemini API...');
     final httpResponse = await _aiReportService.generateReport(requestBody);
+    debugPrint('[AIReportRepository] API call successful.');
 
     // Extract the response data
     final response = httpResponse.data as Map<String, dynamic>;
 
-    // Step 6: Extract the generated text from the response
+    // Step 7: Extract the generated text from the response
+    debugPrint('[AIReportRepository] Parsing API response...');
     final generatedText = _parseGeneratedText(response);
+    debugPrint('[AIReportRepository] Generated text length: ${generatedText.length} characters');
 
+    // Step 8: Cache the report in the User model
+    debugPrint('[AIReportRepository] Caching report...');
+    await _cacheReport(generatedText);
+    debugPrint('[AIReportRepository] Report cached successfully.');
+
+    debugPrint('[AIReportRepository] === REPORT GENERATION COMPLETED ===');
     return generatedText;
+  }
+
+  /// Retrieves cached report from the User model if it exists.
+  ///
+  /// Returns the cached report string if it exists, or null if not.
+  Future<String?> _getCachedReport() async {
+    final user = await _isar.users.where().findFirst();
+    return user?.generatedReport;
+  }
+
+  /// Caches the generated report in the User model.
+  ///
+  /// [report] The report text to cache
+  Future<void> _cacheReport(String report) async {
+    final user = await _isar.users.where().findFirst();
+    if (user == null) {
+      throw StateError('No user found in database');
+    }
+
+    await _isar.writeTxn(() async {
+      user.generatedReport = report;
+      await _isar.users.put(user);
+    });
   }
 
   /// Builds the master prompt that instructs the AI on how to generate the report.
@@ -218,10 +287,10 @@ Begin the report now.
 /// Provides an instance of [AIReportRepository].
 ///
 /// This provider creates and manages the [AIReportRepository] instance,
-/// injecting the required dependencies ([AiReportService] and [JournalRepository]).
+/// injecting the required dependencies ([AiReportService], [JournalRepository], and [Isar]).
 ///
-/// The provider watches [aiReportServiceProvider] and [journalRepositoryProvider]
-/// to get the necessary dependencies.
+/// The provider watches [aiReportServiceProvider], [journalRepositoryProvider],
+/// and [isarProvider] to get the necessary dependencies.
 ///
 /// Usage example:
 /// ```dart
@@ -232,9 +301,11 @@ Begin the report now.
 Future<AIReportRepository> aiReportRepository(AiReportRepositoryRef ref) async {
   final aiReportService = ref.watch(aiReportServiceProvider);
   final journalRepository = await ref.watch(journalRepositoryProvider.future);
+  final isar = await ref.watch(isarProvider.future);
 
   return AIReportRepository(
     aiReportService: aiReportService,
     journalRepository: journalRepository,
+    isar: isar,
   );
 }

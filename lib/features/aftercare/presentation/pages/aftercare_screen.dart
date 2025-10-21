@@ -96,6 +96,10 @@ class AftercareScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Rebirth Protocol Report Card - First thing user sees
+          _buildRebirthProtocolCard(context, theme),
+          const SizedBox(height: 48),
+
           // Header section
           Row(
             children: [
@@ -126,7 +130,9 @@ class AftercareScreen extends ConsumerWidget {
 
           // Commitments list
           if (commitments.isEmpty)
-            _buildEmptyState(context)
+            Consumer(
+              builder: (context, ref, _) => _buildEmptyState(context, ref),
+            )
           else
             ...commitments.map(
               (commitment) => Padding(
@@ -146,6 +152,143 @@ class AftercareScreen extends ConsumerWidget {
           // Bottom padding for better scrolling experience
           const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  /// Builds the Rebirth Protocol report generation card.
+  ///
+  /// This is the first element the user sees on the aftercare screen.
+  /// It provides access to the AI-generated comprehensive journey report.
+  Widget _buildRebirthProtocolCard(BuildContext context, ThemeData theme) {
+    return Card(
+      elevation: 4,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.1),
+              theme.colorScheme.secondary.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(28.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon and title row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 32,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Rebirth Protocol',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'AI-Generated Journey Synthesis',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Description
+              Text(
+                'Discover the full story of your 3-day transformation. Our AI has analyzed your entire journey to create a comprehensive, personalized report celebrating your growth, insights, and the new you.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Action button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.push('/report');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 24,
+                    ),
+                    elevation: 2,
+                    shadowColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.4,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        size: 20,
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                      const SizedBox(width: 12),
+                      const Flexible(
+                        child: Text(
+                          'View Rebirth Protocol',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -426,24 +569,36 @@ class AftercareScreen extends ConsumerWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.symmetric(
+                vertical: 18,
+                horizontal: 24,
+              ),
               elevation: 2,
               shadowColor: theme.colorScheme.primary.withValues(alpha: 0.4),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'BOOK FOLLOW-UP CONSULTATION',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onPrimary,
                 ),
                 const SizedBox(width: 12),
+                const Flexible(
+                  child: Text(
+                    'Book Consultation',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Icon(
-                  Icons.arrow_forward,
+                  Icons.arrow_forward_rounded,
                   size: 18,
                   color: theme.colorScheme.onPrimary,
                 ),
@@ -462,12 +617,16 @@ class AftercareScreen extends ConsumerWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 6),
-              Text(
-                'Exclusive access for EverGlow members',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+              Flexible(
+                child: Text(
+                  'Exclusive access for EverGlow members',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -529,6 +688,23 @@ class AftercareScreen extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 24),
+            Consumer(
+              builder: (context, ref, _) => ElevatedButton.icon(
+                onPressed: () {
+                  // Retry by invalidating the provider
+                  ref.invalidate(_commitmentsProvider);
+                },
+                icon: const Icon(Icons.refresh, size: 20),
+                label: const Text('Try Again'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -536,7 +712,7 @@ class AftercareScreen extends ConsumerWidget {
   }
 
   /// Builds the empty state view when no commitments are found.
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Center(
@@ -577,7 +753,9 @@ class AftercareScreen extends ConsumerWidget {
 ///
 /// This FutureProvider calls [AftercareRepository.extractCommitmentsFromJournal]
 /// to retrieve the user's integration commitments from their journal entries.
-final _commitmentsProvider = FutureProvider<List<Commitment>>((ref) async {
+final _commitmentsProvider = FutureProvider.autoDispose<List<Commitment>>((
+  ref,
+) async {
   final aftercareRepo = await ref.watch(aftercareRepositoryProvider.future);
   return aftercareRepo.extractCommitmentsFromJournal();
 });

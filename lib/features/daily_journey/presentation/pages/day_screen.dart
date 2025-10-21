@@ -122,59 +122,18 @@ class DayScreen extends ConsumerWidget {
                 .where((item) => item.isCompleted)
                 .length;
             final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
+            final isAllComplete =
+                totalTasks > 0 && completedTasks == totalTasks;
 
-            return Column(
-              children: [
-                // Timeline Navigator - fixed at top
-                TimelineNavigator(
-                  currentDay: dayNumber,
-                  onNavigateToDay: onNavigateToDay,
-                ),
-
-                // Progress bar showing task completion
-                _ProgressBar(
-                  progress: progress,
-                  completedTasks: completedTasks,
-                  totalTasks: totalTasks,
-                ),
-
-                // Main scrollable content
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16.0),
-                    children: [
-                      // Header with title and mantra
-                      _DayHeader(
-                        title: dailyJourney.title,
-                        mantra: dailyJourney.mantra,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Single Priority section - read-only display
-                      _SinglePrioritySection(
-                        priority: dailyJourney.singlePriority ?? '',
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Section title for itinerary
-                      Text(
-                        'Your Journey Today',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Itinerary items
-                      ...dailyJourney.itinerary.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: _buildItineraryItem(item, dayNumber, ref),
-                        ),
-                      ),
-
-                    ],
-                  ),
-                ),
-              ],
+            return _DayContentWithCelebration(
+              dayNumber: dayNumber,
+              isAllComplete: isAllComplete,
+              onNavigateToDay: onNavigateToDay,
+              progress: progress,
+              completedTasks: completedTasks,
+              totalTasks: totalTasks,
+              dailyJourney: dailyJourney,
+              buildItineraryItem: _buildItineraryItem,
             );
           },
         ),
@@ -199,7 +158,210 @@ class DayScreen extends ConsumerWidget {
   }
 }
 
-/// Progress bar widget showing task completion percentage
+/// Wrapper widget that displays day content with optional full-day completion celebration
+class _DayContentWithCelebration extends ConsumerStatefulWidget {
+  const _DayContentWithCelebration({
+    required this.dayNumber,
+    required this.isAllComplete,
+    required this.onNavigateToDay,
+    required this.progress,
+    required this.completedTasks,
+    required this.totalTasks,
+    required this.dailyJourney,
+    required this.buildItineraryItem,
+  });
+
+  final int dayNumber;
+  final bool isAllComplete;
+  final void Function(int day)? onNavigateToDay;
+  final double progress;
+  final int completedTasks;
+  final int totalTasks;
+  final DailyJourney dailyJourney;
+  final Widget Function(ItineraryItem, int, WidgetRef) buildItineraryItem;
+
+  @override
+  ConsumerState<_DayContentWithCelebration> createState() =>
+      _DayContentWithCelebrationState();
+}
+
+class _DayContentWithCelebrationState
+    extends ConsumerState<_DayContentWithCelebration>
+    with ConfettiCelebrationMixin {
+  bool _hasShownCelebration = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initConfetti();
+  }
+
+  @override
+  void dispose() {
+    disposeConfetti();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_DayContentWithCelebration oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if we just completed all tasks
+    if (widget.isAllComplete &&
+        !oldWidget.isAllComplete &&
+        !_hasShownCelebration) {
+      _hasShownCelebration = true;
+      // Trigger celebration with a slight delay for better UX
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          celebrate();
+          _showCompletionDialog();
+        }
+      });
+    }
+  }
+
+  /// Shows a celebration dialog when all tasks are complete
+  void _showCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Success icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.celebration_rounded,
+                size: 48,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Title
+            Text(
+              'Day ${widget.dayNumber} Complete!',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Message
+            Text(
+              'You\'ve completed all tasks for today. Your responses will help create your personalized transformation report.',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Close button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Continue'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Main content
+        Column(
+          children: [
+            // Timeline Navigator - fixed at top
+            TimelineNavigator(
+              currentDay: widget.dayNumber,
+              onNavigateToDay: widget.onNavigateToDay,
+            ),
+
+            // Progress bar showing task completion
+            _ProgressBar(
+              progress: widget.progress,
+              completedTasks: widget.completedTasks,
+              totalTasks: widget.totalTasks,
+            ),
+
+            // Main scrollable content
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Header with title and mantra
+                  _DayHeader(
+                    title: widget.dailyJourney.title,
+                    mantra: widget.dailyJourney.mantra,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Single Priority section - read-only display
+                  _SinglePrioritySection(
+                    priority: widget.dailyJourney.singlePriority ?? '',
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Section title for itinerary
+                  Text(
+                    'Your Journey Today',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Itinerary items
+                  ...widget.dailyJourney.itinerary.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: widget.buildItineraryItem(
+                        item,
+                        widget.dayNumber,
+                        ref,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // Full-screen confetti overlay for day completion
+        if (widget.isAllComplete)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiCelebration(
+                  controller: confettiController,
+                  numberOfParticles: 50,
+                  minBlastForce: 15,
+                  maxBlastForce: 30,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  festiveColors: true,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Progress bar widget showing task completion percentage with encouragement messages
 class _ProgressBar extends StatelessWidget {
   const _ProgressBar({
     required this.progress,
@@ -211,12 +373,35 @@ class _ProgressBar extends StatelessWidget {
   final int completedTasks;
   final int totalTasks;
 
+  /// Generates contextual encouragement message based on progress
+  String _getEncouragementMessage() {
+    final remaining = totalTasks - completedTasks;
+
+    if (completedTasks == 0) {
+      return 'Ready to begin your journey today?';
+    } else if (completedTasks == totalTasks) {
+      return 'Amazing! All tasks complete!';
+    } else if (remaining == 1) {
+      return 'Almost there! Just 1 task left';
+    } else if (remaining == 2) {
+      return 'Great progress! 2 tasks to go';
+    } else if (progress >= 0.5) {
+      return 'You\'re doing great! $remaining tasks remaining';
+    } else {
+      return 'Keep going! $remaining tasks to complete';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isComplete = completedTasks == totalTasks && totalTasks > 0;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: isComplete
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -231,18 +416,69 @@ class _ProgressBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Daily Progress',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily Progress',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isComplete
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getEncouragementMessage(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isComplete
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                '$completedTasks / $totalTasks tasks completed',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isComplete
+                      ? Colors.green.withValues(alpha: 0.2)
+                      : Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isComplete) ...[
+                      const Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      '$completedTasks / $totalTasks',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isComplete
+                            ? Colors.green
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -257,7 +493,9 @@ class _ProgressBar extends StatelessWidget {
                 context,
               ).colorScheme.primary.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary,
+                isComplete
+                    ? Colors.green
+                    : Theme.of(context).colorScheme.primary,
               ),
             ),
           ),

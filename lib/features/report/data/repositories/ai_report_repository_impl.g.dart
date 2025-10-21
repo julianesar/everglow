@@ -7,15 +7,15 @@ part of 'ai_report_repository_impl.dart';
 // **************************************************************************
 
 String _$aiReportRepositoryHash() =>
-    r'5456f63e0ded44ea59d0bd5bc3f815378dd3c2d3';
+    r'6b8507a5460f3cc8281b2cdf5d53d36b413872d2';
 
 /// Provides an instance of [AIReportRepository].
 ///
 /// This provider creates and manages the [AIReportRepository] instance,
-/// injecting the required dependencies ([AiReportService] and [JournalRepository]).
+/// injecting the required dependencies ([AiReportService], [JournalRepository], and [Isar]).
 ///
-/// The provider watches [aiReportServiceProvider] and [journalRepositoryProvider]
-/// to get the necessary dependencies.
+/// The provider watches [aiReportServiceProvider], [journalRepositoryProvider],
+/// and [isarProvider] to get the necessary dependencies.
 ///
 /// Usage example:
 /// ```dart

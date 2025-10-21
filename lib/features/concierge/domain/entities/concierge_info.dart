@@ -1,13 +1,22 @@
 /// Contains concierge information for a user's wellness journey.
 ///
-/// This includes details about the assigned driver, villa accommodation,
-/// and check-in instructions to ensure a smooth arrival experience.
+/// This includes details about the assigned driver, concierge team member,
+/// villa accommodation, and check-in instructions to ensure a smooth arrival experience.
 class ConciergeInfo {
   /// Name of the assigned driver
   final String driverName;
 
   /// Phone number of the assigned driver
   final String driverPhone;
+
+  /// Name of the assigned concierge
+  final String conciergeName;
+
+  /// Phone number of the assigned concierge
+  final String conciergePhone;
+
+  /// URL to the concierge's photo
+  final String conciergePhotoUrl;
 
   /// Physical address of the assigned villa
   final String villaAddress;
@@ -22,6 +31,9 @@ class ConciergeInfo {
   const ConciergeInfo({
     required this.driverName,
     required this.driverPhone,
+    required this.conciergeName,
+    required this.conciergePhone,
+    required this.conciergePhotoUrl,
     required this.villaAddress,
     required this.villaImageUrl,
     required this.checkInInstructions,
@@ -31,6 +43,9 @@ class ConciergeInfo {
   ConciergeInfo copyWith({
     String? driverName,
     String? driverPhone,
+    String? conciergeName,
+    String? conciergePhone,
+    String? conciergePhotoUrl,
     String? villaAddress,
     String? villaImageUrl,
     String? checkInInstructions,
@@ -38,6 +53,9 @@ class ConciergeInfo {
     return ConciergeInfo(
       driverName: driverName ?? this.driverName,
       driverPhone: driverPhone ?? this.driverPhone,
+      conciergeName: conciergeName ?? this.conciergeName,
+      conciergePhone: conciergePhone ?? this.conciergePhone,
+      conciergePhotoUrl: conciergePhotoUrl ?? this.conciergePhotoUrl,
       villaAddress: villaAddress ?? this.villaAddress,
       villaImageUrl: villaImageUrl ?? this.villaImageUrl,
       checkInInstructions: checkInInstructions ?? this.checkInInstructions,
@@ -51,6 +69,9 @@ class ConciergeInfo {
     return other is ConciergeInfo &&
         other.driverName == driverName &&
         other.driverPhone == driverPhone &&
+        other.conciergeName == conciergeName &&
+        other.conciergePhone == conciergePhone &&
+        other.conciergePhotoUrl == conciergePhotoUrl &&
         other.villaAddress == villaAddress &&
         other.villaImageUrl == villaImageUrl &&
         other.checkInInstructions == checkInInstructions;
@@ -60,6 +81,9 @@ class ConciergeInfo {
   int get hashCode {
     return driverName.hashCode ^
         driverPhone.hashCode ^
+        conciergeName.hashCode ^
+        conciergePhone.hashCode ^
+        conciergePhotoUrl.hashCode ^
         villaAddress.hashCode ^
         villaImageUrl.hashCode ^
         checkInInstructions.hashCode;
@@ -67,6 +91,6 @@ class ConciergeInfo {
 
   @override
   String toString() {
-    return 'ConciergeInfo(driverName: $driverName, driverPhone: $driverPhone, villaAddress: $villaAddress, villaImageUrl: $villaImageUrl, checkInInstructions: $checkInInstructions)';
+    return 'ConciergeInfo(driverName: $driverName, driverPhone: $driverPhone, conciergeName: $conciergeName, conciergePhone: $conciergePhone, conciergePhotoUrl: $conciergePhotoUrl, villaAddress: $villaAddress, villaImageUrl: $villaImageUrl, checkInInstructions: $checkInInstructions)';
   }
 }

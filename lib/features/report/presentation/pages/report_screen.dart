@@ -80,7 +80,7 @@ class ReportScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Our AI is analyzing your 21-day journey to create your personalized growth report.',
+              'Our AI is analyzing your 3-day journey to create your personalized growth report.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
@@ -177,7 +177,7 @@ class ReportScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'A comprehensive analysis of your 21-day transformation',
+                'A comprehensive analysis of your 3-day transformation',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
