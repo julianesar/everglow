@@ -6,12 +6,33 @@ part of 'booking_repository_impl.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bookingRepositoryHash() => r'7aadf5d62b079cd6a048e279cff5911b97c017ff';
+String _$bookingRemoteDatasourceHash() =>
+    r'ad5c15f45856334f7f8463ffac5b17c5a77f2cad';
+
+/// Provider for [BookingRemoteDatasource].
+///
+/// This provider creates and provides the Supabase-based remote datasource.
+///
+/// Copied from [bookingRemoteDatasource].
+@ProviderFor(bookingRemoteDatasource)
+final bookingRemoteDatasourceProvider =
+    Provider<BookingRemoteDatasource>.internal(
+  bookingRemoteDatasource,
+  name: r'bookingRemoteDatasourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$bookingRemoteDatasourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef BookingRemoteDatasourceRef = ProviderRef<BookingRemoteDatasource>;
+String _$bookingRepositoryHash() => r'7bcdcf116f887f06e956c90e7c47eb748c35e8d9';
 
 /// Provider for [BookingRepository].
 ///
-/// This provider creates and provides the Isar-based booking repository.
-/// It automatically injects the Isar database dependency.
+/// This provider creates and provides the booking repository with
+/// both Isar (local) and Supabase (remote) persistence.
 ///
 /// Copied from [bookingRepository].
 @ProviderFor(bookingRepository)
