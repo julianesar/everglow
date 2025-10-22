@@ -137,8 +137,9 @@ class BookingRepositoryImpl implements BookingRepository {
     // Print the selected date and userId for debugging
     print('Creating booking with start date: $normalizedStartDate for user: $userId');
 
-    // Create a booking with 7-day duration
-    final endDate = normalizedStartDate.add(const Duration(days: 7));
+    // Create a booking with 3-day duration (days 1, 2, and 3)
+    // End date is 2 days after start date (inclusive of both start and end dates)
+    final endDate = normalizedStartDate.add(const Duration(days: 2));
     final bookingId = 'booking-${DateTime.now().millisecondsSinceEpoch}';
 
     final newBooking = Booking(

@@ -21,6 +21,103 @@ class LogisticsHubScreen extends ConsumerStatefulWidget {
 }
 
 class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
+  /// Formats a date range for display (e.g., "Monday, November 24, 2025 - Thursday, November 27, 2025")
+  String _formatDateRange(DateTime startDate, DateTime endDate) {
+    final monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+
+    final startDay = dayNames[startDate.weekday - 1];
+    final startMonth = monthNames[startDate.month - 1];
+    final endDay = dayNames[endDate.weekday - 1];
+    final endMonth = monthNames[endDate.month - 1];
+
+    return '$startDay, $startMonth ${startDate.day}, ${startDate.year} -\n$endDay, $endMonth ${endDate.day}, ${endDate.year}';
+  }
+
+  /// Builds the retreat dates card with dark background
+  Widget _buildRetreatDatesCard(
+    BuildContext context,
+    DateTime startDate,
+    DateTime endDate,
+  ) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your Pre-Arrival Information',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A2A2A),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon and title row
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Retreat Dates',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Date range text
+              Text(
+                _formatDateRange(startDate, endDate),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(logisticsHubControllerProvider);
@@ -141,33 +238,26 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
 
     return Column(
       children: [
-        // Welcome Header (always visible)
+        // Welcome Header (fixed - only name and countdown)
         SafeArea(
           bottom: false,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.05),
-                  theme.colorScheme.surface,
-                ],
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Welcome text
                 Text(
                   'Welcome, $userName',
                   style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                // Days countdown
                 if (!state.isArrivalDay)
                   Text(
                     daysUntil == 1
@@ -175,6 +265,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                         : '$daysUntil days until your transformation',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 0.3,
                     ),
                   )
@@ -183,6 +274,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                     'Your transformation begins today',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -197,9 +289,10 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
     );
   }
 
-  /// Builds the merged content showing only logistics info.
+  /// Builds the merged content showing retreat dates and logistics info.
   ///
   /// Displays:
+  /// - Pre-Arrival Information and Retreat Dates card
   /// - Arrival logistics (concierge, driver, villa, check-in) - always visible
   Widget _buildMergedContent(
     BuildContext context,
@@ -214,13 +307,19 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
         // Scrollable content
         ListView(
           padding: EdgeInsets.only(
-            top: 16,
+            top: 24,
             left: 24,
             right: 24,
             bottom: !state.booking.isCheckedIn ? 120 : 24,
           ),
           children: [
-            const SizedBox(height: 16),
+            // Retreat dates card
+            _buildRetreatDatesCard(
+              context,
+              state.booking.startDate,
+              state.booking.endDate,
+            ),
+            const SizedBox(height: 32),
 
             // Logistics information (always visible)
             // Concierge information card

@@ -9,8 +9,6 @@ import '../models/journal_entry_model.dart';
 // MIGRATION TO SUPABASE: Export the new Supabase implementation
 export 'journal_repository_impl_supabase.dart';
 
-part 'journal_repository_impl.g.dart';
-
 /// Isar database implementation of [JournalRepository].
 ///
 /// This class provides persistent storage using Isar database.
@@ -242,6 +240,9 @@ class IsarJournalRepository implements JournalRepository {
 
 /// Provides an instance of [JournalRepository].
 ///
+/// NOTE: This Isar provider is commented out in favor of the Supabase implementation.
+/// The Supabase implementation is exported at the top of this file.
+///
 /// This provider creates and manages the [IsarJournalRepository] instance,
 /// which uses Isar for persistent storage.
 ///
@@ -253,8 +254,8 @@ class IsarJournalRepository implements JournalRepository {
 /// final journalRepo = await ref.read(journalRepositoryProvider.future);
 /// await journalRepo.saveSinglePriority(dayNumber: 1, priorityText: 'Focus on healing');
 /// ```
-@riverpod
-Future<JournalRepository> journalRepository(JournalRepositoryRef ref) async {
-  final isar = await ref.watch(isarProvider.future);
-  return IsarJournalRepository(isar);
-}
+// @riverpod
+// Future<JournalRepository> journalRepository(JournalRepositoryRef ref) async {
+//   final isar = await ref.watch(isarProvider.future);
+//   return IsarJournalRepository(isar);
+// }
