@@ -60,6 +60,23 @@ class UserRemoteDatasource {
     }
   }
 
+  /// Checks if the user has completed onboarding.
+  Future<bool> hasCompletedOnboarding(String userId) async {
+    try {
+      final response = await _supabase
+          .from('user_profiles')
+          .select('has_completed_onboarding')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) return false;
+
+      return response['has_completed_onboarding'] as bool? ?? false;
+    } catch (e) {
+      throw Exception('Failed to check onboarding status: $e');
+    }
+  }
+
   /// Saves the AI-generated report.
   Future<void> saveGeneratedReport({
     required String userId,

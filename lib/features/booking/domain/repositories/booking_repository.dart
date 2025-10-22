@@ -20,4 +20,15 @@ abstract class BookingRepository {
     required DateTime startDate,
     required String userId,
   });
+
+  /// Streams the active booking for the given user in real-time.
+  ///
+  /// This stream will emit updates whenever the booking data changes
+  /// in the database, allowing the UI to react to changes immediately.
+  ///
+  /// The stream will emit the initial value immediately, then emit new values
+  /// whenever the data changes on the server.
+  ///
+  /// Returns `null` if no active booking exists.
+  Stream<Booking?> watchActiveBookingForUser(String userId);
 }

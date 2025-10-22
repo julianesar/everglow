@@ -6,18 +6,40 @@ part of 'progress_repository_impl.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$userRemoteDatasourceHash() =>
+    r'8e3055cc19091404e38d0909532d4a0363e71de5';
+
+/// Provides the user remote datasource.
+///
+/// Copied from [userRemoteDatasource].
+@ProviderFor(userRemoteDatasource)
+final userRemoteDatasourceProvider =
+    AutoDisposeProvider<UserRemoteDatasource>.internal(
+  userRemoteDatasource,
+  name: r'userRemoteDatasourceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$userRemoteDatasourceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef UserRemoteDatasourceRef = AutoDisposeProviderRef<UserRemoteDatasource>;
 String _$progressRepositoryHash() =>
-    r'a4fede8596435a10d3130e1848dc4d058242cd1e';
+    r'8825287715b9dab88c0bb3d9909d27accc40fd7f';
 
 /// Provides an instance of [ProgressRepository].
 ///
-/// This provider creates and manages the [IsarProgressRepository] instance,
-/// which uses Isar for querying progress data.
+/// This provider creates and manages the [SupabaseProgressRepository] instance,
+/// which uses Supabase for authentication and onboarding status,
+/// and Isar for querying daily log data.
 ///
 /// The provider watches [isarProvider] to get the database instance,
 /// [userRepositoryProvider] to get the user repository instance,
-/// and [bookingRepositoryProvider] to get the booking repository instance,
-/// then passes all three to the repository constructor.
+/// [bookingRepositoryProvider] to get the booking repository instance,
+/// [supabaseClientProvider] to get the Supabase client,
+/// and [userRemoteDatasourceProvider] to get the user remote datasource,
+/// then passes all to the repository constructor.
 ///
 /// Usage example:
 /// ```dart

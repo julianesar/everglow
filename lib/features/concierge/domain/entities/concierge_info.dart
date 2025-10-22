@@ -2,41 +2,42 @@
 ///
 /// This includes details about the assigned driver, concierge team member,
 /// villa accommodation, and check-in instructions to ensure a smooth arrival experience.
+/// All fields are nullable as assignments may not be finalized yet.
 class ConciergeInfo {
-  /// Name of the assigned driver
-  final String driverName;
+  /// Name of the assigned driver (null if not assigned yet)
+  final String? driverName;
 
-  /// Phone number of the assigned driver
-  final String driverPhone;
+  /// Phone number of the assigned driver (null if not assigned yet)
+  final String? driverPhone;
 
-  /// Name of the assigned concierge
-  final String conciergeName;
+  /// Name of the assigned concierge (null if not assigned yet)
+  final String? conciergeName;
 
-  /// Phone number of the assigned concierge
-  final String conciergePhone;
+  /// Phone number of the assigned concierge (null if not assigned yet)
+  final String? conciergePhone;
 
-  /// URL to the concierge's photo
-  final String conciergePhotoUrl;
+  /// URL to the concierge's photo (null if not assigned yet)
+  final String? conciergePhotoUrl;
 
-  /// Physical address of the assigned villa
-  final String villaAddress;
+  /// Physical address of the assigned villa (null if not assigned yet)
+  final String? villaAddress;
 
-  /// URL to an image of the villa
-  final String villaImageUrl;
+  /// URL to an image of the villa (null if not assigned yet)
+  final String? villaImageUrl;
 
-  /// Instructions for checking into the villa
-  final String checkInInstructions;
+  /// Instructions for checking into the villa (null if not assigned yet)
+  final String? checkInInstructions;
 
   /// Creates a new [ConciergeInfo] instance.
   const ConciergeInfo({
-    required this.driverName,
-    required this.driverPhone,
-    required this.conciergeName,
-    required this.conciergePhone,
-    required this.conciergePhotoUrl,
-    required this.villaAddress,
-    required this.villaImageUrl,
-    required this.checkInInstructions,
+    this.driverName,
+    this.driverPhone,
+    this.conciergeName,
+    this.conciergePhone,
+    this.conciergePhotoUrl,
+    this.villaAddress,
+    this.villaImageUrl,
+    this.checkInInstructions,
   });
 
   /// Creates a copy of this concierge info with the given fields replaced with new values.

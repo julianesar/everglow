@@ -7,7 +7,7 @@ part of 'logistics_hub_controller.dart';
 // **************************************************************************
 
 String _$logisticsHubControllerHash() =>
-    r'8d45ff6dcb73a5c41d8bb972745d2e337b898e3b';
+    r'03176e657e5e92c51e4b209af5d3694d70a0ffa4';
 
 /// Controller for managing the Logistics Hub screen state.
 ///
@@ -15,12 +15,11 @@ String _$logisticsHubControllerHash() =>
 /// determining whether to show arrival-day or pre-arrival information based
 /// on the booking dates.
 ///
-/// The controller follows these steps:
-/// 1. Retrieves the current authenticated user ID
-/// 2. Fetches the user's active booking
-/// 3. Determines if today is the arrival day by comparing dates
-/// 4. Conditionally fetches concierge information (only on arrival day)
-/// 5. Returns a complete [LogisticsHubState] with all necessary data
+/// The controller now uses real-time streams to listen for changes in:
+/// 1. Booking data (check-in status, dates, etc.)
+/// 2. Concierge information (driver, villa, contact details)
+///
+/// The UI will automatically update when any of this data changes in Supabase.
 ///
 /// Copied from [LogisticsHubController].
 @ProviderFor(LogisticsHubController)

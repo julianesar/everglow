@@ -9,15 +9,32 @@ class OnboardingRemoteDatasource {
   /// Fetches all onboarding questions ordered by display_order.
   Future<List<OnboardingQuestionData>> getOnboardingQuestions() async {
     try {
+      print('═══════════════════════════════════════════════════');
+      print('🔍 [DATASOURCE] Fetching onboarding questions from Supabase...');
+
       final response = await _supabase
           .from('onboarding_questions')
           .select()
           .order('display_order', ascending: true);
 
-      return (response as List)
+      print('📊 [DATASOURCE] Raw response type: ${response.runtimeType}');
+      print('📊 [DATASOURCE] Raw response: $response');
+
+      final questions = (response as List)
           .map((json) => OnboardingQuestionData.fromJson(json))
           .toList();
-    } catch (e) {
+
+      print('✅ [DATASOURCE] Successfully fetched ${questions.length} questions');
+      for (final q in questions) {
+        print('   - ${q.id}: ${q.questionText} (category: ${q.category})');
+      }
+      print('═══════════════════════════════════════════════════');
+
+      return questions;
+    } catch (e, stackTrace) {
+      print('❌ [DATASOURCE] Error fetching onboarding questions: $e');
+      print('❌ [DATASOURCE] Stack trace: $stackTrace');
+      print('═══════════════════════════════════════════════════');
       throw Exception('Failed to fetch onboarding questions: $e');
     }
   }

@@ -76,6 +76,33 @@ class BookingRemoteDatasource {
     }
   }
 
+  /// Streams the active booking for a given user in real-time.
+  ///
+  /// Returns a Stream that emits updates whenever the booking data
+  /// changes in the database.
+  ///
+  /// The stream will emit:
+  /// - Initial data immediately when subscribed
+  /// - New data whenever the booking is updated
+  /// - New data when a new booking is created for this user
+  Stream<Map<String, dynamic>?> watchActiveBookingForUser(String userId) {
+    print('📡 [BookingDataSource] Setting up real-time stream for user: $userId');
+
+    return _supabaseClient
+        .from(_bookingsTable)
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .map((data) {
+          print('📨 [BookingDataSource] Stream event received - Records: ${data.length}');
+          if (data.isNotEmpty) {
+            print('   Booking ID: ${data.first['id']}, Check-in: ${data.first['is_checked_in']}');
+          }
+          return data.isEmpty ? null : data.first;
+        });
+  }
+
   /// Updates an existing booking in Supabase.
   ///
   /// Returns the updated booking data as a Map.

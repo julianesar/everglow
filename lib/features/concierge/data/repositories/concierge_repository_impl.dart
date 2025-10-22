@@ -1,35 +1,146 @@
+import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/database/isar_provider.dart';
 import '../../domain/entities/concierge_info.dart';
 import '../../domain/repositories/concierge_repository.dart';
+import '../datasources/concierge_remote_datasource.dart';
+import '../models/concierge_info_model.dart';
 
 part 'concierge_repository_impl.g.dart';
 
-/// Implementation of [ConciergeRepository] with hardcoded data.
+/// Implementation of [ConciergeRepository] with Isar and Supabase persistence.
+///
+/// This repository uses a dual-persistence strategy:
+/// - Isar for local caching and offline access
+/// - Supabase for remote synchronization and data retrieval
 class ConciergeRepositoryImpl implements ConciergeRepository {
+  /// The Isar database instance for local storage.
+  final Isar _isar;
+
+  /// The remote datasource for Supabase operations.
+  final ConciergeRemoteDatasource _remoteDatasource;
+
+  /// Creates an instance of [ConciergeRepositoryImpl].
+  ///
+  /// [isar] The Isar database instance to use for local storage.
+  /// [remoteDatasource] The remote datasource for Supabase operations.
+  const ConciergeRepositoryImpl(this._isar, this._remoteDatasource);
+
   @override
   Future<ConciergeInfo> getConciergeInfo(String bookingId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    try {
+      // Try to fetch from Supabase first
+      final remoteData = await _remoteDatasource.getConciergeInfo(bookingId);
 
-    // Return hardcoded concierge information
-    return const ConciergeInfo(
-      driverName: 'Carlos Mendoza',
-      driverPhone: '+52 998 123 4567',
-      conciergeName: 'Sofia Martinez',
-      conciergePhone: '+52 998 765 4321',
-      conciergePhotoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=988',
-      villaAddress: 'Villa Serenidad, Carretera Tulum-Boca Paila Km 7.5, 77780 Tulum, Q.R., Mexico',
-      villaImageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071',
-      checkInInstructions: 'Welcome to Villa Serenidad! Your driver Carlos will pick you up from Cancun Airport. '
-          'Please meet him at Terminal 2, Exit Gate B. He will be holding a sign with your name. '
-          'The journey to your villa takes approximately 2 hours. Upon arrival, your wellness coordinator '
-          'will greet you with a refreshing welcome drink and guide you through your personalized journey.',
-    );
+      if (remoteData != null) {
+        // Convert remote data to model
+        final model = ConciergeInfoModel.fromSupabaseJson(remoteData);
+
+        // Update local cache
+        await _updateLocalConciergeInfo(model);
+
+        // Return as entity
+        return model.toEntity();
+      }
+    } catch (e) {
+      // If remote fetch fails, continue to local fallback
+      print('Failed to fetch concierge info from Supabase: $e');
+    }
+
+    // Fallback to local database
+    final cachedModel = await _isar.conciergeInfoModels
+        .filter()
+        .bookingIdEqualTo(bookingId)
+        .findFirst();
+
+    if (cachedModel != null) {
+      return cachedModel.toEntity();
+    }
+
+    // If no data exists in either location, return empty info
+    // This allows the UI to show "---" for missing fields
+    return const ConciergeInfo();
+  }
+
+  @override
+  Stream<ConciergeInfo> watchConciergeInfo(String bookingId) {
+    // Start with local cached data for immediate UI update
+    return _remoteDatasource.watchConciergeInfo(bookingId).asyncMap((remoteData) async {
+      if (remoteData != null) {
+        // Convert remote data to model
+        final model = ConciergeInfoModel.fromSupabaseJson(remoteData);
+
+        // Update local cache in the background
+        _updateLocalConciergeInfo(model);
+
+        // Return as entity
+        return model.toEntity();
+      }
+
+      // If no remote data, try to get from local cache
+      final cachedModel = await _isar.conciergeInfoModels
+          .filter()
+          .bookingIdEqualTo(bookingId)
+          .findFirst();
+
+      if (cachedModel != null) {
+        return cachedModel.toEntity();
+      }
+
+      // Return empty info if no data exists
+      return const ConciergeInfo();
+    });
+  }
+
+  /// Updates or inserts concierge info in the local Isar database.
+  Future<void> _updateLocalConciergeInfo(ConciergeInfoModel model) async {
+    await _isar.writeTxn(() async {
+      // Find existing model by booking ID
+      final existingModel = await _isar.conciergeInfoModels
+          .filter()
+          .bookingIdEqualTo(model.bookingId)
+          .findFirst();
+
+      if (existingModel != null) {
+        // Update the existing model
+        existingModel.driverName = model.driverName;
+        existingModel.driverPhone = model.driverPhone;
+        existingModel.conciergeName = model.conciergeName;
+        existingModel.conciergePhone = model.conciergePhone;
+        existingModel.conciergePhotoUrl = model.conciergePhotoUrl;
+        existingModel.villaAddress = model.villaAddress;
+        existingModel.villaImageUrl = model.villaImageUrl;
+        existingModel.checkInInstructions = model.checkInInstructions;
+
+        await _isar.conciergeInfoModels.put(existingModel);
+      } else {
+        // Insert new model
+        await _isar.conciergeInfoModels.put(model);
+      }
+    });
   }
 }
 
+/// Provider for [ConciergeRemoteDatasource].
+///
+/// This provider creates and provides the Supabase-based remote datasource.
+@Riverpod(keepAlive: true)
+ConciergeRemoteDatasource conciergeRemoteDatasource(
+    ConciergeRemoteDatasourceRef ref) {
+  return ConciergeRemoteDatasource(
+    supabaseClient: Supabase.instance.client,
+  );
+}
+
 /// Provider for [ConciergeRepository].
-@riverpod
-ConciergeRepository conciergeRepository(ConciergeRepositoryRef ref) {
-  return ConciergeRepositoryImpl();
+///
+/// This provider creates and provides the concierge repository with
+/// both Isar (local) and Supabase (remote) persistence.
+@Riverpod(keepAlive: true)
+Future<ConciergeRepository> conciergeRepository(
+    ConciergeRepositoryRef ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  final remoteDatasource = ref.watch(conciergeRemoteDatasourceProvider);
+  return ConciergeRepositoryImpl(isar, remoteDatasource);
 }

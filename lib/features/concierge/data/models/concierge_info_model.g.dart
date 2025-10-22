@@ -99,14 +99,54 @@ int _conciergeInfoModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.bookingId.length * 3;
-  bytesCount += 3 + object.checkInInstructions.length * 3;
-  bytesCount += 3 + object.conciergeName.length * 3;
-  bytesCount += 3 + object.conciergePhone.length * 3;
-  bytesCount += 3 + object.conciergePhotoUrl.length * 3;
-  bytesCount += 3 + object.driverName.length * 3;
-  bytesCount += 3 + object.driverPhone.length * 3;
-  bytesCount += 3 + object.villaAddress.length * 3;
-  bytesCount += 3 + object.villaImageUrl.length * 3;
+  {
+    final value = object.checkInInstructions;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.conciergeName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.conciergePhone;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.conciergePhotoUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.driverName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.driverPhone;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.villaAddress;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.villaImageUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -135,15 +175,15 @@ ConciergeInfoModel _conciergeInfoModelDeserialize(
 ) {
   final object = ConciergeInfoModel();
   object.bookingId = reader.readString(offsets[0]);
-  object.checkInInstructions = reader.readString(offsets[1]);
-  object.conciergeName = reader.readString(offsets[2]);
-  object.conciergePhone = reader.readString(offsets[3]);
-  object.conciergePhotoUrl = reader.readString(offsets[4]);
-  object.driverName = reader.readString(offsets[5]);
-  object.driverPhone = reader.readString(offsets[6]);
+  object.checkInInstructions = reader.readStringOrNull(offsets[1]);
+  object.conciergeName = reader.readStringOrNull(offsets[2]);
+  object.conciergePhone = reader.readStringOrNull(offsets[3]);
+  object.conciergePhotoUrl = reader.readStringOrNull(offsets[4]);
+  object.driverName = reader.readStringOrNull(offsets[5]);
+  object.driverPhone = reader.readStringOrNull(offsets[6]);
   object.isarId = id;
-  object.villaAddress = reader.readString(offsets[7]);
-  object.villaImageUrl = reader.readString(offsets[8]);
+  object.villaAddress = reader.readStringOrNull(offsets[7]);
+  object.villaImageUrl = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -157,21 +197,21 @@ P _conciergeInfoModelDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -513,8 +553,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      checkInInstructionsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'checkInInstructions',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      checkInInstructionsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'checkInInstructions',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       checkInInstructionsEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -528,7 +586,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       checkInInstructionsGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -544,7 +602,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       checkInInstructionsLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -560,8 +618,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       checkInInstructionsBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -649,8 +707,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'conciergeName',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergeNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'conciergeName',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergeNameEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -664,7 +740,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergeNameGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -680,7 +756,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergeNameLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -696,8 +772,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergeNameBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -785,8 +861,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'conciergePhone',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhoneIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'conciergePhone',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhoneEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -800,7 +894,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhoneGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -816,7 +910,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhoneLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -832,8 +926,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhoneBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -921,8 +1015,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'conciergePhotoUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      conciergePhotoUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'conciergePhotoUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhotoUrlEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -936,7 +1048,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhotoUrlGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -952,7 +1064,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhotoUrlLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -968,8 +1080,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       conciergePhotoUrlBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1057,8 +1169,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      driverNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'driverName',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      driverNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'driverName',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverNameEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1072,7 +1202,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverNameGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1088,7 +1218,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverNameLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1104,8 +1234,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverNameBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1193,8 +1323,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      driverPhoneIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'driverPhone',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      driverPhoneIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'driverPhone',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverPhoneEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1208,7 +1356,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverPhoneGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1224,7 +1372,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverPhoneLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1240,8 +1388,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       driverPhoneBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1385,8 +1533,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      villaAddressIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'villaAddress',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      villaAddressIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'villaAddress',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaAddressEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1400,7 +1566,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaAddressGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1416,7 +1582,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaAddressLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1432,8 +1598,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaAddressBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1521,8 +1687,26 @@ extension ConciergeInfoModelQueryFilter
   }
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      villaImageUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'villaImageUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
+      villaImageUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'villaImageUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaImageUrlEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1536,7 +1720,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaImageUrlGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1552,7 +1736,7 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaImageUrlLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1568,8 +1752,8 @@ extension ConciergeInfoModelQueryFilter
 
   QueryBuilder<ConciergeInfoModel, ConciergeInfoModel, QAfterFilterCondition>
       villaImageUrlBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -2021,56 +2205,56 @@ extension ConciergeInfoModelQueryProperty
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       checkInInstructionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'checkInInstructions');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       conciergeNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'conciergeName');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       conciergePhoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'conciergePhone');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       conciergePhotoUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'conciergePhotoUrl');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       driverNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'driverName');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       driverPhoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'driverPhone');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       villaAddressProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'villaAddress');
     });
   }
 
-  QueryBuilder<ConciergeInfoModel, String, QQueryOperations>
+  QueryBuilder<ConciergeInfoModel, String?, QQueryOperations>
       villaImageUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'villaImageUrl');

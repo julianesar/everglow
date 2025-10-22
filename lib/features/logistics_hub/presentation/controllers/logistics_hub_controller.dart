@@ -91,26 +91,30 @@ class LogisticsHubState {
 /// determining whether to show arrival-day or pre-arrival information based
 /// on the booking dates.
 ///
-/// The controller follows these steps:
-/// 1. Retrieves the current authenticated user ID
-/// 2. Fetches the user's active booking
-/// 3. Determines if today is the arrival day by comparing dates
-/// 4. Conditionally fetches concierge information (only on arrival day)
-/// 5. Returns a complete [LogisticsHubState] with all necessary data
+/// The controller now uses real-time streams to listen for changes in:
+/// 1. Booking data (check-in status, dates, etc.)
+/// 2. Concierge information (driver, villa, contact details)
+///
+/// The UI will automatically update when any of this data changes in Supabase.
 @riverpod
 class LogisticsHubController extends _$LogisticsHubController {
   /// Timer for updating the countdown every second when in pre-arrival mode.
   Timer? _countdownTimer;
 
-  /// Builds the initial state by fetching booking and concierge data.
+  /// Subscription to the booking stream.
+  StreamSubscription<Booking?>? _bookingSubscription;
+
+  /// Subscription to the concierge stream.
+  StreamSubscription<ConciergeInfo>? _conciergeSubscription;
+
+  /// Builds the initial state by streaming booking and concierge data in real-time.
   ///
   /// This method:
   /// 1. Gets the current user ID from [AuthRepository]
-  /// 2. Fetches the active booking for the user
-  /// 3. Determines if today is arrival day by comparing booking start date
-  /// 4. Fetches concierge information (always loaded for user preview)
-  /// 5. Returns a complete [LogisticsHubState]
-  /// 6. Starts a timer to update the countdown every second (if pre-arrival)
+  /// 2. Sets up real-time streams for booking and concierge data
+  /// 3. Combines both streams to create a unified state
+  /// 4. Automatically updates the state when data changes
+  /// 5. Starts a timer to update the countdown every second (if pre-arrival)
   ///
   /// Throws an exception if:
   /// - No user is currently authenticated
@@ -126,44 +130,112 @@ class LogisticsHubController extends _$LogisticsHubController {
       throw Exception('No authenticated user found');
     }
 
-    // Step 2: Fetch the user's active booking
+    // Step 2: Get repository instances
     final bookingRepository = await ref.watch(bookingRepositoryProvider.future);
-    final booking = await bookingRepository.getActiveBookingForUser(currentUser.id);
+    final conciergeRepository = await ref.watch(conciergeRepositoryProvider.future);
 
-    if (booking == null) {
-      throw Exception('No active booking found for user');
-    }
+    // Step 3: Create a stream controller for the combined state
+    final streamController = StreamController<LogisticsHubState>();
 
-    // Step 3: Determine if today is arrival day
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final startDay = DateTime(
-      booking.startDate.year,
-      booking.startDate.month,
-      booking.startDate.day,
+    // Step 4: Set up the real-time data subscription
+    // We need to track both booking and concierge data
+    Booking? currentBooking;
+    ConciergeInfo? currentConciergeInfo;
+
+    // Subscribe to booking changes
+    final bookingStream = bookingRepository.watchActiveBookingForUser(currentUser.id);
+    final conciergeStreamController = StreamController<Stream<ConciergeInfo>>.broadcast();
+
+    _bookingSubscription = bookingStream.listen(
+      (booking) {
+        print('🔄 [LogisticsHub] Booking update received: ${booking?.id}');
+
+        if (booking == null) {
+          print('❌ [LogisticsHub] No active booking found');
+          streamController.addError(Exception('No active booking found for user'));
+          return;
+        }
+
+        currentBooking = booking;
+        print('✅ [LogisticsHub] Booking updated - Check-in: ${booking.isCheckedIn}');
+
+        // When booking changes, also update the concierge stream
+        conciergeStreamController.add(
+          conciergeRepository.watchConciergeInfo(booking.id),
+        );
+      },
+      onError: (error) {
+        print('❌ [LogisticsHub] Booking stream error: $error');
+        streamController.addError(error);
+      },
     );
 
-    // Compare dates without time component
-    // If today is on or after the start date, it's arrival day or later
-    final isArrivalDay = today.isAtSameMomentAs(startDay) || today.isAfter(startDay);
+    // Subscribe to concierge changes
+    _conciergeSubscription = conciergeStreamController.stream.asyncExpand((stream) => stream).listen(
+      (conciergeInfo) {
+        print('🔄 [LogisticsHub] Concierge update received');
 
-    // Step 4: Fetch concierge information (always available for user review)
-    final conciergeRepository = ref.watch(conciergeRepositoryProvider);
-    final conciergeInfo = await conciergeRepository.getConciergeInfo(booking.id);
+        if (currentBooking == null) {
+          print('⚠️  [LogisticsHub] Skipping concierge update - no booking available');
+          return;
+        }
 
-    // Step 5: Return the complete state
-    final initialState = LogisticsHubState(
-      isArrivalDay: isArrivalDay,
-      booking: booking,
-      conciergeInfo: conciergeInfo,
+        currentConciergeInfo = conciergeInfo;
+        print('✅ [LogisticsHub] Concierge updated - Name: ${conciergeInfo.conciergeName ?? "---"}');
+
+        // Calculate if today is arrival day
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final startDay = DateTime(
+          currentBooking!.startDate.year,
+          currentBooking!.startDate.month,
+          currentBooking!.startDate.day,
+        );
+
+        final isArrivalDay = today.isAtSameMomentAs(startDay) || today.isAfter(startDay);
+
+        // Emit the new state
+        final newState = LogisticsHubState(
+          isArrivalDay: isArrivalDay,
+          booking: currentBooking!,
+          conciergeInfo: currentConciergeInfo ?? const ConciergeInfo(),
+          showCelebration: state.value?.showCelebration ?? false,
+        );
+
+        streamController.add(newState);
+
+        // Update the provider state
+        if (!streamController.isClosed) {
+          state = AsyncValue.data(newState);
+          print('🎯 [LogisticsHub] State updated successfully');
+        }
+
+        // Start countdown timer if in pre-arrival mode
+        if (!isArrivalDay && _countdownTimer == null) {
+          _startCountdownTimer();
+        } else if (isArrivalDay && _countdownTimer != null) {
+          _countdownTimer?.cancel();
+          _countdownTimer = null;
+        }
+      },
+      onError: (error) {
+        print('❌ [LogisticsHub] Concierge stream error: $error');
+        streamController.addError(error);
+      },
     );
 
-    // Step 6: Start countdown timer if in pre-arrival mode
-    if (!isArrivalDay) {
-      _startCountdownTimer();
-    }
+    // Clean up when the provider is disposed
+    ref.onDispose(() {
+      _bookingSubscription?.cancel();
+      _conciergeSubscription?.cancel();
+      _countdownTimer?.cancel();
+      streamController.close();
+      conciergeStreamController.close();
+    });
 
-    return initialState;
+    // Return initial state (will be updated by streams)
+    // Wait for the first emission from the stream
+    return streamController.stream.first;
   }
 
   /// Manually refreshes the logistics hub state.

@@ -7,6 +7,34 @@ import '../../data/repositories/onboarding_repository_provider.dart';
 import '../../../booking/data/repositories/booking_repository_impl.dart';
 import '../../../auth/data/repositories/auth_repository_impl.dart';
 
+/// Page type enum for different page types in the onboarding flow
+enum _PageType {
+  question,
+  transition,
+  completion,
+}
+
+/// Metadata for a page in the onboarding flow
+class _PageInfo {
+  final _PageType type;
+  final OnboardingQuestion? question;
+  final String? sectionTitle;
+  final int? questionNumber;
+  final int? totalQuestionsInSection;
+  final String? completedSectionTitle;
+  final String? nextSectionTitle;
+
+  const _PageInfo({
+    required this.type,
+    this.question,
+    this.sectionTitle,
+    this.questionNumber,
+    this.totalQuestionsInSection,
+    this.completedSectionTitle,
+    this.nextSectionTitle,
+  });
+}
+
 /// Section-based onboarding screen with transition pages
 ///
 /// This screen presents onboarding questions organized into sections,
@@ -30,8 +58,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String? _errorMessage;
 
 
-  /// Flattened list of pages (questions + transition pages)
-  List<Widget> _pages = [];
+  /// Sections loaded from the repository
+  List<OnboardingSection> _sections = [];
+
+  /// Page metadata (for building pages dynamically)
+  List<_PageInfo> _pageInfos = [];
 
   /// Current page index
   int _currentPageIndex = 0;
@@ -57,14 +88,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// Loads onboarding sections from the repository
   Future<void> _loadOnboardingData() async {
     try {
+      print('═══════════════════════════════════════════════════');
+      print('📋 [ONBOARDING_SCREEN] Loading onboarding data...');
+
       final repository = await ref.read(onboardingRepositoryProvider.future);
       final sections = await repository.getOnboardingQuestions();
 
+      print('📊 [ONBOARDING_SCREEN] Loaded ${sections.length} sections:');
+      for (final section in sections) {
+        print('   - ${section.title}: ${section.questions.length} questions');
+      }
+
       setState(() {
-        _pages = _flattenSectionsIntoPages(sections);
+        _sections = sections;
+        _pageInfos = _buildPageInfos(sections);
+        print('📄 [ONBOARDING_SCREEN] Created ${_pageInfos.length} total pages');
         _isLoading = false;
       });
+
+      print('✅ [ONBOARDING_SCREEN] Onboarding data loaded successfully');
+      print('═══════════════════════════════════════════════════');
     } catch (e) {
+      print('❌ [ONBOARDING_SCREEN] Error loading onboarding data: $e');
+      print('═══════════════════════════════════════════════════');
       setState(() {
         _errorMessage = 'Failed to load onboarding questions: $e';
         _isLoading = false;
@@ -72,17 +118,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  /// Flattens sections into a list of pages
+  /// Builds metadata for all pages in the onboarding flow
   ///
-  /// Creates question pages for each question and inserts transition pages
+  /// Creates page info for each question and inserts transition pages
   /// between sections (if there are multiple sections).
   /// Adds a final completion page after all sections.
-  List<Widget> _flattenSectionsIntoPages(List<OnboardingSection> sections) {
-    final List<Widget> pages = [];
+  /// Skips empty sections (sections with no questions).
+  List<_PageInfo> _buildPageInfos(List<OnboardingSection> sections) {
+    print('🔧 [ONBOARDING_SCREEN] _buildPageInfos called with ${sections.length} sections');
+    final List<_PageInfo> pageInfos = [];
 
-    for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
-      final section = sections[sectionIndex];
-      final isLastSection = sectionIndex == sections.length - 1;
+    // Filter out empty sections
+    final nonEmptySections = sections
+        .where((section) => section.questions.isNotEmpty)
+        .toList();
+
+    print('🔧 [ONBOARDING_SCREEN] After filtering: ${nonEmptySections.length} non-empty sections');
+
+    for (int sectionIndex = 0; sectionIndex < nonEmptySections.length; sectionIndex++) {
+      final section = nonEmptySections[sectionIndex];
+      final isLastSection = sectionIndex == nonEmptySections.length - 1;
+
+      print('🔧 [ONBOARDING_SCREEN] Processing section "${"${section.title}"}" with ${section.questions.length} questions');
 
       // Add all question pages for this section
       for (
@@ -94,27 +151,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         final isLastQuestionInSection =
             questionIndex == section.questions.length - 1;
 
-        pages.add(
-          QuestionPage(
+        print('   ➕ Adding QuestionPage info: "${question.questionText.substring(0, question.questionText.length > 50 ? 50 : question.questionText.length)}..."');
+
+        pageInfos.add(
+          _PageInfo(
+            type: _PageType.question,
             question: question,
             sectionTitle: section.title,
             questionNumber: questionIndex + 1,
             totalQuestionsInSection: section.questions.length,
-            initialAnswer: _answers[question.id],
-            onAnswerChanged: (value) {
-              setState(() {
-                _answers[question.id] = value;
-              });
-            },
           ),
         );
 
         // Insert transition page after last question of section
         // (but not after the very last section)
         if (isLastQuestionInSection && !isLastSection) {
-          final nextSection = sections[sectionIndex + 1];
-          pages.add(
-            TransitionPage(
+          final nextSection = nonEmptySections[sectionIndex + 1];
+          print('   ➕ Adding TransitionPage info: "${section.title}" → "${nextSection.title}"');
+          pageInfos.add(
+            _PageInfo(
+              type: _PageType.transition,
               completedSectionTitle: section.title,
               nextSectionTitle: nextSection.title,
             ),
@@ -123,17 +179,85 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     }
 
-    // Add final completion page after all sections
-    if (sections.isNotEmpty) {
-      pages.add(const CompletionPage());
+    // Add final completion page after all sections (only if we have questions)
+    if (pageInfos.isNotEmpty) {
+      print('🔧 [ONBOARDING_SCREEN] Adding CompletionPage info');
+      pageInfos.add(const _PageInfo(type: _PageType.completion));
+    } else {
+      print('⚠️ [ONBOARDING_SCREEN] WARNING: No pages created! All sections were empty.');
     }
 
-    return pages;
+    print('🔧 [ONBOARDING_SCREEN] Total page infos created: ${pageInfos.length}');
+    return pageInfos;
+  }
+
+  /// Builds a page widget based on page info
+  Widget _buildPage(_PageInfo pageInfo) {
+    switch (pageInfo.type) {
+      case _PageType.question:
+        return QuestionPage(
+          question: pageInfo.question!,
+          sectionTitle: pageInfo.sectionTitle!,
+          questionNumber: pageInfo.questionNumber!,
+          totalQuestionsInSection: pageInfo.totalQuestionsInSection!,
+          initialAnswer: _answers[pageInfo.question!.id],
+          onAnswerChanged: (value) {
+            setState(() {
+              _answers[pageInfo.question!.id] = value;
+            });
+          },
+        );
+      case _PageType.transition:
+        return TransitionPage(
+          completedSectionTitle: pageInfo.completedSectionTitle!,
+          nextSectionTitle: pageInfo.nextSectionTitle!,
+        );
+      case _PageType.completion:
+        return const CompletionPage();
+    }
+  }
+
+  /// Checks if the current page can be navigated away from
+  bool _canProceed() {
+    final currentPageInfo = _pageInfos[_currentPageIndex];
+
+    // Always allow navigation from transition and completion pages
+    if (currentPageInfo.type != _PageType.question) {
+      return true;
+    }
+
+    // For question pages, check if answer is provided (if required)
+    final question = currentPageInfo.question!;
+    if (!question.isRequired) {
+      return true; // Optional questions can be skipped
+    }
+
+    // Check if there's an answer for this required question
+    final answer = _answers[question.id];
+
+    // Validate based on question type
+    switch (question.questionType) {
+      case QuestionType.text:
+        // Text must not be empty or just whitespace
+        return answer != null && answer.toString().trim().isNotEmpty;
+
+      case QuestionType.multipleChoice:
+      case QuestionType.yesNo:
+        // Must have a selected value
+        return answer != null;
+
+      case QuestionType.multipleSelection:
+        // Must have at least one selection
+        return answer != null && (answer as List).isNotEmpty;
+    }
   }
 
   /// Navigates to the next page
   void _nextPage() {
-    if (_currentPageIndex < _pages.length - 1) {
+    // Hide keyboard when navigating
+    FocusScope.of(context).unfocus();
+
+    if (_currentPageIndex < _pageInfos.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -304,23 +428,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               bottom: false,
               child: _OnboardingProgressBar(
                 currentPage: _currentPageIndex,
-                totalPages: _pages.length,
+                totalPages: _pageInfos.length,
               ),
             ),
           ),
 
-          // PageView with all pages
+          // PageView with all pages (built dynamically)
           Padding(
             padding: const EdgeInsets.only(top: 80),
-            child: PageView(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (index) {
-              setState(() {
-                _currentPageIndex = index;
-              });
-            },
-            children: _pages,
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _pageInfos.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPageIndex = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return _buildPage(_pageInfos[index]);
+              },
             ),
           ),
 
@@ -358,7 +485,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     Expanded(
                       flex: _currentPageIndex > 0 ? 1 : 2,
                       child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _nextPage,
+                        onPressed: (_isSubmitting || !_canProceed()) ? null : _nextPage,
                         child: _isSubmitting
                             ? SizedBox(
                                 height: 20,
@@ -369,7 +496,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 ),
                               )
                             : Text(
-                                _currentPageIndex == _pages.length - 1
+                                _currentPageIndex == _pageInfos.length - 1
                                     ? 'Complete'
                                     : 'Continue',
                               ),
@@ -508,6 +635,21 @@ class _QuestionPageState extends State<QuestionPage> {
   }
 
   @override
+  void didUpdateWidget(QuestionPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update state when initialAnswer changes (e.g., when navigating back)
+    if (widget.initialAnswer != oldWidget.initialAnswer) {
+      setState(() {
+        _currentAnswer = widget.initialAnswer;
+      });
+      // Update text controller for text input questions
+      if (widget.question.questionType == QuestionType.text) {
+        _textController.text = widget.initialAnswer?.toString() ?? '';
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _textController.dispose();
     super.dispose();
@@ -604,6 +746,10 @@ class _QuestionPageState extends State<QuestionPage> {
     return TextField(
       controller: _textController,
       onChanged: _updateAnswer,
+      onSubmitted: (_) {
+        // Hide keyboard when user presses done/submit
+        FocusScope.of(context).unfocus();
+      },
       decoration: InputDecoration(
         hintText: widget.question.placeholder ?? 'Type your answer here...',
       ),

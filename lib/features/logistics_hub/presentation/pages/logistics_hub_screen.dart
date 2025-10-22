@@ -124,8 +124,20 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   ) {
     final theme = Theme.of(context);
     final now = DateTime.now();
-    final difference = state.booking.startDate.difference(now);
-    final daysUntil = difference.inDays;
+
+    // Normalize dates to midnight for accurate day calculation
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay = DateTime(
+      state.booking.startDate.year,
+      state.booking.startDate.month,
+      state.booking.startDate.day,
+    );
+
+    final difference = startDay.difference(today);
+    // If less than 24 hours but still in the future, show at least 1 day
+    final daysUntil = difference.inDays > 0
+        ? difference.inDays
+        : (difference.isNegative ? 0 : 1);
 
     return Column(
       children: [
@@ -180,7 +192,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
         ),
 
         // Main scrollable content - merged view
-        Expanded(child: _buildMergedContent(context, ref, state, difference)),
+        Expanded(child: _buildMergedContent(context, ref, state)),
       ],
     );
   }
@@ -193,7 +205,6 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
     BuildContext context,
     WidgetRef ref,
     LogisticsHubState state,
-    Duration difference,
   ) {
     final theme = Theme.of(context);
     final concierge = state.conciergeInfo;
@@ -274,6 +285,8 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   /// Builds the concierge information card.
   Widget _buildConciergeCard(BuildContext context, ConciergeInfo concierge) {
     final theme = Theme.of(context);
+    final conciergeName = concierge.conciergeName ?? '---';
+    final conciergePhone = concierge.conciergePhone ?? '---';
 
     return Card(
       child: Padding(
@@ -281,65 +294,36 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Your Concierge',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 20),
             Row(
               children: [
-                // Concierge photo
                 Container(
-                  width: 80,
-                  height: 80,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ClipOval(
-                    child: Image.network(
-                      concierge.conciergePhotoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: theme.colorScheme.primary,
-                          ),
-                        );
-                      },
-                    ),
+                  child: Icon(
+                    Icons.person_outline,
+                    color: theme.colorScheme.primary,
+                    size: 28,
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        concierge.conciergeName,
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Available 24/7 for your comfort',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        'Your Concierge',
+                        style: theme.textTheme.labelMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.7,
+                            alpha: 0.6,
                           ),
-                          fontStyle: FontStyle.italic,
+                          letterSpacing: 1.5,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Text(conciergeName, style: theme.textTheme.titleLarge),
                     ],
                   ),
                 ),
@@ -347,11 +331,13 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Implement phone call functionality
-              },
+              onPressed: conciergePhone != '---'
+                  ? () {
+                      // TODO: Implement phone call functionality
+                    }
+                  : null,
               icon: const Icon(Icons.phone_outlined),
-              label: Text(concierge.conciergePhone),
+              label: Text(conciergePhone),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52),
               ),
@@ -365,6 +351,8 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   /// Builds the driver information card.
   Widget _buildDriverCard(BuildContext context, ConciergeInfo concierge) {
     final theme = Theme.of(context);
+    final driverName = concierge.driverName ?? '---';
+    final driverPhone = concierge.driverPhone ?? '---';
 
     return Card(
       child: Padding(
@@ -401,10 +389,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        concierge.driverName,
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text(driverName, style: theme.textTheme.titleLarge),
                     ],
                   ),
                 ),
@@ -412,11 +397,13 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Implement phone call functionality
-              },
+              onPressed: driverPhone != '---'
+                  ? () {
+                      // TODO: Implement phone call functionality
+                    }
+                  : null,
               icon: const Icon(Icons.phone_outlined),
-              label: Text(concierge.driverPhone),
+              label: Text(driverPhone),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52),
               ),
@@ -430,6 +417,8 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   /// Builds the villa information card.
   Widget _buildVillaCard(BuildContext context, ConciergeInfo concierge) {
     final theme = Theme.of(context);
+    final villaAddress = concierge.villaAddress ?? '---';
+    final villaImageUrl = concierge.villaImageUrl;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -439,22 +428,35 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
           // Villa image
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: Image.network(
-              concierge.villaImageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: theme.colorScheme.surface,
-                  child: Center(
-                    child: Icon(
-                      Icons.home_outlined,
-                      size: 64,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            child: villaImageUrl != null
+                ? Image.network(
+                    villaImageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: theme.colorScheme.surface,
+                        child: Center(
+                          child: Icon(
+                            Icons.home_outlined,
+                            size: 64,
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    color: theme.colorScheme.surface,
+                    child: Center(
+                      child: Icon(
+                        Icons.home_outlined,
+                        size: 64,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                   ),
-                );
-              },
-            ),
           ),
 
           // Villa details
@@ -482,7 +484,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        concierge.villaAddress,
+                        villaAddress,
                         style: theme.textTheme.bodyLarge,
                       ),
                     ),
@@ -499,6 +501,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
   /// Builds the check-in instructions card.
   Widget _buildCheckInCard(BuildContext context, ConciergeInfo concierge) {
     final theme = Theme.of(context);
+    final checkInInstructions = concierge.checkInInstructions ?? '---';
 
     return Card(
       child: Padding(
@@ -529,7 +532,7 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              concierge.checkInInstructions,
+              checkInInstructions,
               style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
             ),
           ],
@@ -537,5 +540,4 @@ class _LogisticsHubScreenState extends ConsumerState<LogisticsHubScreen> {
       ),
     );
   }
-
 }

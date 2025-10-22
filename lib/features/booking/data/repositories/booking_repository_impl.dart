@@ -79,6 +79,30 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Stream<Booking?> watchActiveBookingForUser(String userId) {
+    return _remoteDatasource.watchActiveBookingForUser(userId).asyncMap((remoteData) async {
+      if (remoteData != null) {
+        // Convert remote data to entity
+        final booking = _bookingFromMap(remoteData);
+
+        // Update local cache in the background
+        _updateLocalBooking(booking);
+
+        return booking;
+      }
+
+      // If no remote data, try to get from local cache
+      final bookingModel = await _isar.bookingModels
+          .filter()
+          .userIdEqualTo(userId)
+          .findFirst();
+
+      // Convert to domain entity if found
+      return bookingModel?.toEntity();
+    });
+  }
+
+  @override
   Future<void> updateBooking(Booking booking) async {
     // Update in Supabase first
     try {
@@ -103,17 +127,24 @@ class BookingRepositoryImpl implements BookingRepository {
     required DateTime startDate,
     required String userId,
   }) async {
+    // Normalize start date to midnight to avoid time-related calculation issues
+    final normalizedStartDate = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+    );
+
     // Print the selected date and userId for debugging
-    print('Creating booking with start date: $startDate for user: $userId');
+    print('Creating booking with start date: $normalizedStartDate for user: $userId');
 
     // Create a booking with 7-day duration
-    final endDate = startDate.add(const Duration(days: 7));
+    final endDate = normalizedStartDate.add(const Duration(days: 7));
     final bookingId = 'booking-${DateTime.now().millisecondsSinceEpoch}';
 
     final newBooking = Booking(
       id: bookingId,
       userId: userId,
-      startDate: startDate,
+      startDate: normalizedStartDate,
       endDate: endDate,
       isCheckedIn: false,
     );
@@ -123,7 +154,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await _remoteDatasource.createBooking(
         id: bookingId,
         userId: userId,
-        startDate: startDate,
+        startDate: normalizedStartDate,
         endDate: endDate,
         isCheckedIn: false,
       );
