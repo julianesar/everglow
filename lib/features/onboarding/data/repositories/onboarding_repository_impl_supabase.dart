@@ -128,15 +128,19 @@ class SupabaseOnboardingRepository implements OnboardingRepository {
     print('👤 [ONBOARDING] Updating user profile... userName=$userName');
 
     // Update user_profiles table with has_completed_onboarding flag and name
+    // Note: We use update() instead of upsert() because the profile is already created
+    // by the database trigger when the user signs up
     try {
       final profileData = {
-        'user_id': userId,
         'has_completed_onboarding': true,
         if (userName != null) 'name': userName,
       };
-      print('📋 [ONBOARDING] Profile data to upsert: $profileData');
+      print('📋 [ONBOARDING] Profile data to update: $profileData');
 
-      final profileResult = await _supabase.from('user_profiles').upsert(profileData);
+      final profileResult = await _supabase
+          .from('user_profiles')
+          .update(profileData)
+          .eq('user_id', userId);
 
       print('✅ [ONBOARDING] User profile updated successfully');
       print('📊 [ONBOARDING] Profile update result: $profileResult');

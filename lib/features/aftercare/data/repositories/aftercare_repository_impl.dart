@@ -147,11 +147,24 @@ class AftercareRepositoryImpl implements AftercareRepository {
 
   /// Caches the extracted commitments in the User model.
   ///
+  /// If no User exists in the local database, this method creates one first.
+  /// This ensures backward compatibility and handles the case where users
+  /// authenticated via Supabase but don't have a local User record yet.
+  ///
   /// [commitments] The list of commitments to cache
   Future<void> _cacheCommitments(List<Commitment> commitments) async {
-    final user = await _isar.users.where().findFirst();
+    debugPrint('[AftercareRepository] Caching commitments...');
+
+    var user = await _isar.users.where().findFirst();
+
+    // If no user exists in local database, create one
     if (user == null) {
-      throw StateError('No user found in database');
+      debugPrint('[AftercareRepository] No local user found. Creating new user record...');
+      user = User();
+      await _isar.writeTxn(() async {
+        await _isar.users.put(user!);
+      });
+      debugPrint('[AftercareRepository] Local user record created successfully.');
     }
 
     final commitmentModels = commitments
@@ -159,9 +172,11 @@ class AftercareRepositoryImpl implements AftercareRepository {
         .toList();
 
     await _isar.writeTxn(() async {
-      user.commitments = commitmentModels;
+      user!.commitments = commitmentModels;
       await _isar.users.put(user);
     });
+
+    debugPrint('[AftercareRepository] Successfully cached ${commitmentModels.length} commitments.');
   }
 
   /// Builds the specialized prompt for extracting commitments from journal data.

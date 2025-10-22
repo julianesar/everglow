@@ -2,7 +2,6 @@ import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../user/data/models/user_model.dart';
 import '../../../user/domain/repositories/user_repository.dart';
 import '../../../user/data/repositories/user_repository_impl.dart';
 import '../../../user/data/datasources/user_remote_datasource.dart';
@@ -23,17 +22,17 @@ part 'progress_repository_impl.g.dart';
 abstract class ProgressRepository {
   /// Determines the current status of the user's journey.
   ///
-  /// Returns [JourneyStatus.needsOnboarding] if no user exists in the database
-  /// or if the user has not completed the onboarding process.
-  /// Returns [JourneyStatus.awaitingArrival] if the user has a booking but is not checked in.
+  /// Returns [JourneyStatus.needsBooking] if no user is authenticated or if the user has no booking.
+  /// Returns [JourneyStatus.needsOnboarding] if the user has a booking but not completed onboarding.
   /// Returns [JourneyStatus.completed] if a generated report exists and is not empty.
+  /// Returns [JourneyStatus.awaitingArrival] if the user has a booking but is not checked in.
   /// Returns [JourneyStatus.inProgress] otherwise.
   ///
   /// This method performs the following checks:
-  /// 1. Verify if a user exists (if not, return needsOnboarding)
-  /// 2. Check if the user has completed onboarding (if not, return needsOnboarding)
-  /// 3. Check if a generated report exists and is not empty (if yes, return completed)
-  /// 4. Check if the user has a booking and if they are checked in
+  /// 1. Verify if a user is authenticated (if not, return needsBooking)
+  /// 2. Check if the user has a booking (if not, return needsBooking)
+  /// 3. Check if the user has completed onboarding (if not, return needsOnboarding)
+  /// 4. Check if a generated report exists and is not empty (if yes, return completed)
   /// 5. If booking exists but not checked in, return awaitingArrival
   /// 6. Otherwise, return inProgress
   Future<JourneyStatus> getJourneyStatus();
@@ -92,30 +91,34 @@ class SupabaseProgressRepository implements ProgressRepository {
     final currentUser = _supabase.auth.currentUser;
 
     if (currentUser == null) {
-      return JourneyStatus.needsOnboarding;
+      return JourneyStatus.needsBooking;
     }
 
     final userId = currentUser.id;
 
-    // Step 2: Check if the user has completed onboarding in Supabase
+    // Step 2: Check if the user has a booking
+    final booking = await _bookingRepository.getActiveBookingForUser(userId);
+
+    if (booking == null) {
+      return JourneyStatus.needsBooking;
+    }
+
+    // Step 3: Check if the user has completed onboarding in Supabase
     final hasCompleted = await _userRemoteDatasource.hasCompletedOnboarding(userId);
 
     if (!hasCompleted) {
       return JourneyStatus.needsOnboarding;
     }
 
-    // Step 3: Check if a generated report exists and is not empty
+    // Step 4: Check if a generated report exists and is not empty
     final generatedReport = await _userRepository.getGeneratedReport();
 
     if (generatedReport != null && generatedReport.isNotEmpty) {
       return JourneyStatus.completed;
     }
 
-    // Step 4: Check if the user has a booking
-    final booking = await _bookingRepository.getActiveBookingForUser(userId);
-
     // Step 5: If booking exists but user is not checked in, they are awaiting arrival
-    if (booking != null && !booking.isCheckedIn) {
+    if (!booking.isCheckedIn) {
       return JourneyStatus.awaitingArrival;
     }
 

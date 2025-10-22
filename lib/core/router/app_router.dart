@@ -44,9 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Rule 2: User IS logged in AND on the auth page
-      // Redirect to /booking (next step after authentication)
+      // Redirect to /splash which will intelligently route based on journey status
+      // (This handles both new users who need booking/onboarding and returning users)
       if (currentUser != null && targetLocation == '/auth') {
-        return '/booking';
+        return '/splash';
       }
 
       // Rule 3: User IS logged in AND on the welcome screen (/)

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../data/repositories/auth_repository_impl.dart'
     show authRepositoryProvider;
@@ -170,14 +169,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         );
       }
 
-      // Success - navigate to booking screen
+      // Success - clear form and let router handle redirection to splash
       if (mounted) {
         // Clear form
         _nameController.clear();
         _emailController.clear();
         _passwordController.clear();
-        // Navigate to booking screen
-        context.go('/booking');
+        // Router will automatically redirect to /splash via app_router.dart Rule 2
       }
     } catch (e) {
       // Handle error
@@ -474,10 +472,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithGoogle();
 
-      // Success - navigate to booking screen
-      if (mounted) {
-        context.go('/booking');
-      }
+      // Success - router will automatically redirect to /splash via app_router.dart Rule 2
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -502,10 +497,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInWithApple();
 
-      // Success - navigate to booking screen
-      if (mounted) {
-        context.go('/booking');
-      }
+      // Success - router will automatically redirect to /splash via app_router.dart Rule 2
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -530,10 +522,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final authRepository = ref.read(authRepositoryProvider);
       await authRepository.signInAsGuest();
 
-      // Success - navigate to booking screen
-      if (mounted) {
-        context.go('/booking');
-      }
+      // Success - router will automatically redirect to /splash via app_router.dart Rule 2
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');

@@ -15,18 +15,19 @@ class UserRemoteDatasource {
   /// Saves user basic information (name and integration statement).
   ///
   /// This updates the user_profiles table with name-related fields.
+  /// Note: We use update() instead of upsert() because the profile is already
+  /// created by the database trigger when the user signs up.
   Future<void> saveUserBasicInfo({
     required String userId,
     required String name,
     required String integrationStatement,
   }) async {
     try {
-      // Upsert user profile with basic info
-      await _supabase.from('user_profiles').upsert({
-        'user_id': userId,
+      // Update user profile with basic info
+      await _supabase.from('user_profiles').update({
         'name': name,
         'integration_statement': integrationStatement,
-      });
+      }).eq('user_id', userId);
     } catch (e) {
       throw Exception('Failed to save user basic info: $e');
     }
@@ -78,15 +79,16 @@ class UserRemoteDatasource {
   }
 
   /// Saves the AI-generated report.
+  /// Note: We use update() instead of upsert() because the profile is already
+  /// created by the database trigger when the user signs up.
   Future<void> saveGeneratedReport({
     required String userId,
     required String reportText,
   }) async {
     try {
-      await _supabase.from('user_profiles').upsert({
-        'user_id': userId,
+      await _supabase.from('user_profiles').update({
         'generated_report': reportText,
-      });
+      }).eq('user_id', userId);
     } catch (e) {
       throw Exception('Failed to save generated report: $e');
     }
