@@ -23,9 +23,9 @@ class CommitmentModel {
 
   /// Creates a CommitmentModel from a domain entity.
   CommitmentModel.fromEntity(Commitment commitment)
-      : id = commitment.id,
-        commitmentText = commitment.commitmentText,
-        sourceDay = commitment.sourceDay;
+    : id = commitment.id,
+      commitmentText = commitment.commitmentText,
+      sourceDay = commitment.sourceDay;
 
   /// Converts this model to a domain entity.
   Commitment toEntity() {
@@ -46,10 +46,6 @@ class CommitmentModel {
 
   /// Converts this model to JSON.
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'commitmentText': commitmentText,
-      'sourceDay': sourceDay,
-    };
+    return {'id': id, 'commitmentText': commitmentText, 'sourceDay': sourceDay};
   }
 }

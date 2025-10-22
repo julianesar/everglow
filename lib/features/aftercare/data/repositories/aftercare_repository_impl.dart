@@ -1,30 +1,30 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-import '../../../../core/database/isar_provider.dart';
 import '../../../../core/network/ai_report_service.dart';
 import '../../../../core/network/ai_report_service_provider.dart';
+import '../../../../core/network/supabase_provider.dart';
 import '../../../journal/data/repositories/journal_repository_impl.dart';
 import '../../../journal/domain/repositories/journal_repository.dart';
-import '../../../user/data/models/user_model.dart';
 import '../../domain/entities/commitment.dart';
 import '../../domain/repositories/aftercare_repository.dart';
-import '../models/commitment_model.dart';
+import '../datasources/commitments_remote_datasource.dart';
 
 part 'aftercare_repository_impl.g.dart';
 
 /// Repository responsible for extracting and managing user commitments from journal entries.
 ///
 /// This repository orchestrates the commitment extraction process by:
-/// 1. Checking if commitments are already cached in the User model
+/// 1. Checking if commitments are already cached in Supabase
 /// 2. If not cached, fetching all user journal data from [JournalRepository]
 /// 3. Constructing a specialized prompt for AI to extract commitments
 /// 4. Sending the request to Google's Gemini API via [AiReportService]
 /// 5. Parsing the JSON response into [Commitment] objects
-/// 6. Caching the results in the User model to avoid redundant AI calls
+/// 6. Saving the results to Supabase for persistence
 class AftercareRepositoryImpl implements AftercareRepository {
   /// The service for communicating with the Gemini API.
   final AiReportService _aiReportService;
@@ -32,21 +32,103 @@ class AftercareRepositoryImpl implements AftercareRepository {
   /// The repository for accessing user journal data.
   final JournalRepository _journalRepository;
 
-  /// The Isar database instance for caching commitments.
-  final Isar _isar;
+  /// The remote datasource for commitments (Supabase).
+  final CommitmentsRemoteDatasource _remoteDatasource;
+
+  /// The Supabase client for getting current user.
+  final SupabaseClient _supabaseClient;
+
+  /// UUID generator for creating unique IDs.
+  final Uuid _uuid = const Uuid();
 
   /// Creates an instance of [AftercareRepositoryImpl].
   ///
   /// [aiReportService] Service for making API calls to Gemini
   /// [journalRepository] Repository for fetching user journal data
-  /// [isar] Database instance for caching commitments
+  /// [remoteDatasource] Datasource for Supabase operations
+  /// [supabaseClient] Supabase client for authentication
   const AftercareRepositoryImpl({
     required AiReportService aiReportService,
     required JournalRepository journalRepository,
-    required Isar isar,
+    required CommitmentsRemoteDatasource remoteDatasource,
+    required SupabaseClient supabaseClient,
   }) : _aiReportService = aiReportService,
        _journalRepository = journalRepository,
-       _isar = isar;
+       _remoteDatasource = remoteDatasource,
+       _supabaseClient = supabaseClient;
+
+  @override
+  Future<Commitment> addManualCommitment({
+    required String commitmentText,
+    required int sourceDay,
+  }) async {
+    debugPrint('[AftercareRepository] === ADDING MANUAL COMMITMENT ===');
+    debugPrint('[AftercareRepository] Text: $commitmentText');
+    debugPrint('[AftercareRepository] Source day: $sourceDay');
+
+    // Validate input
+    if (commitmentText.trim().isEmpty) {
+      throw ArgumentError('Commitment text cannot be empty');
+    }
+    if (sourceDay < 1 || sourceDay > 3) {
+      throw ArgumentError('Source day must be between 1 and 3');
+    }
+
+    // Get current user ID
+    final userId = _supabaseClient.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User must be authenticated to add commitments');
+    }
+
+    // Check if user already has 10 commitments
+    final existingCommitments = await _getCachedCommitments();
+    if (existingCommitments.length >= 10) {
+      throw Exception('Maximum of 10 commitments allowed');
+    }
+
+    // Create commitment data for Supabase
+    final commitmentData = CommitmentData(
+      id: _uuid.v4(),
+      userId: userId,
+      commitmentText: commitmentText.trim(),
+      sourceDay: sourceDay,
+      createdAt: DateTime.now(),
+    );
+
+    // Save to Supabase
+    final savedData = await _remoteDatasource.saveCommitment(commitmentData);
+    debugPrint(
+      '[AftercareRepository] Manual commitment saved to Supabase successfully',
+    );
+
+    // Convert to domain entity
+    return Commitment(
+      id: savedData.id,
+      commitmentText: savedData.commitmentText,
+      sourceDay: savedData.sourceDay,
+    );
+  }
+
+  @override
+  Future<void> deleteCommitment(String commitmentId) async {
+    debugPrint('[AftercareRepository] === DELETING COMMITMENT ===');
+    debugPrint('[AftercareRepository] Commitment ID: $commitmentId');
+
+    // Validate input
+    if (commitmentId.trim().isEmpty) {
+      throw ArgumentError('Commitment ID cannot be empty');
+    }
+
+    // Get current user ID
+    final userId = _supabaseClient.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User must be authenticated to delete commitments');
+    }
+
+    // Delete from Supabase
+    await _remoteDatasource.deleteCommitment(commitmentId);
+    debugPrint('[AftercareRepository] Commitment deleted successfully');
+  }
 
   @override
   Future<List<Commitment>> extractCommitmentsFromJournal({
@@ -60,12 +142,28 @@ class AftercareRepositoryImpl implements AftercareRepository {
       debugPrint('[AftercareRepository] Checking cache...');
       final cachedCommitments = await _getCachedCommitments();
       if (cachedCommitments.isNotEmpty) {
-        debugPrint('[AftercareRepository] Found ${cachedCommitments.length} cached commitments. Returning cache.');
+        debugPrint(
+          '[AftercareRepository] Found ${cachedCommitments.length} cached commitments. Returning cache.',
+        );
         return cachedCommitments;
       }
-      debugPrint('[AftercareRepository] No cached commitments found.');
+      debugPrint('[AftercareRepository] No cached commitments found. Returning empty list (user must explicitly generate with AI).');
+      return [];
     } else {
-      debugPrint('[AftercareRepository] Skipping cache check (force refresh enabled).');
+      debugPrint(
+        '[AftercareRepository] Force refresh enabled - will generate new commitments with AI.',
+      );
+
+      // Check if user already has 10 commitments
+      final existingCommitments = await _getCachedCommitments();
+      if (existingCommitments.length >= 10) {
+        debugPrint(
+          '[AftercareRepository] ⚠️ WARNING: User already has ${existingCommitments.length} commitments. Maximum is 10.',
+        );
+        throw Exception(
+          'Maximum of 10 commitments reached. Please delete some commitments to generate new ones.',
+        );
+      }
     }
 
     // Step 2: Retrieve all user data from the journal repository
@@ -76,7 +174,9 @@ class AftercareRepositoryImpl implements AftercareRepository {
 
     // Check if user data is empty
     if (userData.isEmpty) {
-      debugPrint('[AftercareRepository] ⚠️ WARNING: User data is empty! No journal entries found.');
+      debugPrint(
+        '[AftercareRepository] ⚠️ WARNING: User data is empty! No journal entries found.',
+      );
       return [];
     }
 
@@ -117,12 +217,16 @@ class AftercareRepositoryImpl implements AftercareRepository {
     // Step 7: Extract the generated text from the response
     debugPrint('[AftercareRepository] Parsing API response...');
     final generatedText = _parseGeneratedText(response);
-    debugPrint('[AftercareRepository] Generated text length: ${generatedText.length} characters');
+    debugPrint(
+      '[AftercareRepository] Generated text length: ${generatedText.length} characters',
+    );
 
     // Step 8: Parse the JSON response into Commitment objects
     debugPrint('[AftercareRepository] Parsing commitments from JSON...');
     final commitments = _parseCommitmentsFromJson(generatedText);
-    debugPrint('[AftercareRepository] Successfully parsed ${commitments.length} commitments.');
+    debugPrint(
+      '[AftercareRepository] Successfully parsed ${commitments.length} commitments.',
+    );
 
     // Step 9: Cache the commitments in the User model
     debugPrint('[AftercareRepository] Caching commitments...');
@@ -133,50 +237,93 @@ class AftercareRepositoryImpl implements AftercareRepository {
     return commitments;
   }
 
-  /// Retrieves cached commitments from the User model if they exist.
+  /// Retrieves commitments from Supabase if they exist.
   ///
-  /// Returns a list of [Commitment] entities if cached, or an empty list if not.
+  /// Returns a list of [Commitment] entities if found, or an empty list if not.
   Future<List<Commitment>> _getCachedCommitments() async {
-    final user = await _isar.users.where().findFirst();
-    if (user == null || user.commitments.isEmpty) {
+    final userId = _supabaseClient.auth.currentUser?.id;
+    if (userId == null) {
       return [];
     }
 
-    return user.commitments.map((model) => model.toEntity()).toList();
+    try {
+      final commitmentDataList = await _remoteDatasource.getUserCommitments(
+        userId,
+      );
+      return commitmentDataList
+          .map(
+            (data) => Commitment(
+              id: data.id,
+              commitmentText: data.commitmentText,
+              sourceDay: data.sourceDay,
+            ),
+          )
+          .toList();
+    } catch (e) {
+      debugPrint('[AftercareRepository] Error fetching cached commitments: $e');
+      return [];
+    }
   }
 
-  /// Caches the extracted commitments in the User model.
+  /// Saves the extracted commitments to Supabase.
   ///
-  /// If no User exists in the local database, this method creates one first.
-  /// This ensures backward compatibility and handles the case where users
-  /// authenticated via Supabase but don't have a local User record yet.
-  ///
-  /// [commitments] The list of commitments to cache
+  /// [commitments] The list of commitments to save
   Future<void> _cacheCommitments(List<Commitment> commitments) async {
-    debugPrint('[AftercareRepository] Caching commitments...');
+    debugPrint('[AftercareRepository] Saving commitments to Supabase...');
 
-    var user = await _isar.users.where().findFirst();
-
-    // If no user exists in local database, create one
-    if (user == null) {
-      debugPrint('[AftercareRepository] No local user found. Creating new user record...');
-      user = User();
-      await _isar.writeTxn(() async {
-        await _isar.users.put(user!);
-      });
-      debugPrint('[AftercareRepository] Local user record created successfully.');
+    final userId = _supabaseClient.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User must be authenticated to save commitments');
     }
 
-    final commitmentModels = commitments
-        .map((c) => CommitmentModel.fromEntity(c))
+    // Get existing commitments to check total count
+    final existingCommitments = await _getCachedCommitments();
+    final totalAfterSave = existingCommitments.length + commitments.length;
+
+    debugPrint(
+      '[AftercareRepository] Existing commitments: ${existingCommitments.length}',
+    );
+    debugPrint('[AftercareRepository] New commitments: ${commitments.length}');
+    debugPrint('[AftercareRepository] Total after save: $totalAfterSave');
+
+    // If total would exceed 10, only save up to the limit
+    final remainingSlots = 10 - existingCommitments.length;
+    final commitmentsToSave = remainingSlots > 0
+        ? commitments.take(remainingSlots).toList()
+        : <Commitment>[];
+
+    if (commitmentsToSave.isEmpty) {
+      debugPrint(
+        '[AftercareRepository] ⚠️ WARNING: Cannot save commitments, already at maximum capacity (10).',
+      );
+      return;
+    }
+
+    if (commitmentsToSave.length < commitments.length) {
+      debugPrint(
+        '[AftercareRepository] ⚠️ WARNING: Only saving ${commitmentsToSave.length} out of ${commitments.length} commitments to respect the 10-commitment limit.',
+      );
+    }
+
+    // Convert domain entities to datasource models
+    final commitmentDataList = commitmentsToSave
+        .map(
+          (c) => CommitmentData(
+            id: c.id,
+            userId: userId,
+            commitmentText: c.commitmentText,
+            sourceDay: c.sourceDay,
+            createdAt: DateTime.now(),
+          ),
+        )
         .toList();
 
-    await _isar.writeTxn(() async {
-      user!.commitments = commitmentModels;
-      await _isar.users.put(user);
-    });
+    // Save to Supabase
+    await _remoteDatasource.saveCommitments(commitmentDataList);
 
-    debugPrint('[AftercareRepository] Successfully cached ${commitmentModels.length} commitments.');
+    debugPrint(
+      '[AftercareRepository] Successfully saved ${commitmentDataList.length} commitments to Supabase.',
+    );
   }
 
   /// Builds the specialized prompt for extracting commitments from journal data.
@@ -318,6 +465,9 @@ Extract the commitments now and return ONLY the JSON array:
   /// ]
   /// ```
   ///
+  /// Note: The AI returns string IDs like "commitment_1", but we generate
+  /// proper UUIDs before saving to the database.
+  ///
   /// [jsonText] The raw JSON text from the AI
   ///
   /// Returns a list of [Commitment] entities.
@@ -363,23 +513,26 @@ Extract the commitments now and return ONLY the JSON array:
           continue;
         }
 
-        final id = item['id'] as String?;
+        // Note: We ignore the AI-provided ID and generate a UUID instead
+        // The AI provides IDs like "commitment_1" which are not valid UUIDs
         final commitmentText = item['commitmentText'] as String?;
         final sourceDay = item['sourceDay'] as int?;
 
-        if (id == null || commitmentText == null || sourceDay == null) {
+        if (commitmentText == null || sourceDay == null) {
           errors.add(
             'Item $i: Missing required fields. '
-            'id=${id != null ? 'present' : 'missing'}, '
             'commitmentText=${commitmentText != null ? 'present' : 'missing'}, '
             'sourceDay=${sourceDay != null ? 'present' : 'missing'}',
           );
           continue;
         }
 
+        // Generate a proper UUID for the commitment
+        final uuid = _uuid.v4();
+
         commitments.add(
           Commitment(
-            id: id,
+            id: uuid,
             commitmentText: commitmentText,
             sourceDay: sourceDay,
           ),
@@ -427,7 +580,8 @@ Extract the commitments now and return ONLY the JSON array:
 /// Provides an instance of [AftercareRepository].
 ///
 /// This provider creates and manages the [AftercareRepositoryImpl] instance,
-/// injecting the required dependencies ([AiReportService], [JournalRepository], and [Isar]).
+/// injecting the required dependencies ([AiReportService], [JournalRepository],
+/// [CommitmentsRemoteDatasource], and [SupabaseClient]).
 ///
 /// Usage example:
 /// ```dart
@@ -440,11 +594,13 @@ Future<AftercareRepository> aftercareRepository(
 ) async {
   final aiReportService = ref.watch(aiReportServiceProvider);
   final journalRepository = await ref.watch(journalRepositoryProvider.future);
-  final isar = await ref.watch(isarProvider.future);
+  final supabase = ref.watch(supabaseClientProvider);
+  final remoteDatasource = CommitmentsRemoteDatasource(supabase);
 
   return AftercareRepositoryImpl(
     aiReportService: aiReportService,
     journalRepository: journalRepository,
-    isar: isar,
+    remoteDatasource: remoteDatasource,
+    supabaseClient: supabase,
   );
 }

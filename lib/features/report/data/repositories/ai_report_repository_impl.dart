@@ -1,26 +1,25 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/database/isar_provider.dart';
 import '../../../../core/network/ai_report_service.dart';
 import '../../../../core/network/ai_report_service_provider.dart';
 import '../../../journal/domain/repositories/journal_repository.dart';
 import '../../../journal/data/repositories/journal_repository_impl.dart';
-import '../../../user/data/models/user_model.dart';
+import '../../../user/domain/repositories/user_repository.dart';
+import '../../../user/data/repositories/user_repository_impl.dart';
 
 part 'ai_report_repository_impl.g.dart';
 
 /// Repository responsible for generating comprehensive AI-powered transformation reports.
 ///
 /// This repository orchestrates the report generation process by:
-/// 1. Checking if a report is already cached in the User model
+/// 1. Checking if a report is already cached via [UserRepository]
 /// 2. If not cached, fetching all user journal data from [JournalRepository]
 /// 3. Constructing a detailed prompt for the AI
 /// 4. Sending the request to Google's Gemini API via [AiReportService]
-/// 5. Caching the result in the User model
+/// 5. Caching the result via [UserRepository]
 /// 6. Parsing and returning the generated report text
 ///
 /// The repository acts as the single source of truth for AI report generation,
@@ -32,21 +31,21 @@ class AIReportRepository {
   /// The repository for accessing user journal data.
   final JournalRepository _journalRepository;
 
-  /// The Isar database instance for caching reports.
-  final Isar _isar;
+  /// The repository for accessing and caching user data.
+  final UserRepository _userRepository;
 
   /// Creates an instance of [AIReportRepository].
   ///
   /// [aiReportService] Service for making API calls to Gemini
   /// [journalRepository] Repository for fetching user journal data
-  /// [isar] Database instance for caching reports
+  /// [userRepository] Repository for caching reports
   const AIReportRepository({
     required AiReportService aiReportService,
     required JournalRepository journalRepository,
-    required Isar isar,
+    required UserRepository userRepository,
   }) : _aiReportService = aiReportService,
        _journalRepository = journalRepository,
-       _isar = isar;
+       _userRepository = userRepository;
 
   /// Generates a comprehensive transformation report based on all user data.
   ///
@@ -147,23 +146,14 @@ class AIReportRepository {
   ///
   /// Returns the cached report string if it exists, or null if not.
   Future<String?> _getCachedReport() async {
-    final user = await _isar.users.where().findFirst();
-    return user?.generatedReport;
+    return await _userRepository.getGeneratedReport();
   }
 
-  /// Caches the generated report in the User model.
+  /// Caches the generated report via UserRepository.
   ///
   /// [report] The report text to cache
   Future<void> _cacheReport(String report) async {
-    final user = await _isar.users.where().findFirst();
-    if (user == null) {
-      throw StateError('No user found in database');
-    }
-
-    await _isar.writeTxn(() async {
-      user.generatedReport = report;
-      await _isar.users.put(user);
-    });
+    await _userRepository.saveGeneratedReport(report);
   }
 
   /// Builds the master prompt that instructs the AI on how to generate the report.
@@ -287,10 +277,10 @@ Begin the report now.
 /// Provides an instance of [AIReportRepository].
 ///
 /// This provider creates and manages the [AIReportRepository] instance,
-/// injecting the required dependencies ([AiReportService], [JournalRepository], and [Isar]).
+/// injecting the required dependencies ([AiReportService], [JournalRepository], and [UserRepository]).
 ///
 /// The provider watches [aiReportServiceProvider], [journalRepositoryProvider],
-/// and [isarProvider] to get the necessary dependencies.
+/// and [userRepositoryProvider] to get the necessary dependencies.
 ///
 /// Usage example:
 /// ```dart
@@ -301,11 +291,11 @@ Begin the report now.
 Future<AIReportRepository> aiReportRepository(AiReportRepositoryRef ref) async {
   final aiReportService = ref.watch(aiReportServiceProvider);
   final journalRepository = await ref.watch(journalRepositoryProvider.future);
-  final isar = await ref.watch(isarProvider.future);
+  final userRepository = await ref.watch(userRepositoryProvider.future);
 
   return AIReportRepository(
     aiReportService: aiReportService,
     journalRepository: journalRepository,
-    isar: isar,
+    userRepository: userRepository,
   );
 }

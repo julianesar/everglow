@@ -32,10 +32,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Your Transformation'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: Column(

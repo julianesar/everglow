@@ -7,12 +7,13 @@ part of 'aftercare_repository_impl.dart';
 // **************************************************************************
 
 String _$aftercareRepositoryHash() =>
-    r'c2f80801ea333e3a93ff0f9e9bb73530159a85c6';
+    r'0ddb8ed4cfd52a0515d970c3042071260ddfbb8e';
 
 /// Provides an instance of [AftercareRepository].
 ///
 /// This provider creates and manages the [AftercareRepositoryImpl] instance,
-/// injecting the required dependencies ([AiReportService], [JournalRepository], and [Isar]).
+/// injecting the required dependencies ([AiReportService], [JournalRepository],
+/// [CommitmentsRemoteDatasource], and [SupabaseClient]).
 ///
 /// Usage example:
 /// ```dart

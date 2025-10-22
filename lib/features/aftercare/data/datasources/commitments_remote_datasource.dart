@@ -25,7 +25,9 @@ class CommitmentsRemoteDatasource {
 
   /// Fetches commitments for a specific day.
   Future<List<CommitmentData>> getCommitmentsByDay(
-      String userId, int dayNumber) async {
+    String userId,
+    int dayNumber,
+  ) async {
     try {
       final response = await _supabase
           .from('user_commitments')
@@ -59,7 +61,8 @@ class CommitmentsRemoteDatasource {
 
   /// Saves multiple commitments at once.
   Future<List<CommitmentData>> saveCommitments(
-      List<CommitmentData> commitments) async {
+    List<CommitmentData> commitments,
+  ) async {
     try {
       final result = await _supabase
           .from('user_commitments')

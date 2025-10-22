@@ -750,8 +750,12 @@ class _QuestionPageState extends State<QuestionPage> {
         // Hide keyboard when user presses done/submit
         FocusScope.of(context).unfocus();
       },
+      style: theme.textTheme.titleMedium,
       decoration: InputDecoration(
         hintText: widget.question.placeholder ?? 'Type your answer here...',
+        hintStyle: theme.textTheme.titleMedium?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
       ),
       maxLines: 4,
       textInputAction: TextInputAction.done,

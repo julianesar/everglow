@@ -71,7 +71,8 @@
       "Bash(node cleanup_temp_files.js:*)",
       "Bash(node:*)",
       "Bash(dart run:*)",
-      "Bash(cmd /c \"dir supabase\\migrations /B\")"
+      "Bash(cmd /c \"dir supabase\\migrations /B\")",
+      "Bash(cmd /c \"del apply_user_profiles_fix.js\")"
     ],
     "deny": [],
     "ask": []
